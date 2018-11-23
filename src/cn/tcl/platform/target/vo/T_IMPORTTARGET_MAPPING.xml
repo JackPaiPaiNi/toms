@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.target.dao.ImportTargetDao">
+
+	
+ <resultMap id="TargetMap" type="Target" >
+    <result column="target_id" property="targetId" jdbcType="INTEGER" />
+    <result column="class_id" property="classId" jdbcType="INTEGER" />
+    <result column="quantity" property="quantity" jdbcType="INTEGER" />
+    <result column="amount" property="amount" jdbcType="VARCHAR" />
+     <result column="tz_quantity" property="tzQuantity" jdbcType="INTEGER" />
+      <result column="tz_amount" property="tzAmount" jdbcType="VARCHAR" />
+      <result column="PARTY_NAME" property="partyName" jdbcType="VARCHAR" />
+       <result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+  	  <result column="PARTY_NAME" property="partyName" jdbcType="VARCHAR" />
+  </resultMap>
+  
+  <resultMap id="CustomerMap" type="Customer">
+  	 <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR" />
+    <result column="CUSTOMER_NAME" property="customerName" jdbcType="VARCHAR" />
+    <result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+    <result column="CREATE_BY" property="createBy" jdbcType="VARCHAR" />
+    <result column="CREATE_DATE" property="createDate" jdbcType="CHAR" />
+    <result column="ENTER_DATE" property="enterDate" jdbcType="DATE" />
+    <result column="COUNTRY_ID" property="countryId" jdbcType="VARCHAR" />
+    <result column="PROVINCE_ID" property="provinceId" jdbcType="VARCHAR" />
+    <result column="CITY_ID" property="cityId" jdbcType="DATE" />
+    <result column="COUNTY_ID" property="countyId" jdbcType="VARCHAR" />
+    <result column="TOWN_ID" property="townId" jdbcType="VARCHAR" />
+    <result column="DETAIL_ADDRESS" property="detailAddress" jdbcType="VARCHAR" />
+    <result column="CONTACT_NAME" property="contactName" jdbcType="VARCHAR" />
+    <result column="PHONE" property="phone" jdbcType="VARCHAR" />
+    <result column="EMAIL" property="email" jdbcType="VARCHAR" />
+    <result column="WEBSITE" property="website" jdbcType="VARCHAR" />
+    <result column="STATUS" property="status" jdbcType="VARCHAR" />
+    <result column="CUSTOMER_CODE" property="customerCode" jdbcType="VARCHAR" />
+    <result column="CHANNEL_TYPE" property="channelType" jdbcType="VARCHAR" />
+    <result column="CUSTOMER_ANAME" property="customerAname" jdbcType="VARCHAR" />
+    
+    <result column="CREATE_DATE_STR" property="createDateStr" jdbcType="VARCHAR" />
+    <result column="ENTER_DATE_STR" property="enterDateStr" jdbcType="VARCHAR" />
+    <result column="PARTY_NAME" property="partyName" jdbcType="VARCHAR" />
+    <result column="COUNTRY_NAME" property="countryName" jdbcType="VARCHAR" />
+    <result column="PROVINCE_NAME" property="provinceName" jdbcType="VARCHAR" />
+    <result column="CITY_NAME" property="cityName" jdbcType="VARCHAR" />
+    <result column="COUNTY_NAME" property="countyName" jdbcType="VARCHAR" />
+    <result column="TOWN_NAME" property="townName" jdbcType="VARCHAR" />
+    <result column="CHANNEL_TYPE_NAME" property="channelTypeName" jdbcType="VARCHAR" />
+  </resultMap>
+  
+    <resultMap id="ShopMap" type="Shop" >
+    <result column="SHOP_ID" property="shopId" jdbcType="VARCHAR" />
+    <result column="SHOP_NAME" property="shopName" jdbcType="VARCHAR" />
+    <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR" />
+    <result column="CUSTOMER_NAME" property="customerName" jdbcType="VARCHAR" />
+    <result column="CREATE_BY" property="createBy" jdbcType="VARCHAR" />
+    <result column="CREATE_DATE" property="createDate" jdbcType="VARCHAR" />
+    <result column="ENTER_DATE" property="enterDate" jdbcType="DATE" />
+    <result column="ENTER_DATE_STR" property="enterDateStr" jdbcType="VARCHAR" />
+    <result column="COUNTRY_ID" property="countryId" jdbcType="VARCHAR" />
+    <result column="PROVINCE_ID" property="provinceId" jdbcType="VARCHAR" />
+    <result column="CITY_ID" property="cityId" jdbcType="VARCHAR" />
+    <result column="COUNTY_ID" property="countyId" jdbcType="VARCHAR" />
+    <result column="TOWN_ID" property="townId" jdbcType="VARCHAR" />
+    <result column="DETAIL_ADDRESS" property="detailAddress" jdbcType="VARCHAR" />
+    <result column="CONTACT_NAME" property="contactName" jdbcType="VARCHAR" />
+    <result column="PHONE" property="phone" jdbcType="VARCHAR" />
+    <result column="EMAIL" property="email" jdbcType="VARCHAR" />
+    <result column="LNG" property="lng" jdbcType="VARCHAR" />
+    <result column="LAT" property="lat" jdbcType="VARCHAR" />
+    <result column="COMMENTS" property="comments" jdbcType="VARCHAR" />
+    <result column="STATUS" property="status" jdbcType="VARCHAR" />
+    <result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+    
+    <result column="COUNTRY_NAME" property="countryName" jdbcType="VARCHAR" />
+    <result column="PROVINCE_NAME" property="provinceName" jdbcType="VARCHAR" />
+    <result column="CITY_NAME" property="cityName" jdbcType="VARCHAR" />
+    <result column="COUNTY_NAME" property="countyName" jdbcType="VARCHAR" />
+    <result column="TOWN_NAME" property="townName" jdbcType="VARCHAR" />
+    <result column="PARTY_NAME" property="partyName" jdbcType="VARCHAR" />
+    
+  </resultMap>
+
+	<sql id="listWhere">
+		<if test="searchStr != null"> ${searchStr} </if>
+		<where>
+			<if test="conditions != null"> and ${conditions} </if>
+		</where>
+	</sql>
+	
+	
+	
+	<select id="selectChannel" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		SELECT c.`CUSTOMER_ID`  FROM  customer_info  c
+
+		WHERE c.`CUSTOMER_NAME`=#{name}
+</select>
+
+
+	<insert id="saveChannelTarget" parameterType="Target">
+	INSERT INTO  `t_target`  
+	(target_id,class_id,quantity,amount,tz_quantity,tz_amount)
+	VALUES(#{targetId},#{classId},#{quantity},#{amount},#{tzQuantity},#{tzAmount})
+	</insert>
+	
+	
+		<select id="selectReg" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		SELECT  p.`PARTY_ID` FROM party p  WHERE p.`PARTY_NAME`=#{name}
+	</select>
+	
+
+
+
+	<select id="selectCount" parameterType="java.lang.String"
+		resultType="java.lang.Integer">
+		SELECT  COUNT(*) FROM t_target   
+		WHERE class_id=#{classId}
+		AND target_id=#{targetId}
+	</select>
+	
+	
+	
+	<update id="updateTarget" parameterType="Target"
+		>
+		UPDATE  t_target  SET  quantity=#{quantity} ,amount=#{amount},tz_quantity=#{tzQuantity},tz_amount=#{tzAmount}
+		WHERE  class_id=#{classId}  AND  target_id=#{targetId}
+	</update>
+
+<select id="selectUser" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		SELECT  ul.user_login_id  FROM user_login ul 
+JOIN  user_role_mapping urm ON urm.`USER_LOGIN_ID`=ul.`USER_LOGIN_ID`
+
+WHERE ul.`USER_NAME`=#{name}
+
+AND urm.`ROLE_ID` LIKE  #{role} 
+
+	</select>
+
+	<select id="selectCustomer" parameterType="java.lang.String" resultType="Customer">
+	<!-- SELECT DISTINCT ci.`PARTY_ID` AS countryId,ci.customer_name AS countryName FROM customer_info ci,user_login ul,party p WHERE  ul.party_id=ci.party_id   AND ul.user_login_id=#{partyId} -->
+<!-- SELECT DISTINCT ci.customer_name AS countryName,ci.`CUSTOMER_ID` AS countryId,p.`PARENT_PARTY_ID` FROM 
+customer_info ci,party p WHERE ci.`PARTY_ID`=p.`PARTY_ID` AND p.`PARENT_PARTY_ID`=#{partyId} -->
+SELECT DISTINCT ci.customer_name AS countryName,ci.`CUSTOMER_ID` AS countryId,p.party_id,p.parent_party_id FROM 
+customer_info ci,party p WHERE ci.`PARTY_ID`=p.`PARTY_ID` AND p.`party_id`=#{partyId}	
+	</select>
+
+	<select id="selectShop" parameterType="java.lang.String" resultType="Shop">
+	SELECT DISTINCT si.shop_name AS countryName,si.shop_id AS countryId FROM shop_info si,customer_info ci WHERE si.`CUSTOMER_ID`=#{partyId} AND ci.`CUSTOMER_ID`=si.customer_id
+	</select>
+	
+	<select id="selectSale" parameterType="java.util.Map" resultType="Shop">
+	SELECT DISTINCT ul.`PARTY_ID` AS countryId,ul.`USER_NAME` AS countryName FROM shop_saler_mapping ssm,user_login ul,party p WHERE 
+ ul.`USER_LOGIN_ID`=ssm.`USER_LOGIN_ID` AND p.`PARTY_ID`=ul.`PARTY_ID` AND ssm.`shop_id`=#{partyId} and ssm.`salerType`=#{saleType} 
+	</select>
+	
+	<select id="selectManager" parameterType="java.lang.String" resultType="Shop">
+	SELECT ul.`PARTY_ID` AS countryId, ul.`USER_NAME` AS countryName,ul.`USER_LOGIN_ID` AS id FROM 
+party pa JOIN user_login ul ON ul.`PARTY_ID`=pa.`PARTY_ID` JOIN user_role_mapping ur ON ul.`USER_LOGIN_ID`=ur.`USER_LOGIN_ID`
+ WHERE pa.party_id IN ( SELECT pp.`PARTY_ID` FROM party pp WHERE pp.`PARTY_ID` = #{partyId} UNION ALL SELECT p.`PARTY_ID` 
+ FROM party p WHERE p.`PARENT_PARTY_ID` = #{partyId} UNION ALL SELECT pa.`PARTY_ID` FROM party pa WHERE pa.`PARENT_PARTY_ID` IN
+(SELECT p.`PARTY_ID` FROM party p WHERE p.`PARENT_PARTY_ID` = #{partyId}) UNION ALL SELECT par.`PARTY_ID` FROM party par WHERE par.`PARENT_PARTY_ID` IN(SELECT pa.`PARTY_ID` FROM party pa WHERE pa.`PARENT_PARTY_ID` IN(SELECT p.`PARTY_ID`FROM party p WHERE p.`PARENT_PARTY_ID` = #{partyId})) ) AND ur.`ROLE_ID` LIKE '%REGIONAL%'; 
+	</select>
+	
+	<select id="selectProduct" parameterType="java.util.Map" resultType="Shop">
+	<!-- SELECT DISTINCT ttt.shop_id AS countryId,ttt.model AS countryName FROM  (SELECT * FROM (SELECT ts.model,ts.shop_id FROM t_sale ts WHERE ts.shop_id IN (SELECT si.`SHOP_ID` FROM shop_info si WHERE si.`CUSTOMER_ID` IN
+(SELECT ci.customer_id FROM customer_info ci WHERE ci.party_id IN ( SELECT p.`PARTY_ID` FROM party p WHERE p.`PARTY_ID`=#{partyId} UNION ALL SELECT p.`PARTY_ID` FROM party p WHERE p.`PARENT_PARTY_ID` = #{partyId} 
+)))) tt LEFT JOIN t_modelmap tm ON tm.branch_model=tt.model)ttt LEFT JOIN product pro ON pro.product_model=ttt.hq_model WHERE ttt.shop_id=#{shopId} -->
+SELECT DISTINCT ttt.shop_id AS countryId,ttt.model AS countryName FROM  (SELECT * FROM (SELECT ts.model,ts.shop_id FROM t_sale ts WHERE ts.shop_id IN (SELECT si.`SHOP_ID` FROM shop_info si WHERE si.`CUSTOMER_ID` IN
+(SELECT ci.customer_id FROM customer_info ci))) tt LEFT JOIN t_modelmap tm ON tm.branch_model=tt.model)ttt LEFT JOIN product pro ON pro.product_model=ttt.hq_model WHERE ttt.shop_id=#{partyId}
+	</select>
+	
+	<!-- 查寻区域目标 -->
+	<select id="chooseRegion" parameterType="java.lang.String" resultType="Target">
+ 
+ SELECT DISTINCT p.`PARTY_NAME` as partyName,t.`quantity` AS quantity,t.`amount` AS amount,t.`tz_quantity` AS tzQuantity,t.`tz_amount` AS tzAmount FROM t_target t,party p WHERE 
+ t.`target_id`=#{partyId} AND p.`PARTY_ID`=t.`target_id` ORDER BY t.`ctime` DESC
+	</select>
+	
+	<!-- 查寻办事处目标 -->
+	<select id="chooseOffice" parameterType="java.lang.String" resultType="Target">
+ 
+ SELECT DISTINCT p.`PARTY_NAME` as partyName,t.`quantity` AS quantity,t.`amount` AS amount,t.`tz_quantity` AS tzQuantity,t.`tz_amount` AS tzAmount FROM t_target t,party p WHERE 
+ t.`target_id`=#{partyId} AND p.`PARTY_ID`=t.`target_id` ORDER BY t.`ctime` DESC
+	</select>
+	
+</mapper>

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.acproduct.dao.IACProductDao" >
+
+<resultMap id="ProductMap" type="ACProduct" >
+  	<result column="ID" property="id" jdbcType="INTEGER" />
+    <result column="PRODUCT_ID" property="productId" jdbcType="VARCHAR" />
+    <result column="party_id" property="partyId" jdbcType="VARCHAR" />
+    <result column="party_name" property="partyName" jdbcType="VARCHAR" />
+    <result column="PRODUCT_TYPE_ID" property="productTypeId" jdbcType="VARCHAR" />
+    <result column="INTRODUCTION_DATE" property="introductionDate" jdbcType="VARCHAR" />
+    <result column="SALES_DISCONTINUATION_DATE" property="salesDiscontinuationDate" jdbcType="CHAR" />
+    <result column="SUPPORT_DISCONTINUATION_DATE" property="supportDiscontinuationDate" jdbcType="CHAR" />
+    <result column="PRODUCT_NAME" property="productName" jdbcType="DATE" />
+    <result column="MANUFACTURER_PARTY_ID" property="manufacturerPartyId" jdbcType="VARCHAR" />
+    <result column="INTERNAL_NAME" property="internalName" jdbcType="VARCHAR" />
+    <result column="COMMENTS" property="comments" jdbcType="DATE" />
+    <result column="DESCRIPTION" property="description" jdbcType="VARCHAR" />
+    <result column="DESCRIPTION_EN" property="descriptionEn" jdbcType="VARCHAR" />
+    <result column="QUANTITY_UOM_ID" property="quantityUomId" jdbcType="VARCHAR" />
+    <result column="COLOR_ID" property="colorId" jdbcType="VARCHAR" />
+    <result column="VOLUME" property="volume" jdbcType="VARCHAR" />
+    <result column="STATUS" property="status" jdbcType="VARCHAR" />
+    <result column="BRAND_ID" property="brandId" jdbcType="VARCHAR" />
+    <result column="CATEGORY_ID" property="categoryId" jdbcType="VARCHAR" />
+    <result column="PRODUCT_SPEC_ID" property="productSpecId" jdbcType="VARCHAR" />
+    <result column="PRODUCT_FUNC_ID" property="productFuncId" jdbcType="VARCHAR" />
+    <result column="PRODUCT_SCREEN_ID" property="productScreenId" jdbcType="VARCHAR" />
+    <result column="PRODUCT_model" property="modelName" jdbcType="VARCHAR" />
+    <result column="PHOTO" property="photo" jdbcType="VARCHAR" />
+    <result column="product_type" property="productType" jdbcType="VARCHAR" />
+    <result column="size" property="size" jdbcType="VARCHAR" />
+    <result column="display" property="display" jdbcType="VARCHAR" />
+    <result column="ratio" property="ratio" jdbcType="VARCHAR" />
+    <result column="power" property="power" jdbcType="VARCHAR" />
+    <result column="power_on" property="powerOn" jdbcType="VARCHAR" />
+    <result column="power_wait" property="powerWait" jdbcType="VARCHAR" />
+    <result column="netweight" property="netweight" jdbcType="VARCHAR" />
+    <result column="weight_include" property="weightInclude" jdbcType="VARCHAR" />
+    <result column="weight" property="weight" jdbcType="VARCHAR" />
+    <result column="interface" property="interFace" jdbcType="VARCHAR" />
+    <result column="network" property="network" jdbcType="VARCHAR" />
+    <result column="os" property="os" jdbcType="VARCHAR" />
+    <result column="file_path" property="filePath" jdbcType="VARCHAR" />
+    <result column="file_name" property="fileName" jdbcType="VARCHAR" />
+    <result column="product_line" property="catena" jdbcType="VARCHAR" />
+    
+  </resultMap>
+
+	
+  <sql id="listWhere">
+  	<where>
+		<if test="keyword != null"> and (acp.`product_model` like CONCAT('%','${keyword}','%') or acp.`DESCRIPTION` LIKE CONCAT('%','${keyword}','%')) </if>
+		<if test="conditions != null"> and ${conditions} </if>
+	</where>
+  </sql>
+  
+  <!-- 查看产品信息 -->
+  <select id="selectProducts" resultType="ACProduct">
+     SELECT acp.`id` id,
+     	acp.`product_model` model,
+	    acp.`size` size,
+	    acp.`COMMENTS` comments,
+	    acp.`DESCRIPTION` description
+     FROM `ac_product` acp
+    <include refid="listWhere"/>
+    order by model limit #{start},#{limit};
+  </select>
+  <!-- 属性查询总条数 -->
+  <select id="countProducts" resultType="int">
+     SELECT COUNT(*) FROM `ac_product` acp
+     <include refid="listWhere"/>
+  </select>
+  
+  <!-- 添加产品 -->
+   <insert id="saveProduct" parameterType="ACProduct">
+<!--  	INSERT INTO ac_product(product_model,product_number,COMMENTS,DESCRIPTION)VALUES(#{model},#{number},#{comments},#{description}) -->
+  INSERT INTO ac_product(product_model,size,COMMENTS,DESCRIPTION)VALUES(#{model},#{size},#{comments},#{description})
+ </insert>
+  
+  <!-- 根据编号获取产品信息 -->
+  <select id="getProduct" parameterType="java.lang.String" resultType="ACProduct">
+    SELECT acp.`id` id,
+     	acp.`product_model` model,
+	    acp.`size` size,
+	    acp.`COMMENTS` comments,
+	    acp.`DESCRIPTION` description
+     FROM `ac_product` acp where acp.id=#{pid} limit 1;
+  </select>
+  
+  <!-- 修改产品 -->
+  <update id="editProduct" parameterType="ACProduct">
+  	UPDATE ac_product SET product_model =#{model},size = #{size},comments = #{comments},description = #{description} WHERE id = #{id};
+  </update> 
+  
+   <!-- 删除产品 -->
+  <delete id="deleteProductByProductId" parameterType="ACProduct">
+  	delete from ac_product where product_model = #{productId}
+  </delete>
+  
+  <!-- 查询型号是否存在 -->
+   <select id="searchCountByProductId" resultType="int">
+  	select count(1) from ac_product where product_model = #{productId}
+   </select>
+   
+  <!-- AC尺寸 -->
+   <select id="selectACAllSize" resultType="ACProduct">
+  	SELECT cfp.`PVALUE` size FROM cfg_parameter cfp WHERE cfp.`PDOMAIN` = 'TCL_PRODUCT' AND cfp.`PTYPE` = 'AC_SIZE' ORDER BY size
+   </select>
+  
+  
+  <!-- ac产品型号是否存在 -->
+   <select id = "selectWhetherTheModelExists" parameterType="java.lang.String" resultType="int">
+   SELECT  COUNT(*)  FROM `ac_product` acp WHERE acp.`product_model` = #{model}
+  </select> 
+  
+  <!-- ac产品尺寸是否存在 -->
+   <select id = "selectWhetherTheDimensionsExist" parameterType="java.lang.String" resultType="int">
+      SELECT COUNT(cfp.`PVALUE`) FROM cfg_parameter cfp WHERE cfp.`PDOMAIN` = 'TCL_PRODUCT' AND cfp.`PTYPE` = 'AC_SIZE' AND cfp.`PVALUE` = CAST(#{size} AS SIGNED)
+  </select> 
+  
+</mapper>

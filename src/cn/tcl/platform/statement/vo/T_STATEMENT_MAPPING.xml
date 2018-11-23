@@ -1,0 +1,1080 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.statement.dao.IStatementDao" >
+	
+	<resultMap id = "StatementMap" type="Statement">
+		<result column="SHOP_ID" property="countryId" jdbcType="VARCHAR" />
+		<result column="SHOP_ID" property="countryName" jdbcType="VARCHAR" />
+		<result column="SHOP_ID" property="countryEnName" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<sql id="countryByPartyId">
+		SELECT pa.`PARTY_ID` FROM party pa WHERE pa.`COUNTRY_ID` = #{partyId} AND pa.`flag` = 0
+	</sql>
+	
+	<sql id="areaByPartyId">
+		SELECT pa.`PARTY_ID` as partyId FROM party pa WHERE  pa.`flag` = 0 AND (pa.`PARENT_PARTY_ID` = #{partyId} OR pa.`PARTY_ID` = #{partyId}) 
+	</sql>
+	
+	 <sql id="countryAmount">
+	 	${"IFNULL(SUM(ts.amount),0) AS revenue"}
+	</sql> 
+	 
+	 <sql id="headAmount">
+	 	${"IFNULL(SUM(ts.`h_amount`),0) AS revenue"}
+	</sql>  
+	
+	<!-- 个人销售目标、数量 -->
+  	<select id = "selectUserSale"  resultType="Statement" parameterType="java.util.Map">
+	 
+	 SELECT IFNULL(SUM(ts.quantity),0) AS volume ,
+	 <if test="isHQRole == 'IS'"><include refid="headAmount"/></if>
+	 <if test="isHQRole == ''"><include refid="countryAmount"/></if>
+	 FROM `shop_saler_mapping` ssm ,shop_info si,t_sale ts ,t_modelmap tm,product pr,party pa,`coefficient` co
+	 WHERE ts.`shop_id` = ssm.`shop_id` 
+	 AND pa.`flag` = 0
+	 AND ssm.`user_login_id` = #{userId}
+	 AND ts.`datadate` >= #{saleTime}
+	 AND ts.`model` = tm.`branch_model`
+	 AND tm.`hq_model` = pr.`PRODUCT_model`
+	 AND pr.`head_type_id` = #{pType}
+	 AND si.`SHOP_ID` = ssm.`shop_id`
+	 <include refid="storeLevel"/>
+	 AND si.`PARTY_ID` = pa.`PARTY_ID`
+	 AND tm.`party_id` = pa.`COUNTRY_ID`
+	 AND pa.`COUNTRY_ID` = co.`country`
+	 UNION ALL 
+	 SELECT IFNULL(SUM(ts.quantity),0) AS volume ,
+	 <if test="isHQRole == 'IS'"><include refid="headAmount"/></if>
+	 <if test="isHQRole == ''"><include refid="countryAmount"/></if> 
+	 FROM t_target ts,`shop_saler_mapping` ssm,shop_info si
+	 WHERE ts.`target_id` = ssm.`shop_id`
+	 AND ts.`class_id` = 4
+	 and si.shop_id = ssm.shop_id
+	 AND ts.type = #{pType}
+	 <include refid="storeLevel"/>
+	 AND ts.datadate BETWEEN #{startTime} AND #{endTime}
+	 AND ssm.`user_login_id` = #{userId}
+	 </select>
+	
+	<select id="selectPartyIdSaleInfoInAll" parameterType="java.util.Map" resultType="Statement">
+		 SELECT ts.`quantity` AS volume,ts.`amount` AS revenue,ts.`datadate` AS dataDate  
+		 FROM t_sale ts,shop_info si ,t_modelmap tm,product pr,party pa ,`coefficient` co
+		 WHERE ts.`shop_id` = si.`SHOP_ID`
+		 AND pa.`flag` = 0
+		 AND si.`PARTY_ID` IN (${partyList})
+		 AND si.`PARTY_ID` = pa.`PARTY_ID`
+		 AND co.`country` = pa.`COUNTRY_ID`
+		 AND tm.`party_id` = pa.`COUNTRY_ID`
+		 AND tm.`branch_model` = ts.`model`
+		 AND tm.`hq_model` = pr.`PRODUCT_model`
+	</select>
+	
+	<select id="selectCountrysaleInfo" parameterType="java.util.Map" resultType="Statement">
+	 	SELECT ts.`quantity` AS volume,ts.`amount` AS revenue,ts.`datadate` AS dataDate,pr.`size` AS size,pr.`PRODUCT_SPEC_ID` AS countryName,
+	 	<if test="isHQRole == true">
+ 			${"tm.`hq_model`"}
+ 		</if>
+ 		<if test="isHQRole == false">
+ 			${"tm.`branch_model`"}
+ 		</if> 
+		 AS NAME
+		 FROM t_sale ts ,shop_info si,t_modelmap tm,`product` pr,party pa ,`coefficient` co
+		 WHERE ts.`shop_id` = si.`SHOP_ID`
+		 AND pa.`flag` = 0
+		 AND si.`PARTY_ID` IN (${partyList})
+		 AND si.`PARTY_ID` = pa.`PARTY_ID`
+		 AND co.`country` = pa.`COUNTRY_ID`
+		 AND tm.`party_id` = pa.`COUNTRY_ID`
+		 AND tm.`branch_model` = ts.`model`
+		 AND tm.`hq_model` = pr.`PRODUCT_model`
+		 AND ts.`datadate` >= #{tDate}
+	</select>
+	
+	<select id="selectCountrysaleModel" parameterType="java.util.Map" resultType="Statement">
+ 		select DISTINCT 
+ 		<if test="isHQRole == true">
+ 			tm.`hq_model`
+ 		</if>
+ 		<if test="isHQRole == false">
+ 			tm.`branch_model`
+ 		</if>
+ 		 as name from t_modelmap tm , product pr 
+ 		 where tm.`party_id` = #{country}
+ 		 AND pr.`PRODUCT_model` = tm.`hq_model`  
+	 	 AND pr.`head_type_id` = #{pType}
+		 ORDER BY NAME
+ 		
+	</select>
+	
+	<!-- 国家、区域销售数据、目标 -->
+	<select id="selecPartySalerTar" resultType="Statement" parameterType="java.util.Map">
+		SELECT IFNULL(SUM(ts.quantity),0) AS volume,
+		<if test="isHQRole == 'IS'"><include refid="headAmount"/></if>
+		<if test="isHQRole == ''"><include refid="countryAmount"/></if>
+		 FROM shop_info si ,t_sale ts,party pa ,`coefficient` co,t_modelmap tm,product pt
+		 WHERE ts.`shop_id` = si.`SHOP_ID` 
+		 AND pa.`flag` = 0
+		 AND si.`PARTY_ID` in (${partyIdList})
+		 AND ts.`datadate` >= #{saleTime}
+		 AND tm.`branch_model`=ts.`model` 
+		 AND si.`PARTY_ID` = pa.`PARTY_ID`
+		 AND pa.`COUNTRY_ID` = co.`country`
+		 AND tm.`party_id`=pa.`COUNTRY_ID` 
+		 AND pt.`PRODUCT_model`=tm.`hq_model`
+		 AND pt.`head_type_id` = #{pType}
+		 <include refid="storeLevel"/>
+		 UNION ALL 
+		 SELECT IFNULL(SUM(ts.quantity),0) AS volume,
+		 <if test="isHQRole == 'IS'"><include refid="headAmount"/></if>
+		 <if test="isHQRole == ''"><include refid="countryAmount"/></if>
+		 FROM t_target ts ,shop_info si
+		 WHERE ts.`target_id` = si.`SHOP_ID`
+		 <include refid="storeLevel"/>
+		 AND  si.`PARTY_ID` in (${partyIdList})
+		 AND ts.`class_id` = 4
+		 AND ts.type = #{pType}
+		 AND ts.datadate BETWEEN #{startTime} AND #{endTime}
+ 	</select>
+ 
+	 <select id="selecPartySalerInfo" resultType="Statement" parameterType="java.util.Map">
+		SELECT IFNULL(SUM(ts.quantity),0) AS volume,
+		<if test="isHQRole == 'IS'"><include refid="headAmount"/></if>
+		 <if test="isHQRole == ''"><include refid="countryAmount"/></if>
+		FROM t_sale ts,shop_info si,t_modelmap tm,`product` pr,party pa ,`coefficient` co
+		 WHERE ts.`shop_id` = si.`SHOP_ID`
+		 AND si.`PARTY_ID` IN (${partyList})
+		 AND pa.`flag` = 0
+		 AND si.`PARTY_ID` = pa.`PARTY_ID`
+		 AND co.`country` = pa.`COUNTRY_ID`
+		 AND tm.`party_id` = pa.`COUNTRY_ID`
+		 AND tm.`branch_model` = ts.`model`
+		 AND tm.`hq_model` = pr.`PRODUCT_model`
+		 AND pr.`head_type_id` = #{pType}
+		 AND ts.`datadate` >= #{saleTime}
+		UNION ALL 
+		SELECT IFNULL(SUM(ts.quantity),0) AS volume,
+		<if test="isHQRole == 'IS'"><include refid="headAmount"/></if>
+		 <if test="isHQRole == ''"><include refid="countryAmount"/></if>  
+		FROM t_target ts ,shop_info si
+		WHERE ts.`target_id` = si.`SHOP_ID`
+		AND ts.`class_id` = 4
+		AND ts.type = #{pType}
+		AND ts.datadate BETWEEN #{startTime} AND #{endTime}
+		AND  si.`PARTY_ID` IN (${partyList})
+	 </select>
+ 
+	<!--  获取指定国家系数 -->
+	 <select id='selectCoefficientByPartyId' resultType="Statement" parameterType="String">
+		SELECT c.`all_products_coefficient` AS allCoeffinient,c.`core_products_coefficient` AS coedCoeffinient FROM `coefficient` c WHERE c.`country` = #{partyId}
+	 </select>
+ 
+	<!--  获取指定国家系数 -->
+	 <select id='selectExchangeByPartyId' resultType="Statement" parameterType="String">
+	 	SELECT tex.`exchange` FROM t_exchange tex WHERE tex.`datadate` = (SELECT MAX(te.`datadate`) FROM `t_exchange` te WHERE te.`country_id` = #{partyId}) AND tex.`country_id` = #{partyId}
+	 </select>
+	
+	<!-- 查询商业中心 -->
+	<select id="selectBusinessCenter" resultType="Statement">
+		SELECT p.`PARTY_ID` AS countryId,p.`PARTY_NAME` AS countryName FROM party p WHERE p.`PARENT_PARTY_ID` IN ('999') AND p.`flag` = 0
+	</select>
+	
+	<!-- 个人所在商业中心 -->
+	<select id = "businessCenterByUserId" parameterType="java.lang.String" resultType="Statement">
+		SELECT p.`PARTY_ID` AS countryId,p.`PARTY_NAME` AS countryName FROM party p WHERE p.`PARTY_ID` = (
+	    SELECT p.`PARENT_PARTY_ID` FROM user_login u,party p  WHERE BINARY  u.`USER_LOGIN_ID` = #{userId} AND p.`PARTY_ID` = u.`PARTY_ID` AND p.`flag` = 0)
+	    AND p.`flag` = 0
+	</select>  
+	
+	<!-- 个人所在区域 -->
+	<select id = "selectCountry" parameterType="java.lang.String" resultType="Statement">
+		SELECT u.`PARTY_ID` AS countryId,p.`PARTY_NAME` AS countryName,p.`PARENT_PARTY_ID` AS id,p.`COUNTRY_ID` AS assistCountryId FROM user_login u,party p  WHERE BINARY  u.`USER_LOGIN_ID` = #{userId} 
+		AND p.`PARTY_ID` = u.`PARTY_ID` AND p.`flag` = 0
+	</select> 
+	
+	<!-- 下一级  -->
+	<select id = "selectAllCountry"  resultType="Statement" parameterType="java.lang.String">
+		SELECT p.`PARTY_ID` AS countryId,p.`PARTY_NAME` AS countryName FROM party p WHERE p.`PARENT_PARTY_ID` = #{partyId} AND p.`flag` = 0
+	</select>
+	
+	<!-- 菲律宾查询国家Party下一级区域-->
+	<select id = "philSelectAreaByCountry"  resultType="Statement" parameterType="java.lang.String">
+		SELECT p.`PARTY_ID` AS countryId,p.`PARTY_NAME` AS countryName FROM party p WHERE p.`PARENT_PARTY_ID` = #{partyId} AND p.`COUNTRY_ID` = #{partyId} AND p.`flag` = 0
+	</select>
+	
+	
+	<select id = "selectRegion"  resultType="Statement" parameterType="java.lang.String">
+		select pp.`PARTY_ID` as countryId from party pp where pp.`PARTY_ID` = #{partyId} AND pp.`flag` = 0 and pp.`PARENT_PARTY_ID` in (select p.`PARTY_ID` from party p where p.`PARTY_ID` = p.`COUNTRY_ID` and p.`PARTY_ID` != 999)
+	</select>
+	
+	<!-- 查询督导、业务员-->
+	 <select id = "selectSalertype"  resultType="Statement" parameterType="java.util.Map">
+		SELECT DISTINCT(mp.user_login_id) AS countryId,u.user_name AS countryName 
+		FROM user_login u,shop_saler_mapping mp,shop_info sf 
+		WHERE mp.shop_id=sf.shop_id 
+		AND u.user_login_id=mp.user_login_id 
+		AND sf.party_id IN(${countryList} )
+		AND mp.salertype IN (#{saleType})
+	</select> 
+	
+	<!-- 根据区域获取门店 -->
+	<select id="selectShopByCountnry" resultType="Statement" parameterType="java.util.Map">
+		<!-- select si.`SHOP_ID` AS shopId,si.`PARTY_ID` AS countryId from shop_info si,party pa where si.`PARTY_ID` = pa.`PARENT_PARTY_ID` and pa.`COUNTRY_ID` =  #{partyId} -->
+		SELECT si.`SHOP_ID` AS shopId,si.`PARTY_ID` AS countryId FROM shop_info si WHERE si.`PARTY_ID` IN (${countryList}) GROUP BY shopId,countryId
+	</select>
+
+
+	<select id="selectShopByCountnrys" resultType="Statement" parameterType="java.util.Map">
+		SELECT si.`SHOP_ID` AS shopId,si.`PARTY_ID` AS countryId FROM  shop_info si WHERE si.`PARTY_ID` IN (${countryList})
+	</select>
+	
+	
+	<!-- 个人重点产品销售 -->
+	<select id="focusOnPersonalSelling" resultType="Statement" parameterType="java.util.Map">
+		 SELECT
+		 <if test="isHQRole == true">
+	 			${"tm.`hq_model`"}
+	 		</if>
+	 		<if test="isHQRole == false">
+	 			${"tm.`branch_model`"}
+	 		</if> 
+		 AS NAME,ts.`quantity` AS volume,ts.`amount` AS revenue,ts.`datadate` AS dataDate 
+		 FROM t_sale ts, t_modelmap tm ,product pr,core_product cp,shop_info si,`coefficient` co,party pa 
+		 WHERE ts.`shop_id` IN (SELECT ssm.`shop_id` FROM shop_saler_mapping ssm WHERE ssm.`user_login_id`= #{userId}) 
+		 AND pa.`flag` = 0
+		 AND ts.`datadate`>=#{tDate}
+		 AND ts.`model` = tm.`branch_model`
+		 AND tm.`hq_model` = pr.`PRODUCT_model`
+		 AND pr.`product_line` = cp.`product_line`
+		 AND ts.`shop_id` = si.`SHOP_ID`
+		 AND si.`PARTY_ID` = pa.`PARTY_ID`
+		 AND tm.`party_id` = pa.`COUNTRY_ID`
+		 AND co.`country` = pa.`COUNTRY_ID`
+		 AND cp.`country_id` = #{partyId}
+	</select>
+	
+	<!-- 地区重点产品销售 -->
+	<select id="focusOnRegionalSales" resultType="Statement" parameterType="java.util.Map">
+	     SELECT ts.`quantity` AS volume,ts.`amount` AS revenue,ts.`datadate` AS dataDate,pr.`size` AS size,pr.`PRODUCT_SPEC_ID` AS countryName,
+	     <if test="isHQRole == true">
+ 			  ${"tm.`hq_model`"}
+ 		 </if>
+ 		 <if test="isHQRole == false">
+ 			  ${"tm.`branch_model`"}
+ 		 </if>  
+	    AS NAME
+		FROM t_sale ts ,shop_info si,t_modelmap tm,`product` pr,core_product cp,`coefficient` co,party pa 
+		WHERE ts.`shop_id` = si.`SHOP_ID`
+		AND pa.`flag` = 0
+		AND ts.`model` = tm.`branch_model`
+		AND tm.`hq_model` = pr.`PRODUCT_model`
+		AND si.`PARTY_ID` = pa.`PARTY_ID`
+		AND tm.`party_id` = pa.`COUNTRY_ID`
+		AND co.`country` = pa.`COUNTRY_ID`
+	    AND pr.`product_line` = cp.`product_line`
+	    AND cp.`country_id` = #{partyId}
+	    AND si.`PARTY_ID` IN (${partyList})
+	    AND ts.`datadate` >=#{tDate}
+	</select>
+	
+	<!-- 所有尺寸  -->
+	<select id="selectAllSize" resultType="Statement">
+		SELECT cp.`PVALUE` as size FROM cfg_parameter cp WHERE cp.`PDOMAIN` = 'TCL_PRODUCT' AND cp.`PTYPE` = 'SIZE' GROUP BY size
+	</select>
+	
+	 <!-- 每个用户所管理的门店 -->
+	 <select id="selectShopByUserId" resultType="Statement" parameterType="java.util.Map">
+		 SELECT ssm.`shop_id` as shopId,ssm.`user_login_id` as userId FROM shop_saler_mapping ssm WHERE ssm.`user_login_id` IN (${userList})
+	 </select>
+	 
+
+ 
+ 
+   	 <select id="shopSaleTarget" resultType="Statement" parameterType="java.util.Map">
+		  SELECT tst.`target_id` AS shopId,IFNULL (SUM(tst.`quantity`),0) AS volume FROM t_target tst 
+		  WHERE tst.`target_id` IS NOT NULL AND tst.`class_id` = 4 AND tst.datadate BETWEEN #{startTime} and #{endTime}
+		  GROUP BY tst.`target_id`
+  	 </select> 
+ 
+ 
+  
+  	
+  
+	 <select id="selectAttr" resultType="Statement">
+	  	 SELECT ptm.`category_id` AS id,ptm.`category_name` AS NAME FROM pro_type_msg ptm WHERE ptm.`TYPE` = 1 AND ptm.`sup_cat_id` = 1
+	 </select>
+  
+ 	 <!-- 根据国家获取系列 -->
+  	 <select id="selectSeriesByAttr" resultType="Statement" parameterType="java.util.Map">
+   	 	 SELECT DISTINCT pr.`product_line` NAME
+		 FROM product pr,`core_product` cp 
+		 WHERE pr.`PRODUCT_SPEC_ID` LIKE CONCAT('%', #{attrId},'%') 
+		 AND  pr.`product_line` = cp.`product_line`
+		 AND cp.`country_id` = #{partyId}
+ 	 </select>
+  
+	  <!-- 尺寸 -->
+	  <select id="selectSizeBySeries" resultType="Statement" parameterType="java.lang.String">
+			SELECT DISTINCT cp.`PVALUE` NAME FROM `cfg_parameter` cp WHERE cp.`PDOMAIN` = 'TCL_PRODUCT' AND cp.`PTYPE` = 'SIZE' ORDER BY NAME
+	  </select>
+	  
+	  <select id="selectSizeByFunction" resultType="Statement" parameterType="java.lang.String">
+	  		SELECT DISTINCT p.`size` as size FROM product p WHERE p.`PRODUCT_SPEC_ID` LIKE CONCAT('%', #{function},'%')
+	  </select>
+  
+	  <!-- 根据国家获取重点型号 -->
+	  <select id="selectModelBy" resultType="Statement" parameterType="java.util.Map">
+ 			SELECT 
+ 			<if test="isHQRole == true">
+ 				${"tm.`hq_model`"}
+	 		</if>
+	 		<if test="isHQRole == false">
+	 			${"tm.`branch_model`"}
+	 		</if> 
+ 			name 
+			FROM product pr,t_modelmap tm,`core_product` cp
+			WHERE tm.`hq_model` = pr.`PRODUCT_model`
+			<if test="functions != '' and functions != null">
+				AND pr.`PRODUCT_SPEC_ID` LIKE CONCAT('%', #{functions},'%')
+			</if>
+			<if test="series != '' and series != null">
+				AND pr.`product_line` = #{series}
+			</if>
+			<if test="size != -1">
+				AND  pr.`size` = #{size}
+			</if>
+			AND pr.`product_line` = cp.`product_line`
+			AND cp.`country_id` = tm.`party_id`
+			AND tm.`party_id` = #{country}
+			AND pr.`head_type_id` = 1 <!--  重点型号目前只有TV存在，所以写死 =1 -->
+  		</select>
+  
+		 <select id="selectItemTypeP" resultType="Statement" parameterType="java.util.Map">
+		 	 SELECT * FROM (SELECT tm.`hq_model` AS NAME FROM (SELECT ts.`model` FROM t_sale ts WHERE ts.`shop_id` IN 
+			(SELECT ssm.`shop_id` FROM shop_saler_mapping ssm WHERE ssm.`user_login_id` = #{userId}) AND 
+			ts.`datadate`>= #{tDate}) tss ,t_modelmap tm WHERE  tss.model = tm.branch_model) tttt GROUP BY tttt.name
+		 </select>
+		 
+		 <select id="selectItemType" resultType="Statement" parameterType="java.util.Map">
+			 SELECT DISTINCT tm.`hq_model` AS NAME FROM t_sale ts ,t_modelmap tm,shop_info si,party pa
+			 WHERE ts.`model` = tm.`branch_model`
+			 AND pa.`flag` = 0
+			 AND ts.`shop_id` = si.`SHOP_ID`
+			 AND ts.`datadate` >= #{tDate}
+			 AND pa.`PARTY_ID` = si.`PARTY_ID`
+			 AND pa.`COUNTRY_ID` = #{partyId}
+		  </select>
+  
+		  <select id = 'codeItemTypeSaleInfo' resultType="Statement" parameterType="java.util.Map">
+			 SELECT 
+			 <if test="isHQRole == true">
+			 ${"tm.`hq_model`"}
+			 </if>
+			 <if test="isHQRole == false">
+			 ${"tm.`branch_model`"}
+			 </if>
+			 AS NAME,SUM(ts.`quantity`) AS volume,SUM(ts.`amount`) AS revenue,DATE_FORMAT(ts.`datadate`,'%Y-%m-') AS dataDate 
+			 FROM t_sale ts,t_modelmap tm,shop_info si,`party` pa,product pr,core_product cp
+			 WHERE ts.`model` = tm.`branch_model`
+			 AND pa.`flag` = 0
+			 AND si.`SHOP_ID` = ts.`shop_id`
+			 AND tm.`hq_model` = pr.`PRODUCT_model`
+			 AND si.`PARTY_ID` = pa.`PARTY_ID`
+			 AND ts.`datadate` >= #{tDate}
+			 AND pa.`COUNTRY_ID` = #{partyId}
+			 AND pr.`product_line` = cp.`product_line`
+			 GROUP BY NAME,dataDate
+		  </select>
+ 
+		 <!-- 型号销售数据 -->
+		 <select id="itemTypeSaleInfo" resultType="Statement" parameterType="java.util.Map">
+			 SELECT 
+				<if test="isHQRole == true">
+		 			${"tm.`hq_model`"}
+		 		</if>
+		 		<if test="isHQRole == false">
+		 			${"tm.`branch_model`"}
+		 		</if> 
+			  NAME,ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0)  volume,DATE_FORMAT(ts.`datadate`,'%Y-%m-') dataDate 
+			 FROM t_sale ts,t_modelmap tm,shop_info si,party pa ,`coefficient` co
+			 WHERE ts.`model` = tm.`branch_model`
+			 AND pa.`flag` = 0
+			 AND si.`SHOP_ID` = ts.`shop_id`
+			 AND si.`PARTY_ID` IN (SELECT pa.`PARTY_ID` FROM party pa WHERE pa.`COUNTRY_ID` = #{country})
+			 AND si.`PARTY_ID` = pa.`PARTY_ID`
+		  	 AND pa.`COUNTRY_ID` = co.`country`
+			 AND ts.`datadate` >= #{tDate}
+			 GROUP BY NAME,dataDate
+		 </select>
+ 
+		 <select id="pSaleInfo" resultType="Statement" parameterType="java.util.Map">
+		 	SELECT 
+		 	<if test="isHQRole == true">
+		 			${"tm.`hq_model`"}
+		 		</if>
+		 		<if test="isHQRole == false">
+		 			${"tm.`branch_model`"}
+		 		</if> 
+			 as NAME,ts.`quantity` as volume,ts.`amount` as revenue,ts.`datadate` as dataDate FROM t_sale 
+			 ts, t_modelmap tm WHERE ts.`shop_id` IN (SELECT ssm.`shop_id` FROM shop_saler_mapping ssm WHERE 
+			 ssm.`user_login_id`= #{userId}) AND ts.`datadate`>= #{tDate} and ts.`model` = tm.`branch_model`
+		 </select>
+ 
+	 <!-- 根据国家查询系数 -->
+	 <select id="selectCoefficientByCountryId" resultType="Statement" parameterType="java.util.Map">
+	 	SELECT co.`all_products_coefficient` allCoeffinient FROM `coefficient` co WHERE co.`country` = #{country}
+	 </select>
+ 
+ <!-- *****************优化*************** -->
+ 
+ 	<!-- 区域功能销售 -->
+ 	 <select id="queryFunctionSaleInfo" resultType="Statement" parameterType="java.util.Map">
+	    SELECT pr.`PRODUCT_SPEC_ID` AS func ,DATE_FORMAT(ts.`datadate`,'%m') AS t,ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0) AS quan
+		FROM t_sale ts,shop_info si,t_modelmap tm,product pr,party pa ,`coefficient` co
+		WHERE ts.`shop_id` = si.`SHOP_ID`
+		AND pa.`flag` = 0
+		AND ts.`datadate` BETWEEN #{startTime} AND #{endTime}
+		AND si.`PARTY_ID` = pa.`PARTY_ID`
+		AND pa.`COUNTRY_ID` = co.`country`
+		AND si.`PARTY_ID` IN (${partyList})
+		AND ts.`model` = tm.`branch_model`
+		<include refid="storeLevel"/>
+		AND pr.`head_type_id` = #{pType}
+		AND tm.`hq_model`= pr.`PRODUCT_model`
+		AND tm.`party_id` = pa.`COUNTRY_ID`
+		GROUP BY func,t HAVING func IS NOT NULL
+  	</select>
+  	
+  	<!-- 个人用户功能销售 -->
+	<select id="queryUsesrFunctionSaleInfo" parameterType="java.util.HashMap" resultType="Statement">
+			SELECT pr.`PRODUCT_SPEC_ID` AS func ,DATE_FORMAT(ts.`datadate`,'%m') AS t,ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0) AS quan
+			FROM t_sale ts,`shop_saler_mapping` ssm,t_modelmap tm,product pr,shop_info si,party pa ,`coefficient` co
+			WHERE ts.`shop_id` = ssm.`shop_id`
+			AND pa.`flag` = 0
+			AND ts.`datadate` BETWEEN #{startTime} AND #{endTime}
+			AND ssm.`user_login_id` = #{userId}
+			and ts.`shop_id` = si.`SHOP_ID`
+			AND si.`PARTY_ID` = pa.`PARTY_ID`
+			AND pa.`COUNTRY_ID` = co.`country`
+			AND ts.`model` = tm.`branch_model`
+			<include refid="storeLevel"/>
+			AND pr.`head_type_id` = #{pType}
+			AND tm.`hq_model`= pr.`PRODUCT_model`
+			AND tm.`party_id` = pa.`COUNTRY_ID`
+			GROUP BY func,t HAVING func IS NOT NULL
+	</select> 
+	
+	<!-- 尺寸销售 --> 
+	<select id="querySizeSaleInfo" resultType="Statement" parameterType="java.util.Map">
+			SELECT pr.`size` AS func ,DATE_FORMAT(ts.`datadate`,'%m') AS t,ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0) AS quan
+			FROM t_sale ts,shop_info si,t_modelmap tm,product pr,party pa ,`coefficient` co
+			WHERE ts.`shop_id` = si.`SHOP_ID`
+			AND pa.`flag` = 0
+			AND ts.`datadate` BETWEEN #{startTime} AND #{endTime}
+			AND si.`PARTY_ID` = pa.`PARTY_ID`
+			AND pa.`COUNTRY_ID` = co.`country`
+			AND si.`PARTY_ID` IN (${partyList})
+			<include refid="storeLevel"/>
+			AND ts.`model` = tm.`branch_model`
+			AND tm.`hq_model`= pr.`PRODUCT_model`
+			AND pr.`head_type_id` = #{pType}
+			AND tm.`party_id` = pa.`COUNTRY_ID`
+			GROUP BY func,t HAVING func IS NOT NULL
+	</select> 
+  	
+ 	 <!-- 个人用户尺寸销售 --> 
+ 	 <select id="queryUserSizeSaleInfo" resultType="Statement" parameterType="java.util.Map">
+		SELECT pr.`size` AS func ,DATE_FORMAT(ts.`datadate`,'%m') AS t,ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0) AS quan
+		FROM t_sale ts,`shop_saler_mapping` ssm,t_modelmap tm,product pr,shop_info si,party pa ,`coefficient` co
+		WHERE ts.`shop_id` = ssm.`shop_id`
+		AND pa.`flag` = 0
+		AND ts.`datadate` BETWEEN #{startTime} AND #{endTime}
+		AND ssm.`user_login_id` = #{userId}
+		and ssm.`shop_id` = si.`SHOP_ID`
+		AND si.`PARTY_ID` = pa.`PARTY_ID`
+		<include refid="storeLevel"/>
+		AND pa.`COUNTRY_ID` = co.`country`
+		AND ts.`model` = tm.`branch_model`
+		AND tm.`hq_model`= pr.`PRODUCT_model`
+		AND pr.`head_type_id` = #{pType}
+		AND tm.`party_id` = pa.`COUNTRY_ID`
+		GROUP BY func,t HAVING func IS NOT NULL
+  	</select>
+  	
+  	<!-- 所有功能 -->
+	<select id="queryAllFunction"  resultType="Statement" >
+		<![CDATA[
+			SELECT ptm.`category_id` AS id,ptm.`category_name` AS NAME FROM pro_type_msg ptm WHERE ptm.`TYPE` = 1 AND ptm.`sup_cat_id` = 1
+		]]>		
+	</select> 
+	
+	<!-- 所有尺寸 -->
+	<select id="queryAllSize"  resultType="java.util.HashMap">
+		<![CDATA[
+			SELECT cp.`PVALUE` as NAME FROM cfg_parameter cp WHERE cp.`PDOMAIN` = 'TCL_PRODUCT' AND cp.`PTYPE` = 'SIZE' ORDER BY NAME
+		]]>		
+	</select> 
+ 
+	<!-- 国家所查partyId(包括国家partyId) -->
+	<select id="selectPartyIdByCountry" parameterType="java.util.Map" resultType="Statement">
+		SELECT pa.`PARTY_ID` as countryId,pa.`PARTY_NAME` countryName FROM party pa WHERE pa.`COUNTRY_ID` = #{partyId} AND pa.`flag` = 0
+	</select>
+	
+	<!-- 经营部、办事处所查partyId -->
+	<select id="selectPartyIdByArea" parameterType="java.util.Map" resultType="Statement">
+		SELECT pa.`PARTY_ID` as countryId,pa.`PARTY_NAME` countryName FROM party pa WHERE   pa.`flag` = 0 AND (pa.`PARENT_PARTY_ID` = #{partyId} OR pa.`PARTY_ID` = #{partyId})
+	</select>
+	
+	<!--  国家所查partyId(不包括国家partyId) -->
+	<select id="selectAreaByPartyId" parameterType="java.lang.String" resultType="Statement">
+	 SELECT pa.`PARTY_ID` AS countryId,PA.`PARTY_NAME` AS countryNAME FROM party pa WHERE pa.`COUNTRY_ID` = #{partyId} AND pa.`flag` = 0 AND pa.`PARTY_ID` != #{partyId}
+	 </select>
+	
+	<!-- 	根据业务经理获取区域 -->
+	<select id = "selectCountryByUserId" parameterType="java.util.Map" resultType="Statement">
+		SELECT pa.`PARTY_ID` AS countryId,urm.`USER_LOGIN_ID` AS userId FROM   user_role_mapping  urm  
+		JOIN  `role_data_permission`  rdp ON rdp.`ROLE_ID`=urm.`ROLE_ID`
+		JOIN party pa ON pa.`PARTY_ID`=rdp.`PERMISSION_VALUE`
+		WHERE rdp.`PERMISSION_TYPE`='PARTY'
+		AND pa.`flag` = 0
+		AND   urm.`USER_LOGIN_ID` IN (${userList})
+	</select>
+	
+	 <!-- 指定区域督导业务员-->
+	<select id="selectPartySupeAndSale"  parameterType="java.util.Map" resultType="Statement">
+		<![CDATA[
+			SELECT DISTINCT(mp.user_login_id) AS userId,u.user_name AS userName,sf.`PARTY_ID`
+			FROM user_login u,shop_saler_mapping mp,shop_info sf 
+			WHERE mp.shop_id=sf.shop_id 
+			AND u.user_login_id=mp.user_login_id 
+			AND sf.party_id IN(${countryList})
+			AND mp.salertype = #{type}
+			GROUP BY userId	
+			]]>		
+	</select> 
+	
+	
+	<!-- 根据区域经理查询所在区域 -->
+	<select id="selectPartyIdByUserManager" parameterType="java.util.Map" resultType="Statement">
+		<![CDATA[
+		SELECT pa.`PARTY_ID` partyId,urm.`USER_LOGIN_ID` AS userId FROM user_role_mapping  urm  
+		JOIN  `role_data_permission`  rdp ON rdp.`ROLE_ID`=urm.`ROLE_ID`
+		JOIN party pa ON pa.`PARTY_ID`=rdp.`PERMISSION_VALUE`
+		WHERE rdp.`PERMISSION_TYPE`='PARTY'
+		AND pa.`flag` = 0
+		AND  urm.`USER_LOGIN_ID` IN (${userId})
+		]]>		
+	</select>
+	
+	<!-- 角色销售年份对比 -->
+	<select id="queryManagerOfSalesYear" parameterType="java.util.Map" resultType="Statement">
+		 SELECT ROUND(SUM(ts.`amount`/co.`all_products_coefficient`),3) AS amou,IFNULL(ROUND(SUM(ts.`h_amount`/co.`all_products_coefficient`),3),0) AS HAmou,ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0) AS quan, DATE_FORMAT(ts.`datadate`,'%Y') AS yearT,DATE_FORMAT(ts.`datadate`,'%m') AS dataDate
+		 FROM shop_info si ,t_sale ts,party pa ,`coefficient` co,t_modelmap tm,product pt
+		 WHERE si.`PARTY_ID` IN (${countryList})
+		 AND pa.`flag` = 0
+		 AND ts.`shop_id` = si.`SHOP_ID`
+		 AND tm.`branch_model`=ts.`model` 
+		 AND si.`PARTY_ID` = pa.`PARTY_ID`
+		 AND pa.`COUNTRY_ID` = co.`country`
+		 AND tm.`party_id`=pa.`COUNTRY_ID` 
+		 <include refid="storeLevel"/>
+		 AND pt.`PRODUCT_model`=tm.`hq_model`
+		 AND pt.`head_type_id` = #{pType}
+		 AND tm.`party_id` = pa.`COUNTRY_ID`
+		 AND (ts.`datadate` LIKE CONCAT('%', #{startTime},'%')  OR ts.`datadate` LIKE CONCAT('%', #{endTime},'%'))
+		 GROUP BY DATE_FORMAT(ts.`datadate`,'%Y%m')
+	</select> 
+	
+	<!-- 角色销售年份对比 -->
+	<select id="queryRoleOfSalesYear" parameterType="java.util.Map" resultType="Statement">
+			SELECT ROUND(SUM(ts.`amount`/co.`all_products_coefficient`),3) AS amou,IFNULL(ROUND(SUM(ts.`h_amount`/co.`all_products_coefficient`),3),0) AS HAmou,ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0) AS quan, DATE_FORMAT(ts.`datadate`,'%Y') AS yearT,DATE_FORMAT(ts.`datadate`,'%m') AS dataDate
+			FROM t_sale ts,`shop_saler_mapping` ssm,shop_info si,party pa ,`coefficient` co,t_modelmap tm,product pt
+			WHERE ssm.`user_login_id` IN (${userList})
+			AND pa.`flag` = 0
+			AND ts.`shop_id` = ssm.`shop_id`
+			AND ssm.`shop_id` = si.`SHOP_ID`
+			AND si.`PARTY_ID` = pa.`PARTY_ID`
+			AND pa.`COUNTRY_ID` = co.`country`
+			<include refid="storeLevel"/>
+			AND tm.`party_id`=pa.`COUNTRY_ID` 
+			AND tm.`branch_model`=ts.`model` 
+			AND pt.`PRODUCT_model`=tm.`hq_model`
+			AND pt.`head_type_id` = #{pType}
+			AND tm.`party_id` = pa.`COUNTRY_ID`
+			AND (ts.`datadate` LIKE CONCAT('%',#{startTime},'%') 
+			OR ts.`datadate` LIKE  CONCAT('%', #{endTime},'%'))
+			GROUP BY DATE_FORMAT(ts.`datadate`,'%Y%m')
+	</select> 
+	
+	<!-- 业务经理 -->
+	<select id="businessManagerByPartyId" parameterType="java.util.Map" resultType="Statement">
+			SELECT DISTINCT ul.`USER_NAME` AS userName ,ul.`USER_LOGIN_ID` userId FROM user_role_mapping ur JOIN user_login ul ON ul.`USER_LOGIN_ID`=ur.`USER_LOGIN_ID`
+			JOIN role_data_permission udp ON udp.`ROLE_ID`=ur.`ROLE_ID`
+			WHERE udp.`PERMISSION_VALUE` IN (${countryList})
+			AND ur.`ROLE_ID` LIKE '%REGIONAL%'
+	</select>
+	
+	<!-- 业务经理 -->
+	<select id="businessManagerByParty" parameterType="java.util.Map" resultType="Statement">
+			SELECT DISTINCT ul.`USER_NAME` AS countryName ,ul.`USER_LOGIN_ID` countryId FROM user_role_mapping ur JOIN user_login ul ON ul.`USER_LOGIN_ID`=ur.`USER_LOGIN_ID`
+			JOIN role_data_permission udp ON udp.`ROLE_ID`=ur.`ROLE_ID`
+			WHERE udp.`PERMISSION_VALUE` IN (${countryList})
+			AND ur.`ROLE_ID` LIKE '%REGIONAL%'
+	</select>
+	
+	 <!-- 指定区域督导业务员-->
+	<select id="selectPartySupeAndSales"  parameterType="java.util.Map" resultType="Statement">
+		<![CDATA[
+			SELECT DISTINCT(mp.user_login_id) AS countryId,u.user_name AS countryName,sf.`PARTY_ID`
+			FROM user_login u,shop_saler_mapping mp,shop_info sf 
+			WHERE mp.shop_id=sf.shop_id 
+			AND u.user_login_id=mp.user_login_id 
+			AND sf.party_id IN(${countryList})
+			AND mp.salertype = #{saleType}
+			GROUP BY countryId	
+			]]>		
+	</select> 
+	
+	 <!-- 指定区域督导业务员-->
+	<select id="selectPartySupeAndSaless"  parameterType="java.util.Map" resultType="Statement">
+		<![CDATA[
+			SELECT DISTINCT(mp.user_login_id) AS userId,u.user_name AS userName,sf.`PARTY_ID`
+			FROM user_login u,shop_saler_mapping mp,shop_info sf 
+			WHERE mp.shop_id=sf.shop_id 
+			AND u.user_login_id=mp.user_login_id 
+			AND sf.party_id IN(${countryList})
+			AND mp.salertype = #{saleType}
+			GROUP BY userId	
+			]]>		
+	</select> 
+	
+	<!-- 渠道 -->
+	<select id="selectChannelByPartyId" parameterType="java.util.Map" resultType="Statement">
+		SELECT ci.`CUSTOMER_ID` countryId,ci.`CUSTOMER_NAME` AS countryName FROM `customer_info` ci 
+		WHERE ci.`PARTY_ID` IN (${partyList})
+	</select>
+	
+	<!-- 商店 -->
+	<select id="selectShopByPartyId" parameterType="java.util.Map" resultType="Statement">
+		SELECT si.`SHOP_ID` AS countryId,si.`SHOP_NAME` AS countryName FROM shop_info si WHERE si.`PARTY_ID` IN (${partyList})
+	</select>
+	
+	<!-- 区域重点产品销售数量 -->
+	<select id="regionalSalesOfKeyProductsInfo"  parameterType="java.util.Map" resultType="Statement">
+		SELECT ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0) quan,DATE_FORMAT(ts.`datadate`,'%m') dataDate ,tm.`hq_model` modelName 
+		FROM t_sale ts ,shop_info si,t_modelmap tm,`product` pr,core_product cp,party pa ,`coefficient` co
+		WHERE ts.`shop_id` = si.`SHOP_ID`
+		AND pa.`flag` = 0
+		AND ts.`model` = tm.`branch_model`
+		AND tm.`hq_model` = pr.`PRODUCT_model`
+		AND pr.`head_type_id` = #{pType}
+		AND pr.`product_line` = cp.`product_line`
+		AND si.`PARTY_ID` = pa.`PARTY_ID`
+		<include refid="storeLevel"/> 
+		AND pa.`COUNTRY_ID` = co.`country`
+		AND cp.`country_id` = #{country}
+		AND si.`PARTY_ID` IN (${partyList})
+		AND ts.`datadate` BETWEEN #{startTime} AND #{endTime}
+		AND tm.`party_id` = pa.`COUNTRY_ID`
+		GROUP BY modelName,dataDate
+	</select> 
+	
+	<!-- 个人重点产品销售数量 -->
+	<select id="personalSalesOfKeyProductsInfo"  parameterType="java.util.Map" resultType="Statement">
+		SELECT ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0) quan,DATE_FORMAT(ts.`datadate`,'%m') dataDate ,tm.`hq_model` modelName 
+		FROM t_sale ts ,`shop_saler_mapping` ssm,t_modelmap tm,`product` pr,core_product cp,shop_info si,party pa ,`coefficient` co
+		WHERE ts.`shop_id` = ssm.`SHOP_ID`
+		AND pa.`flag` = 0
+		AND ts.`model` = tm.`branch_model`
+		AND tm.`hq_model` = pr.`PRODUCT_model`
+		AND pr.`head_type_id` = #{pType}
+		AND pr.`product_line` = cp.`product_line`
+		AND cp.`country_id` = #{country}
+		AND ssm.`shop_id` = si.`SHOP_ID`
+		<include refid="storeLevel"/> 
+		AND si.`PARTY_ID` = pa.`PARTY_ID`
+		AND pa.`COUNTRY_ID` = co.`country`
+		AND ssm.`user_login_id` = #{userId}
+		AND ts.`datadate` BETWEEN #{startTime} AND #{endTime}
+		AND tm.`party_id` = pa.`COUNTRY_ID`
+		GROUP BY modelName,dataDate
+	</select> 
+	
+	
+	<!-- 区域单品销售数量 -->
+	<select id="regionalSalesItemInfo"  parameterType="java.util.Map" resultType="Statement">
+		 SELECT 
+		 <if test="isHQRole == true">
+ 			${"tm.`hq_model`"}
+ 		</if>
+ 		<if test="isHQRole == false">
+ 			${"tm.`branch_model`"}
+ 		</if> 
+		 modelName,ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0)  quan,DATE_FORMAT(ts.`datadate`,'%m') dataDate 
+		 FROM t_sale ts,t_modelmap tm,shop_info si,party pa ,`coefficient` co,product pr
+		 WHERE ts.`model` = tm.`branch_model`
+		 AND pa.`flag` = 0
+		 AND si.`SHOP_ID` = ts.`shop_id`
+		 AND si.`PARTY_ID` IN (${partyList})
+		 AND si.`PARTY_ID` = pa.`PARTY_ID`
+		 <include refid="storeLevel"/> 
+	  	 AND pa.`COUNTRY_ID` = co.`country`
+	  	 AND tm.`hq_model` = pr.`PRODUCT_model`
+	  	 AND pr.`head_type_id` = #{pType}
+		 AND ts.`datadate` BETWEEN #{startTime} AND #{endTime}
+		 AND tm.`party_id` = pa.`COUNTRY_ID`
+		 GROUP BY modelName,dataDate
+	</select> 
+	
+	<!-- 个人单品销售数量 -->
+	<select id="personalItemSalesInfo"  parameterType="java.util.Map" resultType="Statement">
+		 SELECT 
+		<if test="isHQRole == true">
+ 			${"tm.`hq_model`"}
+ 		</if>
+ 		<if test="isHQRole == false">
+ 			${"tm.`branch_model`"}
+ 		</if> 
+		 modelName,ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0)  quan,DATE_FORMAT(ts.`datadate`,'%m') dataDate 
+		 FROM t_sale ts,shop_saler_mapping ssm,t_modelmap tm,shop_info si,party pa ,`coefficient` co,product pr
+		 WHERE ts.`shop_id` = ssm.`shop_id`
+		 AND ts.`datadate` BETWEEN #{startTime} AND #{endTime}
+		 AND pa.`flag` = 0
+		 AND ts.`model` = tm.`branch_model`
+		 AND pr.`head_type_id` = #{pType}
+		 AND ssm.`shop_id` = si.`SHOP_ID`
+		 <include refid="storeLevel"/> 
+		 AND si.`PARTY_ID` = pa.`PARTY_ID`
+		 AND tm.`hq_model` = pr.`PRODUCT_model`
+		 AND pa.`COUNTRY_ID` = co.`country`
+		 AND ssm.`user_login_id` = #{userId}
+		 AND tm.`party_id` = pa.`COUNTRY_ID`
+		 GROUP BY modelName,dataDate
+	</select> 
+	
+	<sql id='storeLevel'>
+		<if test="level != '' and level != null">
+			and si.`LEVEL` = #{level}
+		</if>
+	</sql>
+	
+	<!-- tv用户销售数据 -->
+	<select id="personalSalesData"  parameterType="java.util.Map" resultType="Statement">
+		SELECT IFNULL(ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0),0) quan,
+			   IFNULL(ROUND(SUM(ts.`amount`/co.`all_products_coefficient`),3),0) amou,
+			   IFNULL(ROUND(SUM(ts.`h_amount`/co.`all_products_coefficient`),3),0) HAmou,
+			   ssm.`user_login_id` userId
+		FROM `t_sale` ts,`shop_saler_mapping` ssm,`t_modelmap` tm,`product` pr,shop_info si,party pa ,`coefficient` co
+		WHERE ts.`shop_id` = ssm.`shop_id`
+		AND pa.`flag` = 0
+		AND ts.`model`= tm.`branch_model`
+		AND ssm.`shop_id` = si.`SHOP_ID`
+		AND si.`PARTY_ID` = pa.`PARTY_ID`
+		AND pa.`COUNTRY_ID` = co.`country`
+		AND tm.`hq_model` = pr.`PRODUCT_model`
+		AND pr.`head_type_id` = #{pType}
+		AND ts.`datadate` BETWEEN #{startTime} AND #{endTime}
+		AND pr.`PRODUCT_SPEC_ID` LIKE CONCAT('%',#{attr},'%') 
+		AND tm.`party_id` = pa.`COUNTRY_ID`
+ 	 	AND pr.`size` = #{sizes}  
+ 		<include refid="storeLevel"/>  
+		GROUP BY ssm.`user_login_id`
+	</select> 
+	
+	<!-- tv用户销售数据 -->
+	<select id="personalManagerSalesData"   parameterType="java.util.Map" resultType="Statement">
+		 SELECT 
+		 IFNULL(ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0),0) quan,IFNULL(ROUND(SUM(ts.`amount`/co.`all_products_coefficient`),3),0) amou,IFNULL(ROUND(SUM(ts.`h_amount`/co.`all_products_coefficient`),3),0) HAmou,
+		  si.`PARTY_ID` partyId
+		  FROM
+		  `t_sale` ts,
+		  `shop_info` si,
+		  `t_modelmap` tm,
+		  `product` pr ,party pa ,`coefficient` co
+		  WHERE ts.`shop_id` = si.`SHOP_ID`
+		  AND pa.`flag` = 0
+		  AND ts.`model` = tm.`branch_model` 
+		  AND tm.`hq_model` = pr.`PRODUCT_model` 
+		  AND pr.`head_type_id` = #{pType}
+		  AND ts.`datadate`BETWEEN #{startTime} AND #{endTime}
+		  AND pr.`PRODUCT_SPEC_ID` LIKE CONCAT('%', #{attr}, '%') 
+		  AND pr.`size` = #{sizes}
+		  AND si.`PARTY_ID` = pa.`PARTY_ID`
+		  <include refid="storeLevel"/>
+		  AND pa.`COUNTRY_ID` = co.`country`
+		  AND tm.`party_id` = pa.`COUNTRY_ID`
+		  GROUP BY si.`PARTY_ID`
+	</select> 
+	
+	<sql id="userSaleDataCon">
+		<if test="acType  != '' and acType != null">AND pr.`product_type` =#{acType}</if>
+		<if test="catena  != '' and catena != null">AND pr.`product_line` LIKE CONCAT('%', #{catena}, '%')</if>
+		<if test="sizes   != '' and sizes  != null">AND pr.`size` = #{sizes}</if>
+	</sql>
+	
+	<!-- ac用户销售数据 -->
+	<select id="personalSalesACData"  parameterType="java.util.Map" resultType="Statement">
+		SELECT IFNULL(ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0),0) quan,
+			   IFNULL(ROUND(SUM(ts.`amount`/co.`all_products_coefficient`),3),0) amou,
+			   IFNULL(ROUND(SUM(ts.`h_amount`/co.`all_products_coefficient`),3),0) HAmou,
+			   ssm.`user_login_id` userId
+		FROM `t_sale` ts,`shop_saler_mapping` ssm,`t_modelmap` tm,`product` pr,shop_info si,party pa ,`coefficient` co
+		WHERE ts.`shop_id` = ssm.`shop_id`
+		AND pa.`flag` = 0
+		AND ts.`model`= tm.`branch_model`
+		AND ssm.`shop_id` = si.`SHOP_ID`
+		AND si.`PARTY_ID` = pa.`PARTY_ID`
+		AND pa.`COUNTRY_ID` = co.`country`
+		AND tm.`hq_model` = pr.`PRODUCT_model`
+		AND pr.`head_type_id` = #{pType}
+		AND ts.`datadate` BETWEEN #{startTime} AND #{endTime}
+		<include refid="userSaleDataCon"/>  
+		AND tm.`party_id` = pa.`COUNTRY_ID`
+ 		<include refid="storeLevel"/>  
+		GROUP BY ssm.`user_login_id`
+	</select> 
+	
+	
+	<!-- ac用户销售数据 -->
+	<select id="personalManagerSalesACData"   parameterType="java.util.Map" resultType="Statement">
+		 SELECT 
+		 IFNULL(ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0),0) quan,IFNULL(ROUND(SUM(ts.`amount`/co.`all_products_coefficient`),3),0) amou,IFNULL(ROUND(SUM(ts.`h_amount`/co.`all_products_coefficient`),3),0) HAmou,
+		  si.`PARTY_ID` partyId
+		  FROM
+		  `t_sale` ts,
+		  `shop_saler_mapping` ssm,
+		  `shop_info` si,
+		  `t_modelmap` tm,
+		  `product` pr ,party pa ,`coefficient` co
+		  WHERE ts.`shop_id` = ssm.`shop_id` 
+		  AND pa.`flag` = 0
+		  AND ts.`model` = tm.`branch_model` 
+		  AND tm.`hq_model` = pr.`PRODUCT_model` 
+		  AND pr.`head_type_id` = #{pType}
+		  AND ts.`datadate`BETWEEN #{startTime} AND #{endTime}
+		  <include refid="userSaleDataCon"/>  
+		  AND si.`PARTY_ID` = pa.`PARTY_ID`
+		  <include refid="storeLevel"/>
+		  AND pa.`COUNTRY_ID` = co.`country`
+		  AND tm.`party_id` = pa.`COUNTRY_ID`
+		  AND ssm.`shop_id` = si.`SHOP_ID`
+		  GROUP BY si.`PARTY_ID`
+	</select> 
+	
+	<!-- 区域销售数据 -->
+	<select id="eachRegionalSalesQuantity"  parameterType="java.util.Map" resultType="Statement">
+		SELECT ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0) quan,si.`PARTY_ID` partyId,pa.`PARTY_NAME` partyName
+		FROM t_sale ts,shop_info si,party pa ,`coefficient` co,t_modelmap tm,product pr
+		WHERE ts.`shop_id` = si.`SHOP_ID`
+		AND pa.`flag` = 0
+		AND si.`PARTY_ID` = pa.`PARTY_ID`
+		AND pa.`COUNTRY_ID` = co.`country`
+		AND ts.`datadate` BETWEEN #{startTime} AND #{endTime}
+		AND ts.`model` = tm.`branch_model`
+		AND tm.`hq_model` = pr.`PRODUCT_model`
+		AND pr.`head_type_id` = #{pType}
+		<include refid="storeLevel"/> 
+		AND tm.`party_id` = pa.`COUNTRY_ID`
+		AND si.`PARTY_ID` IN (${partyList})
+		GROUP BY partyId
+	</select> 
+	
+	<!-- 渠道销售数据 -->
+	<select id="eachChannelsSalesQuantity"  parameterType="java.util.Map" resultType="Statement">
+		<![CDATA[
+		SELECT ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0) quan,si.`CUSTOMER_ID` customerId
+		FROM t_sale ts,shop_info si,party pa ,`coefficient` co,t_modelmap tm,product pr
+		WHERE ts.`shop_id` = si.`SHOP_ID`
+		AND pa.`flag` = 0
+		AND si.`PARTY_ID` = pa.`PARTY_ID`
+	  	AND pa.`COUNTRY_ID` = co.`country`
+		AND ts.`datadate` BETWEEN #{startTime} AND #{endTime}
+		AND ts.`model` = tm.`branch_model`
+		AND tm.`hq_model` = pr.`PRODUCT_model`
+		AND pr.`head_type_id` = #{pType}
+		AND tm.`party_id` = pa.`COUNTRY_ID`
+		GROUP BY customerId
+		]]>		
+	</select> 
+	
+	<!-- 门店销售数据 -->
+	<select id="eachStoresSalesQuantity"  parameterType="java.util.Map" resultType="Statement">
+		<![CDATA[
+		SELECT ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0) quan,ts.`shop_id` shopId
+		FROM t_sale ts,shop_info si,party pa ,`coefficient` co,t_modelmap tm,product pr
+		WHERE ts.`shop_id` = si.`SHOP_ID`
+		AND pa.`flag` = 0
+		AND si.`PARTY_ID` = pa.`PARTY_ID`
+	  	AND pa.`COUNTRY_ID` = co.`country`
+		AND ts.`datadate` BETWEEN #{startTime} AND #{endTime}
+		AND ts.`model` = tm.`branch_model`
+		AND tm.`hq_model` = pr.`PRODUCT_model`
+		AND pr.`head_type_id` = #{pType}
+		AND tm.`party_id` = pa.`COUNTRY_ID`
+		GROUP BY shopId
+		]]>		
+	</select> 
+	
+	<!-- 区域下渠道 -->
+	<select id="selectCustomerByPartyList"  parameterType="java.lang.String" resultType="Statement">
+		<![CDATA[
+		SELECT ci.`CUSTOMER_ID` customerId,ci.`CUSTOMER_NAME` customerName FROM customer_info ci WHERE ci.`PARTY_ID` IN (${countryList})
+		]]>		
+	</select> 
+	
+	<!-- 区域下门店 -->
+	<select id="selectShopByPartyList"  parameterType="java.util.Map" resultType="Statement">
+		SELECT si.`SHOP_ID` shopId,si.`SHOP_NAME` shopName FROM  shop_info si WHERE si.`PARTY_ID`IN (${countryList})
+		<include refid="storeLevel"/> 
+	</select> 
+	
+	<!-- 个别区域销售数量 -->
+	<select id="eachSingleAreaSalesQuantity" parameterType="java.util.Map" resultType="Statement">
+		SELECT IFNULL(ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0),0) quan 
+		FROM t_sale ts,shop_info si ,party pa ,`coefficient` co,t_modelmap tm,product pr
+		WHERE ts.`shop_id` = si.`SHOP_ID` 
+		AND ts.`model` = tm.`branch_model`
+		AND pa.`flag` = 0
+		AND tm.`hq_model` = pr.`PRODUCT_model`
+		AND pr.`head_type_id` = #{pType}
+		AND tm.`party_id` = pa.`COUNTRY_ID`
+		<include refid="storeLevel"/>
+		AND si.`PARTY_ID` = pa.`PARTY_ID` 
+		AND si.`PARTY_ID` IN (${partyList}) 
+		AND pa.`COUNTRY_ID` = co.`country` 
+		AND ts.`datadate` BETWEEN #{startTime} AND #{endTime}
+	</select> 
+	
+	<!-- 角色销售数量(督导、业务员) -->
+	<select id="eachRoleSalesQuantity"  parameterType="java.util.Map" resultType="Statement">
+		SELECT IFNULL(ROUND(SUM(ts.`quantity`/co.`all_products_coefficient`),0),0) quan 
+		FROM t_sale ts,`shop_saler_mapping` ssm ,shop_info si,party pa ,`coefficient` co,t_modelmap tm,product pr
+		WHERE ts.`shop_id` = ssm.`shop_id` 
+		AND ts.`model` = tm.`branch_model`
+		AND pa.`flag` = 0
+		AND tm.`hq_model` = pr.`PRODUCT_model`
+		AND pr.`head_type_id` = #{pType}
+		AND tm.`party_id` = pa.`COUNTRY_ID`
+		AND ssm.`shop_id` = si.`SHOP_ID` 
+		<include refid="storeLevel"/>
+		AND si.`PARTY_ID` = pa.`PARTY_ID`
+		AND pa.`COUNTRY_ID` = co.`country`
+		AND ssm.`user_login_id` = #{userId} 
+		AND ts.`datadate` BETWEEN #{startTime} AND #{endTime}
+	</select> 
+	
+	
+	<!-- 区域经理销售比例 -->
+	<select id="regionalManagerSalesProportion"  parameterType="java.util.Map" resultType="Statement">
+		SELECT v.userId,v.userName, COALESCE(SUM(v.saleQty),0) as volume,COALESCE(SUM(targetQty),0) target FROM (
+		SELECT 
+		r.userName,
+		r.userId,
+		pa.`PARTY_ID` partyId, 
+		PA.`PARTY_NAME` AS AREA,
+		ROUND(COALESCE(SUM(S.`quantity`/co.`all_products_coefficient`),0)) AS saleQty,ttt.targetQty  AS targetQty
+		FROM t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+		JOIN shop_info p ON p.`SHOP_ID`=s.`shop_id` 
+		<if test="level != '' and level != null">
+			and p.`LEVEL` = #{level}
+		</if>
+		JOIN party pa ON pa.party_id = p.party_id AND pa.`flag` = 0
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND  tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.`head_type_id` = #{pType}
+		JOIN coefficient co ON co.`country`=pa.`COUNTRY_ID`
+		LEFT JOIN (
+		SELECT pa.`PARTY_ID`,
+		COALESCE(SUM(s.`quantity`),0) AS targetQty
+		FROM t_target s  
+		JOIN shop_info p ON p.`SHOP_ID`=s.`target_id` AND s.`class_id`=4
+		AND s.type = #{pType}
+		<if test="level != '' and level != null">
+			and p.`LEVEL` = #{level}
+		</if>
+		JOIN party pa ON pa.party_id = p.party_id AND pa.`flag` = 0
+		WHERE pa.`PARTY_ID` in (${countryList})
+		AND s.datadate  BETWEEN #{startTime} AND #{endTime}
+		GROUP BY PA.`PARTY_ID`)ttt ON  ttt.party_id=pa.`PARTY_ID`
+		LEFT JOIN (
+		SELECT pa.`PARTY_ID`, ul.`USER_NAME` AS userName,ul.`USER_LOGIN_ID` AS userId FROM user_role_mapping ur
+		JOIN user_login ul ON ul.`USER_LOGIN_ID`=ur.`USER_LOGIN_ID`
+		JOIN role_data_permission udp ON udp.`ROLE_ID`=ur.`ROLE_ID`
+		JOIN party pa ON pa.`PARTY_ID`=udp.`PERMISSION_VALUE`
+		WHERE pa.`PARTY_ID` in (${countryList})
+		AND pa.`flag` = 0
+		AND ur.`ROLE_ID` LIKE '%REGIONAL%'
+		GROUP BY pa.`PARTY_ID`)r  ON  r.party_id=PA.`PARTY_ID`
+		WHERE pa.`PARTY_ID` in (${countryList})
+		AND s.datadate >= #{tDate} 
+		AND pr.head_type_id=1
+		GROUP BY PA.`PARTY_ID`)v
+		GROUP BY v.userId HAVING userId IS NOT NULL 
+	</select> 
+	
+	
+	
+	<!-- 督导业务员销售比例 -->
+	<select id="toSuperviseTheSalesmanSalesProportion"  parameterType="java.util.Map" resultType="Statement">
+		
+		SELECT  sv.userId, sv.userName AS userName,
+		COALESCE(SUM(sv.saleQty),0) volume, COALESCE(SUM(tv.targetQuan),0)  target
+		FROM (
+		 SELECT ul.`USER_login_id` AS userId,ul.`USER_NAME` AS userName,
+		t.shop_id AS shop_id,
+		ROUND(COALESCE(SUM(t.`quantity`/co.`all_products_coefficient`),0)) AS saleQty
+		FROM t_sale t    FORCE INDEX(idx_sale_shopdatadate)
+		JOIN shop_info si ON t.`shop_id`=si.`SHOP_ID`
+		<include refid="storeLevel"/>
+		JOIN `shop_saler_mapping` ssm
+		ON ssm.`shop_id`=t.`shop_id`
+		JOIN user_login ul ON ul.`USER_LOGIN_ID`=ssm.`user_login_id`
+		JOIN party pa ON pa.party_id = si.party_id AND pa.`flag` = 0
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.`head_type_id` = #{pType}
+		JOIN coefficient co ON pa.`COUNTRY_ID`=co.`country`
+		WHERE pa.party_id IN (${countryList})
+		AND  t.`datadate` BETWEEN #{startTime} AND #{endTime}
+		AND ssm.salertype = #{saleType}
+		GROUP BY t.`shop_id`,ul.`USER_login_id`
+		)sv
+		LEFT  JOIN 
+		(SELECT tst.`target_id` AS targetId, 
+		COALESCE(SUM(tst.`quantity`),0) AS targetQuan 
+		FROM  t_target tst 
+		WHERE    tst.`class_id`=4
+		 AND tst.type = #{pType}
+		AND  tst.`datadate`  >= #{tDate}
+		GROUP BY tst.`target_id`
+		) tv ON sv.shop_id=tv.targetId
+		GROUP BY sv.userId
+		
+		
+	</select> 
+	
+	<!-- 门店等级 -->
+	<select id="storeLevelQuery" parameterType="java.lang.String" resultType="Statement">
+		SELECT tl.`id` id,tl.`value` levels FROM t_level tl  WHERE tl.`countryId` = #{country}	
+	</select> 
+	
+	<!-- AC系列 -->
+	<select id="selectACCatena" parameterType="java.lang.String" resultType="Statement">
+<!-- 		SELECT cp.`PVALUE` catena FROM cfg_parameter cp WHERE cp.`PDOMAIN` = 'TCL_PRODUCT' AND cp.`PTYPE` = 'AC_catena' -->
+		SELECT DISTINCT pr.`product_line` catena FROM product pr WHERE pr.`head_type_id` = 2 AND pr.`product_type` = #{acType}
+	</select> 
+	
+	<!-- AC匹数 -->
+	<select id="selectACSize"  resultType="Statement" parameterType="java.lang.String">
+		SELECT DISTINCT p.`size` AS size FROM product p 
+		WHERE p.`product_line` = #{catena} 
+		AND p.`head_type_id` = 2
+		AND p.`product_type` =#{acType}
+	</select>
+	 
+	<!-- AC窗体and分体 -->
+	<select id="selectAcMachine" resultType="Statement">
+		SELECT cp.`PVALUE` value FROM cfg_parameter cp WHERE cp.`PDOMAIN` = 'TCL_PRODUCT' AND cp.`PTYPE` = 'AC_CLASSIFICATION'
+	</select> 
+	
+	
+	
+</mapper>

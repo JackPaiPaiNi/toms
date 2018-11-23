@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.sale.dao.ISampleDeviceDao" >
+	
+  <resultMap id="SampleDeviceMap" type="SampleDevice" >
+    <result column="id" property="sampleId" jdbcType="INTEGER" />
+    <result column="user_id" property="userId" jdbcType="VARCHAR" />
+    <result column="user_name" property="userName" jdbcType="VARCHAR" />
+    <result column="model" property="model" jdbcType="VARCHAR" />
+    <result column="quantity" property="quantity" jdbcType="INTEGER" />
+    <result column="remark" property="remark" jdbcType="VARCHAR" />
+    <result column="party_id" property="partyId" jdbcType="VARCHAR" />
+    <result column="party_name" property="partyName" jdbcType="VARCHAR" />
+    <result column="datadate" property="datadate" jdbcType="VARCHAR" />
+    <result column="ctime" property="ctime" jdbcType="DATE" />
+    <result column="shop_id" property="shopId" jdbcType="INTEGER" />
+    <result column="SHOP_NAME" property="shopName" jdbcType="VARCHAR" />
+    <result column="CUSTOMER_NAME" property="customerName" jdbcType="VARCHAR" />
+    <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR" />
+    <result column="hq_model" property="hqModel" jdbcType="VARCHAR" />
+  </resultMap>
+
+  <sql id="listWhere">
+  	<where>
+		<if test="searchStr != null"> and ${searchStr} </if>
+		<if test="conditions != null"> and ${conditions} </if>
+	</where>
+  </sql>
+  <select id="selectSampleDevices" resultMap="SampleDeviceMap">
+    select vs.*,tm.hq_model from v_sample vs 
+    left join t_modelmap tm on tm.branch_model = vs.model
+    <include refid="listWhere"/>
+    order by vs.ctime desc limit #{start},#{limit};
+  </select>
+  <select id="countSampleDevices" resultType="int">
+    select count(*) from v_sample vs
+    left join t_modelmap tm on tm.branch_model = vs.model
+    <include refid="listWhere"/>
+  </select>
+  
+  <select id="getSampleDevices" resultMap="SampleDeviceMap" resultType="SampleDevice">
+    select vs.*,tm.hq_model from v_sample vs
+    left join t_modelmap tm on tm.branch_model = vs.model
+     where vs.id=#{sid} limit 1;
+  </select>
+  
+  <select id="searchExporSamples" resultMap="SampleDeviceMap">
+    select vs.*,tm.hq_model from v_sample vs 
+    left join t_modelmap tm on tm.branch_model = vs.model
+    where 1=1 
+    and ${conditions}
+    order by vs.ctime desc
+  </select>
+  
+</mapper>

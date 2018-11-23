@@ -1,0 +1,11 @@
+<sitemesh>
+    <!-- 默认的渲染 -->  
+    <mapping  path="/*Page.action" decorator="/decorate.jsp"/>
+    <mapping path="/loginPage.action" exclue="true"/>
+    <mapping path="/css/*" exclue="true"/>
+    <mapping path="/files/*" exclue="true"/>
+    <mapping path="/images/*" exclue="true"/>
+    <mapping path="/js/*" exclue="true"/>
+    <mapping path="/404.html" exclue="true"/>
+    <mapping path="/500.html" exclue="true"/>
+</sitemesh>

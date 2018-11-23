@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.ws.dao.DMXProductDao">
+	<resultMap type="DMXProduct" id="productMap">
+		<result column="model" property="model" jdbcType="VARCHAR"/>
+		<result column="ctime" property="ctime" jdbcType="DATE"/>
+	</resultMap>
+	
+	<!-- 批量插入未维护的产品型号 -->
+	<insert id="InsertUnmaintenedModel" parameterType="java.util.List">
+	 insert into product_dmx_unmaintened(model,ctime)
+	 values
+	 <foreach collection="list" item="item" index="index" separator=",">
+	 (#{item.model},#{item.ctime})
+	 </foreach>
+	</insert>
+	
+	<!-- 根据model查询 -->
+	<select id="getDMXProductByModel" resultMap="productMap">
+	select * from product_dmx_unmaintened  where model=#{model}
+	</select>
+</mapper>

@@ -1,0 +1,265 @@
+*{
+	padding: 0;
+	margin: 0;
+}
+.fl{float: left;}
+.fr{float: right;}
+.inb{display: inline-block;}
+body{
+	background-color: #f8f8f8;
+}
+html,body,.parent{
+		height: 100%;
+		overflow: hidden;
+	}
+.parent{
+	position: relative;
+	}
+.header{
+	width: 100%;
+	height: 60px;
+	background-color: #f3f3f3;	
+	overflow: hidden;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 1000;
+}
+@media only screen 
+and (min-width: 768px){
+	.parent .header .head-left{
+		width: 66%;
+	}	
+}
+@media only screen 
+and (max-width: 768px){
+	.parent .header .head-left{
+		width: 100%;
+	}
+}
+.header .head-left{	
+	height: 60px;
+}
+.header .head-left .head-left-one{	
+	font-size: 24px;
+	font-weight: 500;
+	line-height: 1.1;	
+	color: #337ab7;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	margin-left: 15px;
+	margin-top: 20px;
+	margin-bottom: 10px;
+}
+.header .head-left .head-left-one>span{
+	display: inline-block;
+	padding: 3px 7px;
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 700;	
+	color: #f0ad4e;
+    background-color: #EAE9E9;
+	border-radius: 10px;
+}
+.header .head-right{
+	font-size: 12px;
+	line-height: 1.4;
+	color: #404040;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	margin-top: 20px;
+	margin-right: 15px;
+	padding-right: 20px;	
+}
+.header .head-right>a{
+	text-decoration: none;
+	color: #f0ad4e;
+}
+.header .head-right>a:hover {
+    text-decoration: underline;
+}
+
+.side{
+	border-top: 1px solid #b5a38f;
+	width: 300px;
+	float: left;
+	background-color: #f8f8f8;
+	position: absolute;
+	top: 60px;
+	left: 0;
+	bottom: 1px;
+	overflow: auto;
+}
+.side>ul{
+	display: block;
+	padding-left: 10px;
+	padding-right: 10px;
+	text-align: left;
+}
+.side>ul>li{
+	display: block;
+	font-size: 12px;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+.side>ul>li>a{
+	display: block;
+	width: 100%;
+	height: 100%;
+	text-decoration: none;
+	color: #337ab7;
+	line-height: 37px;
+	text-indent: 15px;
+}
+.side>ul>li:last-child{
+	/*margin-bottom: 80px;*/
+	line-height: 37px;	
+	text-indent: 15px;
+	color: #337ab7;
+}
+.side>ul>li>ul>li>a{
+	display: block;
+	width: 100%;
+	height: 100%;
+	text-decoration: none;
+	color: #337ab7;
+	line-height: 37px;
+	text-indent: 40px;
+}
+#training>ul>li>a:before{
+	content: "";
+	display: inline-block;
+	width: 12px;
+	height: 12px;	
+	margin-right: 4px;
+}
+.Creategraphic:before{
+	background: url(/images/chuangjiantuwen_03.png) no-repeat center center;
+	background-size: 12px 12px;
+	opacity: 0.6;
+}
+.Queryby:before{
+	background: url(../images/sellIn/chaxuntuwen.png) no-repeat center center;
+	background-size: 12px 12px;
+	opacity: 0.6;
+}
+.Addproductknowledge:before{
+	background: url(../images/sellIn/tianjiachanpinzhisi.png) no-repeat center center;
+	background-size: 12px 12px;
+	opacity: 0.6;
+}
+.Examiquestmana:before{
+	background: url(../images/sellIn/kaotiguanli.png) no-repeat center center;
+	background-size: 12px 12px;
+	opacity: 0.6;
+}
+.Themessagetag:before{
+	background: url(../images/sellIn/xiaoxibaioqian.png) no-repeat center center;
+	background-size: 12px 12px;
+	opacity: 0.6;
+}
+.Messagesent:before{
+	background: url(../images/sellIn/duoxiaoxifasong.png) no-repeat center center;
+	background-size: 12px 12px;
+	opacity: 0.6;
+}
+.Thestatisum:before{
+	background: url(../images/sellIn/tongjihuizong.png) no-repeat center center;
+	background-size: 12px 12px;
+	opacity: 0.6;
+}
+.Itemmanagement:before{
+	background: url(../images/sellIn/shixiangguanli.png) no-repeat center center;
+	background-size: 12px 12px;
+	opacity: 0.6;
+}
+#training>ul>li>a:hover:before{
+	opacity: 1;
+}
+
+.main{
+	border-top: 1px solid #b5a38f;
+	border-left: 1px solid #b5a38f;
+	position: absolute;
+	left: 0px;
+	right: 0;
+	top: 0px;
+	bottom: 1px;
+	background-color: #fafafa;
+	overflow: auto;
+	padding-bottom: 30px;
+}
+.create{
+	background-color: #f0e3bf;
+	height: 28px;
+	line-height: 28px;
+	text-indent: 10px;
+	font-size: 14px;
+	border-bottom: 1px solid #d4a375;
+	position: fixed;
+    top: 60px;
+    /* right: 0; */
+    z-index: 999;
+}
+.main>div{
+	margin-top: 10px;
+	line-height: 20px;
+	font-size: 14px;
+}
+.main .search_SI{
+	margin-top: 40px;
+}
+.search_SI label{
+	margin-left: 20px;
+}
+.search_SI select{
+	width: 150px;
+}
+.search{
+	height: 22px;
+	font-size: 12px;
+	color: #404040;	
+	line-height: 22px;
+	margin-left: 20px;
+	background: url(../../images/sellIn/sch_03.png) no-repeat 4px center;
+	background-size: 15px 15px;
+	text-indent: 20px;
+	padding: 0 6px;
+	text-decoration: none;	
+}
+.search:hover{
+	background-color: #fff5dc;
+}
+#prizes{
+    width: -webkit-calc(100vw - 340px);
+    width: -moz-calc(100vw - 340px);
+    width: calc(100vw - 340px);
+    margin-left: 16px;
+}
+#prizes>div>div select{
+	width: 150px;
+	margin-bottom: 10px;
+}
+#prizes>div>div label{
+	margin-left: 10px;
+}
+#prizes ul a{
+	padding: 0.1em 1em;
+}
+#prizes table{
+	text-align: center;
+}
+#prizes thead{
+	background-color: #ffc700;
+}
+#prizes th,#prizes td{
+	white-space: nowrap;
+	padding: 0 10px;
+}
+td.sub{
+	color: #ff5c00;
+}
+.totalback{
+	background-color: #ff5c00;
+}
+.backgray{
+	background-color: #c0c0c0;
+}

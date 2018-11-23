@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.product.dao.IProductDao" >
+	
+  <resultMap id="ProductMap" type="Product" >
+  	<result column="ID" property="id" jdbcType="INTEGER" />
+    <result column="PRODUCT_ID" property="productId" jdbcType="VARCHAR" />
+    <result column="party_id" property="partyId" jdbcType="VARCHAR" />
+    <result column="party_name" property="partyName" jdbcType="VARCHAR" />
+    <result column="PRODUCT_TYPE_ID" property="productTypeId" jdbcType="VARCHAR" />
+    <result column="INTRODUCTION_DATE" property="introductionDate" jdbcType="VARCHAR" />
+    <result column="SALES_DISCONTINUATION_DATE" property="salesDiscontinuationDate" jdbcType="CHAR" />
+    <result column="SUPPORT_DISCONTINUATION_DATE" property="supportDiscontinuationDate" jdbcType="CHAR" />
+    <result column="PRODUCT_NAME" property="productName" jdbcType="DATE" />
+    <result column="MANUFACTURER_PARTY_ID" property="manufacturerPartyId" jdbcType="VARCHAR" />
+    <result column="INTERNAL_NAME" property="internalName" jdbcType="VARCHAR" />
+    <result column="COMMENTS" property="comments" jdbcType="DATE" />
+    <result column="DESCRIPTION" property="description" jdbcType="VARCHAR" />
+    <result column="DESCRIPTION_EN" property="descriptionEn" jdbcType="VARCHAR" />
+    <result column="QUANTITY_UOM_ID" property="quantityUomId" jdbcType="VARCHAR" />
+    <result column="COLOR_ID" property="colorId" jdbcType="VARCHAR" />
+    <result column="VOLUME" property="volume" jdbcType="VARCHAR" />
+    <result column="STATUS" property="status" jdbcType="VARCHAR" />
+    <result column="BRAND_ID" property="brandId" jdbcType="VARCHAR" />
+    <result column="CATEGORY_ID" property="categoryId" jdbcType="VARCHAR" />
+    <result column="PRODUCT_SPEC_ID" property="productSpecId" jdbcType="VARCHAR" />
+    <result column="PRODUCT_FUNC_ID" property="productFuncId" jdbcType="VARCHAR" />
+    <result column="PRODUCT_SCREEN_ID" property="productScreenId" jdbcType="VARCHAR" />
+    <result column="PRODUCT_model" property="modelName" jdbcType="VARCHAR" />
+    <result column="PHOTO" property="photo" jdbcType="VARCHAR" />
+    <result column="product_type" property="productType" jdbcType="VARCHAR" />
+    <result column="size" property="size" jdbcType="VARCHAR" />
+    <result column="display" property="display" jdbcType="VARCHAR" />
+    <result column="ratio" property="ratio" jdbcType="VARCHAR" />
+    <result column="power" property="power" jdbcType="VARCHAR" />
+    <result column="power_on" property="powerOn" jdbcType="VARCHAR" />
+    <result column="power_wait" property="powerWait" jdbcType="VARCHAR" />
+    <result column="netweight" property="netweight" jdbcType="VARCHAR" />
+    <result column="weight_include" property="weightInclude" jdbcType="VARCHAR" />
+    <result column="weight" property="weight" jdbcType="VARCHAR" />
+    <result column="interface" property="interFace" jdbcType="VARCHAR" />
+    <result column="network" property="network" jdbcType="VARCHAR" />
+    <result column="os" property="os" jdbcType="VARCHAR" />
+    <result column="file_path" property="filePath" jdbcType="VARCHAR" />
+    <result column="file_name" property="fileName" jdbcType="VARCHAR" />
+    <result column="product_line" property="catena" jdbcType="VARCHAR" />
+    <result column="gasType" property="gasType" jdbcType="CHAR" />
+    
+  </resultMap>
+
+  <sql id="listWhere">
+  	<where>
+		<if test="keyword != null"> and (p.PRODUCT_model like CONCAT('%','${keyword}','%') or p.PRODUCT_NAME like CONCAT('%','${keyword}','%') or p.INTERNAL_NAME like CONCAT('%','${keyword}','%') or p.DESCRIPTION like CONCAT('%','${keyword}','%')) </if>
+		<if test="conditions != null"> and ${conditions} </if>
+		
+		<if test="fatherId != null"> and p.`head_type_id` = #{fatherId} and p.flag=0</if>
+
+		<if test="sonId != null and sonId != ''"> AND p.`PRODUCT_TYPE_ID` LIKE CONCAT('%' ,'${sonId}', '%')  </if>
+		<if test="catId != null and catId != ''"> AND p.`PRODUCT_SPEC_ID` LIKE CONCAT('%', '${catId}', '%')  </if> 
+	</where>
+  </sql>
+  
+  <!-- 产品系列 -->
+  <select id = "selectLine" resultMap="ProductMap">
+
+SELECT * FROM ( 
+  
+ 	SELECT cp.`PVALUE` AS catena,cp.`PVALUE` AS catenaName FROM  cfg_parameter cp WHERE cp.`PTYPE` = 'line' AND cp.`PDOMAIN` = 'TCL_PRODUCT'
+
+   UNION ALL 
+		SELECT '','  All  '  FROM DUAL
+   )c
+   
+ORDER BY c.catena
+  </select>
+  
+  
+  <select id="selectProducts" resultMap="ProductMap">
+    select p.*,
+    (select t.party_name from party t where t.party_id = p.party_id) party_name,
+     substring_index(p.file_path,'/',-1) as  file_name
+     from product p
+    <include refid="listWhere"/>
+    order by p.product_type desc limit #{start},#{limit};
+  </select>
+  <select id="countProducts" resultType="int">
+    select count(*) from product p
+    <include refid="listWhere"/>
+  </select>
+  
+  <insert id="saveProduct" parameterType="Product">
+  	insert into product(PRODUCT_ID,party_id,PRODUCT_TYPE_ID,INTRODUCTION_DATE,SALES_DISCONTINUATION_DATE,SUPPORT_DISCONTINUATION_DATE,PRODUCT_NAME,
+  	MANUFACTURER_PARTY_ID,INTERNAL_NAME,COMMENTS,DESCRIPTION,DESCRIPTION_EN,QUANTITY_UOM_ID,COLOR_ID,VOLUME,STATUS,BRAND_ID,CATEGORY_ID,
+  	PRODUCT_SPEC_ID,PRODUCT_FUNC_ID,PRODUCT_SCREEN_ID,PRODUCT_model,PHOTO,product_type,size,display,ratio,power,power_on,power_wait,netweight,
+  	weight_include,weight,interface,network,os,file_path,head_type_id,product_line,gasType) 
+  	values(#{productId},(SELECT u.`PARTY_ID` FROM user_login u WHERE u.`USER_LOGIN_ID` = #{partyId}),#{productTypeId},#{introductionDate},#{salesDiscontinuationDate},#{supportDiscontinuationDate},
+  	#{productName},#{manufacturerPartyId},#{internalName},#{comments},#{description},#{descriptionEn},#{quantityUomId},#{colorId},#{volume},#{status},
+  	#{brandId},#{categoryId},#{productSpecId},#{productFuncId},#{productScreenId},#{modelName},#{photo},#{productType},#{size},
+  	#{display},#{ratio},#{power},#{powerOn},#{powerWait},#{netweight},#{weightInclude},#{weight},#{interFace},#{network},#{os},#{filePath},#{headType},#{catena},#{gasType});
+  </insert>
+  
+  <select id="getProduct" resultMap="ProductMap" resultType="Product">
+    select * from product  where id=#{pid} limit 1;
+  </select>
+  
+    <update id="editProduct" parameterType="Product">
+  	update product set party_id=(SELECT u.`PARTY_ID` FROM user_login u WHERE u.`USER_LOGIN_ID` = #{partyId}),PRODUCT_TYPE_ID=#{productTypeId},INTRODUCTION_DATE=#{introductionDate},
+  	SALES_DISCONTINUATION_DATE=#{salesDiscontinuationDate},SUPPORT_DISCONTINUATION_DATE=#{supportDiscontinuationDate},
+  	PRODUCT_NAME=#{productName},MANUFACTURER_PARTY_ID=#{manufacturerPartyId},INTERNAL_NAME=#{internalName},COMMENTS=#{comments},
+  	DESCRIPTION=#{description},DESCRIPTION_EN=#{descriptionEn},QUANTITY_UOM_ID=#{quantityUomId},COLOR_ID=#{colorId},
+  	VOLUME=#{volume},STATUS=#{status},BRAND_ID=#{brandId},CATEGORY_ID=#{categoryId},
+  	PRODUCT_SPEC_ID=#{productSpecId},PRODUCT_FUNC_ID=#{productFuncId},PRODUCT_SCREEN_ID=#{productScreenId},
+  	MODEL_NAME=#{modelName},PHOTO=#{photo},product_type=#{productType},size=#{size},display=#{display},
+  	ratio=#{ratio},power=#{power},power_on=#{powerOn},power_wait=#{powerWait},netweight=#{netweight},
+  	weight_include=#{weightInclude},weight=#{weight},interface=#{interFace},network=#{network},os=#{os},file_path=#{filePath},
+  	product_line=#{catena},product_model=#{modelName},product_id=#{productId},gasType=#{gasType} where id = #{id};
+  </update> 
+  
+  <select id="searchCountByProductId" resultType="int">
+  	select count(1) from product where product_model = #{productId} and flag="0"
+  </select>
+  
+    <!--  -->
+  <update id="deleteProductByProductId" parameterType="Product">
+  	update product set flag='-1',del_user_id=#{delUserId} where product_model = #{productId}
+  </update>
+  
+ <!--  <delete id="deleteProductByProductId" parameterType="Product">
+  	delete from product where product_model = #{productId}
+  </delete> -->
+  
+  <select id="getHQProductParm" parameterType="java.lang.String" resultMap="ProductMap">
+  	SELECT p.`PRODUCT_model` from product p
+  	where 1=1
+	${conditions} and p.flag='0'
+	order by p.product_Model
+  </select>
+  
+  <select id="searchPartyByName" parameterType="Product" resultType="int">
+	select count(*) from party p where 1=1 
+	and p.PARTY_NAME = #{partyId}
+	and p.PARTY_ID = p.COUNTRY_ID
+  </select>
+  
+  <select id="searchProductById" parameterType="Product" resultMap="ProductMap">
+		select * from product p where 1=1 and p.PRODUCT_model = #{modelName} and p.flag = 0
+  </select>
+  
+  <select id="searchParamByNameType" parameterType="java.lang.String" resultType="int">
+  		select count(*) from cfg_parameter cp where 1=1 
+			and cp.PDOMAIN = #{paramDomain} 
+			and cp.PTYPE = #{paramType} 
+			and cp.PVALUE = #{paramValue} 
+  </select>
+	  
+  <select id = "selectModel" resultType="java.lang.Integer" parameterType="java.util.Map">
+  	 SELECT COUNT(*) FROM pro_type_msg ptm WHERE ptm.`TYPE`  = #{paramType} 
+  AND #{paramValue} LIKE CONCAT('%', ptm.`category_name`,'%')
+  </select>
+  
+  <!-- 后加 -->
+  <!-- <select id = "selectCategoryByFatherId" parameterType="java.lang.String" resultMap="ProductMap">
+  	SELECT p.`category_id` AS partyId,p.`category_name` AS partyName FROM pro_type_msg p WHERE p.`sup_cat_id` = #{fatherId}
+  </select> -->
+   <select id = "selectCategoryByFatherId" resultMap="ProductMap">
+  		select p.`category_id` AS partyId,p.`category_name` AS partyName from pro_type_msg p where p.`sup_cat_id` = 0
+  </select> 
+  
+  
+   <select id = "selectCategoryByFatherIdTWo" parameterType="java.lang.String" resultMap="ProductMap">
+	  SELECT p.`category_id` as partyId,p.`category_name` as productName,p.`TYPE` as productId FROM pro_type_msg p WHERE p.`sup_cat_id` = #{fatherId}
+  </select>
+  
+  <!-- AC尺寸 -->
+   <select id="selectACAllSize" resultType="Product">
+  	SELECT cfp.`PVALUE` size FROM cfg_parameter cfp WHERE cfp.`PDOMAIN` = 'TCL_PRODUCT' AND cfp.`PTYPE` = 'AC_SIZE' ORDER BY size
+   </select>
+   
+  <!-- AC分类 -->
+   <select id="selectACAllClassification" resultType="Product">
+   SELECT cfp.`PVALUE` productTypeId FROM `cfg_parameter` cfp WHERE cfp.`PDOMAIN` = 'TCL_PRODUCT' AND cfp.`PTYPE` = 'AC_CLASSIFICATION'
+   </select>
+   
+  <!-- AC系列 -->
+   <select id="selectACCatena" resultType="Product">
+   SELECT cfp.`PVALUE` productType FROM `cfg_parameter` cfp WHERE cfp.`PDOMAIN` = 'TCL_PRODUCT' AND cfp.`PTYPE` = 'AC_catena';
+   </select>
+   
+   <!-- ac产品尺寸是否存在 -->
+   <select id = "selectWhetherTheDimensionsExist" parameterType="java.lang.String" resultType="int">
+      SELECT COUNT(cfp.`PVALUE`) FROM cfg_parameter cfp WHERE cfp.`PDOMAIN` = 'TCL_PRODUCT' AND cfp.`PTYPE` = 'AC_SIZE' AND cfp.`PVALUE` = CAST(#{size} AS SIGNED)
+  </select> 
+  
+   <!-- ac分类是否存在 -->
+   <select id = "selectDoesTheTypeExist" parameterType="java.lang.String" resultType="int">
+      SELECT COUNT(cfp.`PVALUE`) FROM cfg_parameter cfp WHERE cfp.`PDOMAIN` = 'TCL_PRODUCT' AND cfp.`PTYPE` = 'AC_CLASSIFICATION' AND cfp.`PVALUE` = #{classification}
+  </select> 
+  
+   <!-- ac系列是否存在 -->
+   <select id = "selectTheSeriesWillExist" parameterType="java.lang.String" resultType="int">
+      SELECT COUNT(cfp.`PVALUE`) FROM cfg_parameter cfp WHERE cfp.`PDOMAIN` = 'TCL_PRODUCT' AND cfp.`PTYPE` = 'AC_catena' AND cfp.`PVALUE` = #{catena}
+  </select> 
+  
+</mapper>

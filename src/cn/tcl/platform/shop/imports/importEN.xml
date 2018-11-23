@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<import>
+	<mapping bean="cn.tcl.platform.shop.vo.Shop">
+		<property column="*Shop name" propertyName="shopName" required="true" javaType="java.lang.String"></property>
+		<property column="*Dealer code" propertyName="customerId" required="true" javaType="java.lang.String"></property>
+		<property column="Level" propertyName="level" required="true" javaType="java.lang.String"></property>
+		<property column="Date of joining TCL" propertyName="enterDate" required="false" javaType="java.util.Date"></property>
+		<property column="*Country" propertyName="countryId" required="true" javaType="java.lang.String"></property>
+		<property column="*Party" propertyName="partyId" required="true" javaType="java.lang.String"></property>
+		<property column="*Province" propertyName="provinceId" required="true" javaType="java.lang.String"></property>
+		<!-- <property column="City" propertyName="cityId" javaType="java.lang.String"></property>
+		<property column="County" propertyName="countyId"  javaType="java.lang.String"></property>
+		<property column="Town" propertyName="townId"  javaType="java.lang.String"></property> -->
+		<property column="*Address" propertyName="detailAddress" required="true" javaType="java.lang.String"></property>
+		<property column="*Contact name" propertyName="contactName" required="true" javaType="java.lang.String"></property>
+		<property column="*Contact number" propertyName="phone" required="true" javaType="java.lang.String"></property>
+		<property column="*Email" propertyName="email" required="true" javaType="java.lang.String"></property>
+		<property column="*Longtitude" propertyName="lng" required="true" javaType="java.lang.Float"></property>
+		<property column="*Latitude" propertyName="lat" required="true" javaType="java.lang.Float"></property>
+		<!-- <property column="Remarks" propertyName="comments" javaType="java.lang.String"></property> -->
+	</mapping>
+	<volidate dateFormat="yyyy-MM-dd" volidateClass="cn.tcl.platform.shop.imports.ValidationImportShop" volidateMethod="validationImport"></volidate>
+	<service serviceBean="shopService" serviceMethod="importShop"></service>
+</import>

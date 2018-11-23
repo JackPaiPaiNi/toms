@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<import>
+	<mapping bean="cn.tcl.platform.acproduct.vo.ACProduct">
+		<property column="*Product model" propertyName="model" required="true" javaType="java.lang.String"></property>
+		<property column="*Size" propertyName="size" required="true" javaType="java.lang.String"></property>
+		<property column="Comments" propertyName="comments" required="false" javaType="java.lang.String"></property>
+		<property column="Description" propertyName="description" required="false" javaType="java.lang.String"></property>
+		</mapping>
+	<volidate dateFormat="yyyy-MM-dd" volidateClass="cn.tcl.platform.acproduct.imports.ValidationImportProduct" volidateMethod="validationImport"></volidate>
+	<service serviceBean="acproductService" serviceMethod="importProduct"></service>
+</import>

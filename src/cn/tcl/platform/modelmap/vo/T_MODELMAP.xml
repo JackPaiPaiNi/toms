@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.modelmap.dao.IModelMapDao" >
+
+ <resultMap id="ModelMap_map" type="ModelMap" >
+ 	 <result column="ID" property="id" jdbcType="VARCHAR" />
+ 	 <result column="BRANCH_MODEL" property="branchModel" jdbcType="VARCHAR" />
+ 	 <result column="HQ_MODEL" property="hqModel" jdbcType="VARCHAR" />
+ 	 <result column="CHANNEL_MODEL" property="channelModel" jdbcType="VARCHAR" />
+ 	 <result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+ 	 <result column="price" property="price" jdbcType="FLOAT" />
+ 	 <result column="PARTY_NAME" property="partyName" jdbcType="VARCHAR" />
+	 <result column="CTIME" property="ctime" jdbcType="DATE" />
+	 <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR" />
+	 <result column="CUSTOMER_NAME" property="customerName" jdbcType="VARCHAR" />
+ </resultMap>
+ 
+<sql id="listWhere">
+	<where>
+		<if test="keyword != null"> and (instr(tm.branch_model,'${keyword}') > 0  or instr(tm.hq_model,'${keyword}') > 0)
+		</if>
+		<if test="conditions!=null">
+     		<![CDATA[  ${conditions} ]]> and tm.flag="0"
+		</if>
+	</where>
+</sql> 
+
+<select id="selectModelMap" resultMap="ModelMap_map">
+	select tm.id,tm.branch_model,tm.hq_model,tm.party_id,p.party_name,tm.price,
+	DATE_FORMAT(tm.ctime,'%Y-%m-%d %H:%i:%s') as ctime  from t_modelmap tm 
+	left join party p on p.party_id = tm.party_id
+	<include refid="listWhere" />
+	order by tm.ctime desc limit #{start},#{limit}
+</select>
+ 
+<select id="countModelMap" resultType="int">
+	select count(1) from t_modelmap tm
+	<include refid="listWhere" />
+</select> 
+ 
+<select id="getModelMapById" resultMap="ModelMap_map" resultType="ModelMap">
+	select tm.id,tm.branch_model,tm.hq_model,DATE_FORMAT(tm.ctime,'%Y-%m-%d %H:%i:%s') as ctime,
+		   tm.party_id,p.PARTY_NAME from t_modelmap tm
+	left join party p on tm.party_id = p.PARTY_ID
+	where 1=1 and tm.id = #{modelId};
+</select>
+
+<update id="editModelMap" parameterType="ModelMap">
+	update t_modelmap tm 
+	<trim prefix="set" suffix="" suffixOverrides="," >
+	      <if test="branchModel!=null" >
+	        tm.branch_model = #{branchModel},
+	      </if>
+	      <if test="hqModel!=null" >
+	        tm.hq_model = #{hqModel},
+	      </if>
+	      <if test="partyId!=null" >
+	        tm.party_id = #{partyId},
+	      </if>
+	      <if test="price!=null" >
+	        tm.price = #{price},
+	      </if>
+	</trim>
+	where 1=1 and tm.id = #{id}
+</update>
+
+<insert id="addModelMap" parameterType="ModelMap">
+	insert into t_modelmap
+	 <trim prefix="(" suffix=")" suffixOverrides="," >
+	      <if test="branchModel!=null" >
+	        branch_model,
+	      </if>
+	      <if test="hqModel!=null" >
+	        hq_model,
+	      </if>
+	      <if test="partyId!=null" >
+	        party_id,
+	      </if>
+	      <if test="price!=null" >
+	        price,
+	      </if>
+	      <if test="ctime!=null" >
+	        ctime,
+	      </if>
+	 </trim>
+	values
+	 <trim prefix="(" suffix=")" suffixOverrides="," >
+	      <if test="branchModel!=null" >
+	        #{branchModel},
+	      </if>
+	      <if test="hqModel!=null" >
+	        #{hqModel},
+	      </if>
+	      <if test="partyId!=null" >
+	        #{partyId},
+	      </if>
+	      <if test="price!=null" >
+	        #{price},
+	      </if>
+	      <if test="ctime!=null" >
+	        #{ctime},
+	      </if>
+	 
+	 </trim>
+</insert>
+	
+	<!-- 假删除 -->
+	<update id="deleteModelMap" parameterType="ModelMap">
+		update t_modelmap set flag="-1",del_user_id=#{delUserId} where id=#{id};
+	</update>
+
+<!-- <delete id="deleteModelMap" parameterType="ModelMap">
+	delete from t_modelmap where id = #{id};
+</delete> -->
+
+
+<select id="searchBeanLimit" parameterType="ModelMap" resultType="int">
+	select count(*) from t_modelmap where BRANCH_MODEL = #{branchModel} <!-- AND hq_model = #{hqModel} -->
+	AND party_Id=#{partyId} 
+	<if test="condition!=null" >
+	${condition}
+	</if>
+</select>
+
+<select id="searchBeanHQLimit" parameterType="ModelMap" resultType="int">
+	select count(*) from t_modelmap where hq_model = #{hqModel}
+	AND party_Id=#{partyId} 
+	<if test="condition!=null" >
+	${condition}
+	</if>
+</select>
+
+
+<select id="aSearchBeanLimit" parameterType="ModelMap" resultType="int">
+	select count(*) from t_modelmap where BRANCH_MODEL = #{branchModel} and hq_model = #{hqModel}
+</select>
+
+<select id="bSearchBeanLimit" parameterType="ModelMap" resultType="int">
+	select count(*) from t_modelmap m,party p where p.party_id=m.party_id and m.BRANCH_MODEL = #{branchModel}
+	AND p.party_name=#{partyId} and m.flag="0"
+</select>
+
+<select id="searchHqModelMapCount" parameterType="ModelMap" resultType="int">
+	SELECT COUNT(*) FROM product pt
+WHERE  pt.`PRODUCT_model`=#{hqModel} 
+</select>
+
+<select id="searchCountryByName"  parameterType="ModelMap" resultType="int">
+	select count(*) from party p where 1=1 
+	and p.PARTY_NAME = #{partyId}
+	and p.PARTY_ID = p.COUNTRY_ID
+</select>
+
+<select id="searchPartyIdByName"  parameterType="ModelMap" resultType="java.lang.String">
+	select p.`PARTY_ID` from party p where 1=1 
+	and p.PARTY_NAME = #{partyId}
+	and p.PARTY_ID = p.COUNTRY_ID
+</select>
+
+<select id="searchChannelByName"  parameterType="java.lang.String" resultType="int">
+	SELECT ci.`CUSTOMER_ID` FROM `customer_info` ci WHERE ci.`COUNTRY_ID` 
+	= (SELECT p.`PARTY_ID` FROM party p WHERE p.`PARTY_NAME` = #{countryName} )
+	AND ci.`CUSTOMER_NAME` = #{customerName}
+</select>
+
+<select id="searchChannelByNameCount"  parameterType="java.lang.String" resultType="int">
+	SELECT count(ci.`CUSTOMER_ID`) FROM `customer_info` ci WHERE ci.`COUNTRY_ID` 
+	= (SELECT p.`PARTY_ID` FROM party p WHERE p.`PARTY_NAME` = #{countryName} )
+	AND ci.`CUSTOMER_NAME` = #{customerName}
+</select>
+
+<select id="getPartyIdByName"  parameterType="ModelMap" resultType="java.lang.String">
+	select p.party_id from party p where 1=1 
+	and p.PARTY_NAME = #{partyId}
+</select>
+
+<sql id="by">
+		<if test="cond!=null">
+     		<![CDATA[  ${cond} ]]>
+		</if>
+</sql> 
+
+
+<select id="getModelIdByParty"  parameterType="ModelMap" resultType="int">
+	SELECT  count(*)   FROM t_modelmap t
+	WHERE t.branch_model=#{branchModel}
+	
+	<include refid="by" />
+</select>
+<update id="editModelPrice" parameterType="ModelMap">
+	UPDATE  t_modelmap  SET price=#{price}  WHERE branch_model=#{branchModel}  AND party_id=#{partyId}
+
+</update>
+
+<select id="getModelMapByBModel" resultMap="ModelMap_map">
+	select tm.id,
+		   tm.branch_model,
+		   tm.hq_model,
+		   tm.party_id,
+		   CONVERT(tm.price,DECIMAL) as price
+	from t_modelmap tm where tm.branch_model=#{bmodel}
+</select>
+
+<!-- 渠道型号与分公司型号对应关系  -->
+<sql id="channelListWhere">
+	<where>
+		<if test="keyword != null"> and (instr(tm.branch_model,'${keyword}') > 0  or instr(tm.channel_model,'${keyword}') > 0)
+		</if>
+		<if test="conditions!=null">
+     		<![CDATA[  ${conditions} ]]> and tm.flag="0"
+		</if>
+	</where>
+</sql> 
+
+<select id="selectChannelModelMap"  resultMap="ModelMap_map" parameterType="java.util.Map">
+	select tm.id,tm.branch_model,tm.channel_model,tm.party_id,p.party_name,tm.price,tm.`customer_id`,ci.`CUSTOMER_NAME`,
+	DATE_FORMAT(tm.ctime,'%Y-%m-%d %H:%i:%s') as ctime  from t_modelmap_channel tm 
+	left join party p on p.party_id = tm.party_id
+	LEFT JOIN `customer_info` ci ON ci.`CUSTOMER_ID` = tm.`customer_id`
+	<include refid="channelListWhere" />
+	order by tm.ctime desc limit #{start},#{limit}
+</select>
+
+<select id="countChannelModelMap" resultType="int">
+	select count(1) from t_modelmap_channel tm
+	<include refid="channelListWhere" />
+</select> 
+
+<!-- 假删除 -->
+<update id="deleteChannelModel" parameterType="ModelMap">
+	update t_modelmap_channel set flag="-1",del_user_id=#{delUserId} where id=#{id}
+</update>
+
+<!-- <delete id="deleteChannelModel" parameterType="java.lang.String">
+	DELETE FROM t_modelmap_channel WHERE id = #{id}
+</delete> -->
+
+<select id="selectChennalModelByPartyId" parameterType="java.lang.String" resultMap="ModelMap_map">
+	SELECT DISTINCT tm.`branch_model` FROM t_modelmap tm
+	WHERE
+	<if test="partyId!=null and partyId!='' ">
+     	 tm.`party_id` = #{partyId} and
+	</if>
+	 tm.flag="0"
+	ORDER BY tm.`branch_model`
+</select>   
+
+<update id="updateChannelModelById" parameterType="ModelMap">
+	UPDATE `t_modelmap_channel` SET 
+	branch_model = #{branchModel},
+	channel_model=#{channelModel},
+	party_id = #{partyId},
+	customer_id = #{customerId},
+	price = #{channelPrice} WHERE id = #{id}
+</update>
+
+<insert id="insertChannelModel" parameterType="ModelMap">
+	INSERT INTO `t_modelmap_channel`
+	(branch_model,channel_model,party_id,price,customer_id)VALUE
+	(#{branchModel},#{channelModel},#{partyId},#{channelPrice},#{customerId})
+</insert>
+ 
+ <select id="channelModelIsBeing" parameterType="java.lang.String" resultType="int">
+	SELECT COUNT(*) FROM `t_modelmap_channel` tc WHERE tc.`customer_id` = #{customerId} 
+	<!-- AND tc.`branch_model` = #{branchModel} -->
+	AND tc.`channel_model` = #{channelModel}
+	<if test="condition!=null" >
+	${condition}
+	</if>
+</select>
+<!--  <select id="brModelIsBeing" parameterType="java.lang.String" resultType="int">
+	SELECT COUNT(*) FROM `t_modelmap_channel` tc WHERE tc.`customer_id` = #{customerId} 
+	AND tc.`branch_model` = #{branchModel}
+	<if test="condition!=null" >
+	${condition}
+	</if>
+</select> -->
+
+<!-- 是否存在分公司、渠道且分公司型号一致的数据 -->
+ <select id="isPartyAndCustAndPaModelUnan" parameterType="java.lang.String" resultType="int">
+	SELECT COUNT(*) FROM `t_modelmap_channel` tmc WHERE tmc.`branch_model` = #{branchModel}
+	AND tmc.`party_id` = #{partyId} AND tmc.`customer_id` = #{customerId} 
+</select>
+
+<select id="branchModelIsBeing" parameterType="ModelMap" resultType="int">
+	SELECT  count(*) FROM t_modelmap tmc,party p WHERE tmc.`party_id` = p.`PARTY_ID`
+	<!-- and p.`PARTY_NAME` = #{partyId} --> and tmc.`branch_model` = #{branchModel}
+</select>
+
+<select id="selectSaleMappingBybranchModel" parameterType="java.lang.String" resultType="int">
+	SELECT COUNT(ts.`model`) FROM t_sale ts WHERE ts.`model` = #{branchModel}
+</select>
+
+</mapper>

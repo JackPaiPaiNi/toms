@@ -1,0 +1,525 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.user.dao.IUserLoginDAO" >
+	
+  <resultMap id="UserLoginMap" type="UserLogin" >
+    <result column="USER_LOGIN_ID" property="userLoginId" jdbcType="VARCHAR" />
+    <result column="USER_NAME" property="userName" jdbcType="VARCHAR" />
+    <result column="PASSWORD" property="password" jdbcType="VARCHAR" />
+    <result column="PASSWORD_HINT" property="passwordHint" jdbcType="VARCHAR" />
+    <result column="ENABLED" property="enabled" jdbcType="CHAR" />
+    <result column="DISABLED_DATE_TIME" property="disabledDateTime" jdbcType="DATE" />
+    <result column="LOGIN_TYPE" property="loginType" jdbcType="VARCHAR" />
+    <result column="CREATE_BY" property="createBy" jdbcType="VARCHAR" />
+    <result column="CREATE_DATE" property="createDate" jdbcType="DATE" />
+    <result column="USER_EMAIL" property="userEmail" jdbcType="VARCHAR" />
+    <result column="USER_WORK_NUM" property="userWorkNum" jdbcType="VARCHAR" />
+    <result column="USER_MC_ID" property="userMcId" jdbcType="VARCHAR" />
+    <result column="USER_TEL_NUM" property="userTelNum" jdbcType="VARCHAR" />
+    <result column="USER_LOCALE" property="userLocale" jdbcType="VARCHAR" />
+    <result column="USER_LOCALE_DESC" property="userLocaleDesc" jdbcType="VARCHAR" />
+    <result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+    <result column="PARTY_NAME" property="partyName" jdbcType="VARCHAR" />
+    <result column="ROLE_ID" property="roleId" jdbcType="VARCHAR" />
+    <result column="ROLE_NAME" property="roleName" jdbcType="VARCHAR" />
+   	 <result column="STATUS" property="status" jdbcType="VARCHAR" />
+   	  <result column="updatePassword" property="updatePassword" jdbcType="VARCHAR" />
+  </resultMap>
+  
+  <resultMap id="UserLoginForRoleMap" type="UserLogin" >
+    <result column="USER_LOGIN_ID" property="userLoginId" jdbcType="VARCHAR" />
+    <result column="USER_NAME" property="userName" jdbcType="VARCHAR" />
+    <result column="PASSWORD" property="password" jdbcType="VARCHAR" />
+    <result column="PASSWORD_HINT" property="passwordHint" jdbcType="VARCHAR" />
+    <result column="ENABLED" property="enabled" jdbcType="CHAR" />
+    <result column="DISABLED_DATE_TIME" property="disabledDateTime" jdbcType="DATE" />
+    <result column="LOGIN_TYPE" property="loginType" jdbcType="VARCHAR" />
+    <result column="CREATE_BY" property="createBy" jdbcType="VARCHAR" />
+    <result column="CREATE_DATE" property="createDate" jdbcType="DATE" />
+    <result column="USER_EMAIL" property="userEmail" jdbcType="VARCHAR" />
+    <result column="USER_WORK_NUM" property="userWorkNum" jdbcType="VARCHAR" />
+    <result column="USER_MC_ID" property="userMcId" jdbcType="VARCHAR" />
+    <result column="USER_TEL_NUM" property="userTelNum" jdbcType="VARCHAR" />
+    <result column="USER_LOCALE" property="userLocale" jdbcType="VARCHAR" />
+    <result column="LEFT_OR_RIGHT" property="leftOrRight" jdbcType="VARCHAR" />
+    <result column="USER_LOCALE_DESC" property="userLocaleDesc" jdbcType="VARCHAR" />
+    <result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+  </resultMap>
+  
+   <resultMap id="UserLoginForSaleMap" type="UserLogin" >
+    <result column="USER_LOGIN_ID" property="userLoginId" jdbcType="VARCHAR" />
+    <result column="USER_NAME" property="userName" jdbcType="VARCHAR" />
+    <result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+  </resultMap>
+  
+  <resultMap id="userLevelMap" type="userLevel">
+  	<result column="id" property="id"  jdbcType="VARCHAR"/>
+  	<result column="value" property="value"  jdbcType="VARCHAR"/>
+  	<result column="countryId" property="countryId"  jdbcType="VARCHAR"/>
+  </resultMap>
+  
+  <sql id="userLoginWhere">
+  	<if test="conditions!=null">
+       	<![CDATA[  ${conditions} ]]>
+  	</if>
+  </sql>
+  
+  <select id="selectLoginUserId" resultMap="UserLoginMap" parameterType="java.util.Map">
+    select a.USER_LOGIN_ID, a.USER_NAME, a.PASSWORD, a.PASSWORD_HINT, a.ENABLED, a.DISABLED_DATE_TIME,
+      a.LOGIN_TYPE, a.CREATE_BY, a.CREATE_DATE, a.USER_EMAIL,a.USER_WORK_NUM,a.USER_MC_ID,a.USER_TEL_NUM,a.USER_LOCALE,
+      a.PARTY_ID,a.`updatePassword`,
+      (select b.PVALUE from cfg_parameter b where b.PDOMAIN='TCL_TOMS' and b.PTYPE='LANGUAGE' and b.PKEY=a.USER_LOCALE) as USER_LOCALE_DESC,
+      urm.ROLE_ID,a.level
+    from user_login a
+    	 left JOIN user_role_mapping urm on urm.USER_LOGIN_ID = a.USER_LOGIN_ID
+    where a.`flag` = 0 AND a.USER_LOGIN_ID = #{userId} 
+  </select>
+  
+  <select id="selectLoginUserIdAndPass" resultMap="UserLoginMap" parameterType="java.util.Map">
+    select a.USER_LOGIN_ID, a.USER_NAME, a.PASSWORD, a.PASSWORD_HINT, a.ENABLED, a.DISABLED_DATE_TIME,
+      a.LOGIN_TYPE, a.CREATE_BY, a.CREATE_DATE, a.USER_EMAIL,a.USER_WORK_NUM,a.USER_MC_ID,a.USER_TEL_NUM,a.USER_LOCALE,
+      a.PARTY_ID,a.`updatePassword`,
+      (select b.PVALUE from cfg_parameter b where b.PDOMAIN='TCL_TOMS' and b.PTYPE='LANGUAGE' and b.PKEY=a.USER_LOCALE) as USER_LOCALE_DESC,
+      urm.ROLE_ID,a.level
+    from user_login a
+    	 left JOIN user_role_mapping urm on urm.USER_LOGIN_ID = a.USER_LOGIN_ID
+    	where a.`flag` = 0 AND a.USER_LOGIN_ID = #{userId} and a.PASSWORD = #{pass}
+  </select>
+  
+  <select id="selectUserLogin" resultMap="UserLoginMap" parameterType="java.util.Map">
+    select a.USER_LOGIN_ID, a.USER_NAME, a.PASSWORD, a.PASSWORD_HINT, a.ENABLED, a.DISABLED_DATE_TIME,
+      a.LOGIN_TYPE, a.CREATE_BY, a.CREATE_DATE, a.USER_EMAIL,a.USER_WORK_NUM,a.USER_MC_ID,a.USER_TEL_NUM,a.USER_LOCALE,
+      a.PARTY_ID,a.`updatePassword`,
+      (select b.PVALUE from cfg_parameter b where b.PDOMAIN='TCL_TOMS' and b.PTYPE='LANGUAGE' and b.PKEY=a.USER_LOCALE) as USER_LOCALE_DESC,
+      urm.ROLE_ID,a.level
+    from user_login a
+    	 left JOIN user_role_mapping urm on urm.USER_LOGIN_ID = a.USER_LOGIN_ID
+    where 1=1
+   	<include refid="userLoginWhere"/>
+  </select>
+  
+  <select id="selectUserLoginCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+  	select count(distinct a.USER_LOGIN_ID) from user_login a
+	left join party p on p.PARTY_ID = a.PARTY_ID
+	left JOIN user_role_mapping urm on urm.USER_LOGIN_ID = a.USER_LOGIN_ID
+	left join role r on r.ROLE_ID = urm.ROLE_ID
+	WHERE
+		a.flag = 0  
+		<include refid="userLoginWhere"/>
+  </select>
+
+  <select id="selectSalerListData" resultMap="UserLoginForSaleMap">
+  	SELECT DISTINCT a.user_login_id,a.user_name FROM user_login a, user_role_mapping c,role_data_permission n WHERE 
+	a.flag = 0 AND
+	a.user_login_id = c.user_login_id AND c.role_id=n.role_id
+  	<if test="type==0">
+       	and c.role_id like 'SALES_%' 
+  	</if>
+  	<if test="type==1">
+       	and c.role_id like 'PROM_%' 
+       	and (a.USER_LOGIN_ID
+        not in(select ssm.user_login_id from shop_saler_mapping ssm where ssm.salertype =1)
+       	<if test="shopId != null">
+       		or a.USER_LOGIN_ID in (select ssm1.user_login_id from shop_saler_mapping ssm1 
+       		where ssm1.shop_id = #{shopId} and ssm1.salertype =1)
+       	</if>
+        )
+  	</if>
+  	<if test="type==2">
+       	and c.role_id like 'SUPERVISOR_%' 
+  	</if>
+   	<include refid="userLoginWhere"/>
+  </select>
+  
+  <select id="selectSalerList" resultMap="UserLoginForSaleMap">
+  	SELECT DISTINCT a.user_login_id,a.user_name FROM user_login a, user_role_mapping c,role_data_permission n WHERE 
+	a.flag = 0 AND
+	a.user_login_id = c.user_login_id and c.role_id=n.role_id
+  	<if test="type==0">
+       	and c.role_id like 'SALES_%' 
+  	</if>
+  	<if test="type==1">
+       	and c.role_id like 'PROM_%' 
+       	and (a.USER_LOGIN_ID
+        not in(select ssm.user_login_id from shop_saler_mapping ssm where ssm.salertype =1)
+       	<if test="shopId != null">
+       		or a.USER_LOGIN_ID in (select ssm1.user_login_id from shop_saler_mapping ssm1 
+       		where ssm1.shop_id = #{shopId} and ssm1.salertype =1)
+       	</if>
+        )
+  	</if>
+  	<if test="type==2">
+       	and c.role_id like 'SUPERVISOR_%' 
+  	</if>
+   	<include refid="userLoginWhere"/>
+  </select>
+
+  <select id="selectUserLoginWithPage" resultMap="UserLoginMap" parameterType="java.util.Map">
+  	SELECT
+  		DISTINCT
+		a.USER_LOGIN_ID,
+		a.USER_NAME,
+		a.PASSWORD,
+		a.PASSWORD_HINT,
+		a.ENABLED,
+		a.DISABLED_DATE_TIME,
+		a.LOGIN_TYPE,
+		a.CREATE_BY,
+		a.CREATE_DATE,
+		a.USER_EMAIL,
+		a.USER_WORK_NUM,
+		a.USER_MC_ID,
+		a.USER_TEL_NUM,
+		a.USER_LOCALE,
+		a.PARTY_ID,
+	      p.PARTY_NAME,
+	      r.role_id,
+	      r.ROLE_NAME,
+		(select b.PVALUE from cfg_parameter b where b.PDOMAIN='TCL_TOMS' and b.PTYPE='LANGUAGE' and b.PKEY=a.USER_LOCALE) as USER_LOCALE_DESC,
+		a.level
+	FROM
+		user_login a
+	left join party p on p.PARTY_ID = a.PARTY_ID
+	left JOIN user_role_mapping urm on urm.USER_LOGIN_ID = a.USER_LOGIN_ID
+	left join role r on r.ROLE_ID = urm.ROLE_ID
+	WHERE
+		a.flag = 0 
+		<include refid="userLoginWhere"/>
+	${orderBy}
+	LIMIT ${startIndex},${endIndex}
+  </select>
+  
+  <insert id="insertUserLogin" parameterType="UserLogin">
+    insert into user_login
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="userLoginId!=null" >
+        USER_LOGIN_ID,
+      </if>
+      <if test="userName!=null" >
+        USER_NAME,
+      </if>
+      <if test="password!=null" >
+        PASSWORD,
+      </if>
+      <if test="passwordHint!=null" >
+        PASSWORD_HINT,
+      </if>
+      <if test="enabled!=null" >
+        ENABLED,
+      </if>
+      <if test="disabledDateTime!=null" >
+        DISABLED_DATE_TIME,
+      </if>
+      <if test="loginType!=null" >
+        LOGIN_TYPE,
+      </if>
+      <if test="createBy!=null" >
+        CREATE_BY,
+      </if>
+      <if test="createDate!=null" >
+        CREATE_DATE,
+      </if>
+      <if test="userEmail!=null" >
+        USER_EMAIL,
+      </if>
+      <if test="userWorkNum!=null" >
+        USER_WORK_NUM,
+      </if>
+      <if test="userMcId!=null" >
+        USER_MC_ID,
+      </if>
+      <if test="userTelNum!=null" >
+        USER_TEL_NUM,
+      </if>
+      <if test="userLocale!=null" >
+        USER_LOCALE,
+      </if>
+      <if test="partyId!=null" >
+        PARTY_ID,
+      </if>
+       <if test="level!=null" >
+        level,
+      </if>
+    </trim>
+    values
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="userLoginId!=null" >
+        #{userLoginId},
+      </if>
+      <if test="userName!=null" >
+        #{userName},
+      </if>
+      <if test="password!=null" >
+        #{password},
+      </if>
+      <if test="passwordHint!=null" >
+        #{passwordHint},
+      </if>
+      <if test="enabled!=null" >
+        #{enabled},
+      </if>
+      <if test="disabledDateTime!=null" >
+        #{disabledDateTime},
+      </if>
+      <if test="loginType!=null" >
+        #{loginType},
+      </if>
+      <if test="createBy!=null" >
+        #{createBy},
+      </if>
+      <if test="createDate!=null" >
+        #{createDate},
+      </if>
+      <if test="userEmail!=null" >
+        #{userEmail},
+      </if>
+      <if test="userWorkNum!=null" >
+        #{userWorkNum},
+      </if>
+      <if test="userMcId!=null" >
+        #{userMcId},
+      </if>
+      <if test="userTelNum!=null" >
+        #{userTelNum},
+      </if>
+      <if test="userLocale!=null" >
+        #{userLocale},
+      </if>
+      <if test="partyId!=null" >
+        #{partyId},
+      </if>
+        <if test="level!=null" >
+        #{level},
+      </if>
+    </trim>
+  </insert>
+  
+  <update id="updateUserLoginById" parameterType="UserLogin" >
+    update user_login
+    <trim prefix="set" suffix="" suffixOverrides="," >
+      <if test="userName!=null" >
+        USER_NAME = #{userName},
+      </if>
+      <if test="password!=null" >
+        PASSWORD = #{password},
+      </if>
+      <if test="passwordHint!=null" >
+        PASSWORD_HINT = #{passwordHint},
+      </if>
+      <if test="enabled!=null" >
+        ENABLED = #{enabled},
+      </if>
+      <if test="disabledDateTime!=null" >
+        DISABLED_DATE_TIME = #{disabledDateTime},
+      </if>
+      <if test="loginType!=null" >
+        LOGIN_TYPE = #{loginType},
+      </if>
+      <if test="createBy!=null" >
+        CREATE_BY = #{createBy},
+      </if>
+      <if test="createDate!=null" >
+        CREATE_DATE = #{createDate},
+      </if>
+      <if test="userEmail!=null" >
+        USER_EMAIL = #{userEmail},
+      </if>
+      <if test="userWorkNum!=null" >
+        USER_WORK_NUM = #{userWorkNum},
+      </if>
+      <if test="userMcId!=null" >
+        USER_MC_ID = #{userMcId},
+      </if>
+      <if test="userTelNum!=null" >
+        USER_TEL_NUM = #{userTelNum},
+      </if>
+      <if test="userLocale!=null" >
+        USER_LOCALE = #{userLocale},
+      </if>
+      <if test="partyId!=null" >
+        PARTY_ID = #{partyId},
+      </if>
+       <if test="updatePassword!=null" >
+        updatePassword = #{updatePassword},
+      </if>
+       <if test="isUpdatePass=='true'" >
+        init_pass = '1',
+      </if>
+       <if test="level!=null" >
+        level=#{level},
+      </if>
+      <if test="updateTime!=null">
+      	UPDATE_TIME=#{updateTime}
+      </if>
+    </trim>
+    where USER_LOGIN_ID = #{userLoginId}
+  </update>
+ 
+  <!-- <delete id="deleteUserLogin"  parameterType="UserLogin">
+  	delete from user_login where user_login_id=#{userLoginId};
+  </delete> -->
+  <select id="selectUserLoginForRole" resultMap="UserLoginForRoleMap" parameterType="java.util.Map">
+		select * from 
+		    (select ul.USER_LOGIN_ID,
+			       ul.USER_NAME,
+			       ul.PASSWORD,
+			       ul.PASSWORD_HINT,
+			       ul.ENABLED,
+			       ul.DISABLED_DATE_TIME,
+			       ul.LOGIN_TYPE,
+			       ul.CREATE_BY,
+			       ul.CREATE_DATE,
+			       ul.USER_EMAIL,
+			       ul.USER_WORK_NUM,
+			       ul.USER_MC_ID,
+			       ul.USER_TEL_NUM,
+			       ul.USER_LOCALE,
+			       ul.PARTY_ID,
+			       (select b.PVALUE from cfg_parameter b where b.PDOMAIN='TCL_TOMS' and b.PTYPE='LANGUAGE' and b.PKEY=ul.USER_LOCALE) as USER_LOCALE_DESC,
+			       (case when (select count(*) from user_role_mapping b where b.user_login_id = ul.user_login_id and b.ROLE_ID=#{roleId}) > 0 then 'right' else 'left' end) as LEFT_OR_RIGHT
+			  from user_login ul where ul.`flag` = 0 ) a
+	 	 where 1=1 
+	  <include refid="userLoginWhere"/>
+  </select>
+  
+  <insert id="insertLoginHistory" parameterType="LoginHistory">
+    insert into login_history
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="userLoginId!=null" >
+        USER_LOGIN_ID,
+      </if>
+      <if test="loginDatetime!=null" >
+        LOGIN_DATETIME,
+      </if>
+      <if test="passwordUsed!=null" >
+        PASSWORD_USED,
+      </if>
+      <if test="successfulLogin!=null" >
+        SUCCESSFUL_LOGIN,
+      </if>
+      <if test="partyId!=null" >
+        PARTY_ID,
+      </if>
+      <if test="comments!=null" >
+        COMMENTS,
+      </if>
+    </trim>
+    values
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="userLoginId!=null" >
+        #{userLoginId},
+      </if>
+      <if test="loginDatetime!=null" >
+        #{loginDatetime},
+      </if>
+      <if test="passwordUsed!=null" >
+        #{passwordUsed},
+      </if>
+      <if test="successfulLogin!=null" >
+        #{successfulLogin},
+      </if>
+      <if test="partyId!=null" >
+        #{partyId},
+      </if>
+      <if test="comments!=null" >
+        #{comments},
+      </if>
+    </trim>
+  </insert>
+  
+  <select id="selectDataPermissionValues" resultType="java.lang.String" parameterType="java.lang.String">
+    select DISTINCT b.PERMISSION_VALUE
+		from user_role_mapping a,role_data_permission b
+		where a.ROLE_ID = b.ROLE_ID
+		and b.PERMISSION_TYPE = #{permissionType}
+		and a.USER_LOGIN_ID = #{userLoginId}
+  </select>
+  
+  <select id="getUserLoginList" resultMap="UserLoginMap">
+  	select ul.* from user_login ul
+		where ul.`flag` = 0 
+		and ul.ENABLED = '1'
+		and ul.USER_LOGIN_ID in (
+		select ssm.user_login_id from shop_saler_mapping ssm 
+		where 1=1 
+		and ssm.shop_id = ${shopId}
+		and ssm.user_login_id = ul.USER_LOGIN_ID 
+		)
+  </select>
+  
+  <!-- 修改微信号 -->
+  <update id="updateUserLoginTableId" parameterType="java.util.HashMap">
+  update user_login u set u.`USER_LOGIN_ID` = #{userLoginId} where u.`USER_LOGIN_ID` = #{newUserLoginId}
+  </update>
+  
+  <update id="updateUserRoleTableId" parameterType="java.util.HashMap">
+  UPDATE user_role_mapping ur SET ur.`USER_LOGIN_ID` = #{userLoginId} WHERE ur.`USER_LOGIN_ID` = #{newUserLoginId}
+  </update>
+  
+  <update id="updateUserSalerTableId" parameterType="java.util.HashMap">
+  UPDATE shop_saler_mapping s SET s.`user_login_id` = #{userLoginId} WHERE s.`user_login_id` = #{newUserLoginId}
+  </update>
+  
+ <select id="selectUserLoginId" parameterType="java.lang.String" resultType="java.lang.Integer">
+  SELECT COUNT(*) FROM user_login u WHERE binary u.`USER_LOGIN_ID` = #{newUserLoginId} 
+  </select>
+  
+  
+  
+   <select id="selectUserParty" parameterType="java.lang.String" resultType="java.lang.String">
+   SELECT rdp.permission_value AS party FROM  `role_data_permission` rdp
+	    JOIN USER_ROLE_MAPPING urm ON urm.role_id=rdp.role_id
+	    JOIN party pa ON pa.party_id=rdp.permission_value AND rdp.permission_type='PARTY'
+	    WHERE urm.USER_LOGIN_ID=#{userId} AND pa.`flag` = 0
+  </select>
+  
+  
+     
+  <select id="selectParty" parameterType="java.lang.String" resultMap="UserLoginMap" >
+
+   SELECT  pa.`PARTY_ID`  AS  partyId  ,pa.`PARTY_NAME` AS  partyName 
+FROM  party  pa  
+WHERE pa.`COUNTRY_ID`=#{countryId} AND pa.`flag` = 0
+order by pa.`PARTY_NAME` 
+  </select>
+  
+  
+     <select id="selectRoleByName" parameterType="java.lang.String" resultType="java.lang.String">
+    SELECT  role_id FROM role  WHERE role_Name=#{roleName}
+
+  </select>
+  
+  
+  <select id="selectUserLevel" resultMap="userLevelMap">
+  		select tl.id,tl.value from t_level tl where tl.countryId is null ORDER BY tl.id
+  </select>
+  
+  <select id="selectIdByValue" resultType="java.lang.String">
+  		select tl.id,tl.value from t_level tl where tl.value=#{level}
+  </select>
+  
+  <update id="deleteUserLogin" parameterType="UserLogin">
+ 	UPDATE user_login u SET u.`flag`='-1',u.`user_id` = #{operatingUser} WHERE u.`USER_LOGIN_ID`=#{userLoginId}
+  </update>
+  
+  
+  
+  <select id="selectSalerListDataBycondition" resultMap="UserLoginForSaleMap">
+  	SELECT DISTINCT a.user_login_id,a.user_name FROM user_login a, user_role_mapping c,role_data_permission n WHERE 
+	a.flag = 0  AND
+	a.user_login_id = c.user_login_id and c.role_id=n.role_id
+  	<if test="type==0">
+       	and c.role_id like 'SALES_%' 
+  	</if>
+  	<if test="type==1">
+       	and c.role_id like 'PROM_%' 
+       	and (a.USER_LOGIN_ID
+        not in(select ssm.user_login_id from shop_saler_mapping ssm where ssm.salertype =1)
+        )
+  	</if>
+  	<if test="type==2">
+       	and c.role_id like 'SUPERVISOR_%' 
+  	</if>
+   	<include refid="userLoginWhere"/>
+  </select>
+</mapper>

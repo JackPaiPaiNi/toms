@@ -1,0 +1,627 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.shop.dao.IShopDao" >
+	
+  <resultMap id="ShopMap" type="Shop" >
+    <result column="SHOP_ID" property="shopId" jdbcType="VARCHAR" />
+    <result column="SHOP_NAME" property="shopName" jdbcType="VARCHAR" />
+    <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR" />
+    <result column="CUSTOMER_NAME" property="customerName" jdbcType="VARCHAR" />
+    <result column="CREATE_BY" property="createBy" jdbcType="VARCHAR" />
+    <result column="CREATE_DATE" property="createDate" jdbcType="VARCHAR" />
+    <result column="ENTER_DATE" property="enterDate" jdbcType="DATE" />
+    <result column="ENTER_DATE_STR" property="enterDateStr" jdbcType="VARCHAR" />
+    <result column="COUNTRY_ID" property="countryId" jdbcType="VARCHAR" />
+    <result column="PROVINCE_ID" property="provinceId" jdbcType="VARCHAR" />
+    <result column="CITY_ID" property="cityId" jdbcType="VARCHAR" />
+    <result column="COUNTY_ID" property="countyId" jdbcType="VARCHAR" />
+    <result column="TOWN_ID" property="townId" jdbcType="VARCHAR" />
+    <result column="DETAIL_ADDRESS" property="detailAddress" jdbcType="VARCHAR" />
+    <result column="CONTACT_NAME" property="contactName" jdbcType="VARCHAR" />
+    <result column="PHONE" property="phone" jdbcType="VARCHAR" />
+    <result column="EMAIL" property="email" jdbcType="VARCHAR" />
+    <result column="LNG" property="lng" jdbcType="VARCHAR" />
+    <result column="LAT" property="lat" jdbcType="VARCHAR" />
+    <result column="COMMENTS" property="comments" jdbcType="VARCHAR" />
+    <result column="STATUS" property="status" jdbcType="VARCHAR" />
+    <result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+    
+    <result column="COUNTRY_NAME" property="countryName" jdbcType="VARCHAR" />
+    <result column="PROVINCE_NAME" property="provinceName" jdbcType="VARCHAR" />
+    <result column="CITY_NAME" property="cityName" jdbcType="VARCHAR" />
+    <result column="COUNTY_NAME" property="countyName" jdbcType="VARCHAR" />
+    <result column="TOWN_NAME" property="townName" jdbcType="VARCHAR" />
+    <result column="PARTY_NAME" property="partyName" jdbcType="VARCHAR" />
+    <result column="LEVEL" property="level" jdbcType="VARCHAR"/>
+    
+  </resultMap>
+  <resultMap id="ShopUserMap" type="ShopUser" >
+    <result column="shop_id" property="shopId" jdbcType="INTEGER" />
+    <result column="user_login_id" property="userLoginId" jdbcType="VARCHAR" />
+     <result column="SHOP_NAME" property="shopName" jdbcType="VARCHAR" />
+    <result column="salertype" property="salerType" jdbcType="INTEGER" />
+     <result column="ROLE_ID" property="roleId" jdbcType="VARCHAR" />
+  </resultMap>
+
+
+
+
+	 <resultMap id="ShopPhotosMap" type="ShopPhotos" >
+    <result column="ID" property="id" jdbcType="INTEGER" />
+    <result column="USER_ID" property="userId" jdbcType="VARCHAR" />
+    <result column="SHOP_ID" property="shopId" jdbcType="INTEGER" />
+    <result column="SHOP_NAME" property="shopName" jdbcType="VARCHAR" />
+    <result column="OVERALL" property="overall" jdbcType="VARCHAR" />
+    <result column="MIDDLE" property="middle" jdbcType="VARCHAR" />
+    <result column="LF" property="lf" jdbcType="VARCHAR" />
+    <result column="RG" property="rg" jdbcType="VARCHAR" />
+    <result column="OTHERONE" property="otherOne" jdbcType="VARCHAR" />
+    <result column="OTHERTWO" property="otherTwo" jdbcType="VARCHAR" />
+    <result column="SERVERID" property="serverId" jdbcType="VARCHAR" />
+    <result column="UPTIME" property="upTime" jdbcType="VARCHAR" />
+    <result column="REMARKS" property="remarks" jdbcType="VARCHAR" />
+  
+    
+  </resultMap>
+	
+	<resultMap id="partyMap" type="ShopParty" >
+   
+    <result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+    <result column="PARTY_NAME" property="partyName" jdbcType="VARCHAR" />
+    
+  </resultMap>
+  
+  <!--  <resultMap id="CfgParameterMap" type="CfgParameter" >
+    <result column="UIID" property="uiid" jdbcType="DECIMAL" />
+    <result column="PDOMAIN" property="pdomain" jdbcType="VARCHAR" />
+    <result column="PTYPE" property="ptype" jdbcType="VARCHAR" />
+    <result column="PKEY" property="pkey" jdbcType="VARCHAR" />
+    <result column="PVALUE" property="pvalue" jdbcType="VARCHAR" />
+  </resultMap> -->
+	
+	<resultMap type="Level" id="LevelMap">
+		<result column="id" property="id" jdbcType="VARCHAR"/>
+		<result column="value" property="value" jdbcType="VARCHAR"/>
+		<result column="countryId" property="countryId" jdbcType="VARCHAR"/>
+	</resultMap>
+	
+ <sql id="allWhere">
+  	<where>
+		<if test="searchStr != null"> and ${searchStr}</if>
+		<if test="levelNum != null">and v_shop.level=#{levelNum}</if>
+		<if test="conditions != null"> and ${conditions} and v_shop.flag=0</if>
+	</where>
+  </sql>
+	
+  <sql id="listWhere">
+  	<where>
+		<if test="searchStr != null"> and ${searchStr} and si.flag=0</if>
+		<if test="conditions != null"> and ${conditions} </if>
+	</where>
+  </sql>
+  
+  	
+  <sql id="listWheres">
+  	<where>
+		<if test="searchStr != null"> and ${searchStr} and si.flag=0 </if>
+		<if test="conditions != null"> and ${conditions} </if>
+	</where>
+  </sql>
+  
+ <!--  <select id="selectShops" resultMap="ShopMap">
+   select * from (
+    select 	si.SHOP_ID,
+			si.SHOP_NAME,
+			si.CUSTOMER_ID,
+			si.COUNTRY_ID,
+			cy.COUNTRY as COUNTRY_NAME,
+			si.CREATE_BY,
+			DATE_FORMAT(si.CREATE_DATE,'%Y-%m-%d') as CREATE_DATE,
+			si.ENTER_DATE,
+			DATE_FORMAT(si.ENTER_DATE,'%Y-%m-%d') as ENTER_DATE_STR,
+			si.PROVINCE_ID,
+			p.PROVINCE as PROVINCE_NAME,
+			si.CITY_ID,
+			t.CITY AS CITY_NAME,
+			si.COUNTY_ID,
+			cy1.COUNTY AS COUNTY_NAME,
+			si.TOWN_ID,
+			n.TOWN AS TOWN_NAME,
+			si.DETAIL_ADDRESS,
+			si.EMAIL,
+			si.CONTACT_NAME,
+			si.PHONE,
+			si.LAT,
+			si.LNG,
+			si.STATUS,
+			si.COMMENTS,
+    	   	ci.CUSTOMER_NAME,
+    	   	ci.party_id,
+    	   
+    	   	(select party.party_name from party where party_id = ci.party_id) as party_name
+    	   	from shop_info si
+   		    left join customer_info ci on si.CUSTOMER_ID= ci.CUSTOMER_ID 
+			left join country cy on cy.COUNTRY_ID = si.COUNTRY_ID 
+			left join province p on p.PROVINCE_ID = si.PROVINCE_ID
+			left join city t on t.CITY_ID = si.CITY_ID
+			left join county cy1 on cy1.COUNTY_ID = si.COUNTY_ID
+			left join town n on n.TOWN_ID = si.TOWN_ID 
+			
+			) v_shop
+    <include refid="listWhere"/>
+    order by v_shop.CREATE_DATE desc limit #{start},#{limit}; 
+  </select> -->
+   <select id="selectShops" resultMap="ShopMap">
+   select * from (
+     SELECT 	si.SHOP_ID,
+			si.SHOP_NAME,
+			si.location,
+			si.CUSTOMER_ID,
+			si.COUNTRY_ID,
+			( pa.party_name) AS COUNTRY_NAME,
+			si.CREATE_BY,
+			DATE_FORMAT(si.CREATE_DATE,'%Y-%m-%d') AS CREATE_DATE,
+			si.ENTER_DATE,
+			DATE_FORMAT(si.ENTER_DATE,'%Y-%m-%d') AS ENTER_DATE_STR,
+			si.PROVINCE_ID,
+			p.PROVINCE AS PROVINCE_NAME,
+			si.CITY_ID,
+			t.CITY AS CITY_NAME,
+			si.COUNTY_ID,
+			cy1.COUNTY AS COUNTY_NAME,
+			si.TOWN_ID,
+			n.TOWN AS TOWN_NAME,
+			si.DETAIL_ADDRESS,
+			si.EMAIL,
+			si.CONTACT_NAME,
+			si.PHONE,
+			si.LAT,
+			si.LNG,
+			si.STATUS,
+			si.COMMENTS,
+    	   	ci.CUSTOMER_NAME,
+    	   	si.level,
+    	   	<!-- ci.party_id,
+    	   
+    	   	(SELECT party.party_name FROM party WHERE party_id = ci.party_id) AS party_name -->
+    	   	si.party_id,ci.party_id AS cpartyId,
+    	   
+    	   	(SELECT party.party_name FROM party WHERE party_id = si.party_id) AS party_name,
+    	   	si.flag
+    	   	FROM shop_info si
+   		    LEFT JOIN customer_info ci ON si.CUSTOMER_ID= ci.CUSTOMER_ID 
+			LEFT JOIN party pa ON pa.party_id = si.party_id 
+			LEFT JOIN province p ON p.PROVINCE_ID = si.PROVINCE_ID
+			LEFT JOIN city t ON t.CITY_ID = si.CITY_ID
+			LEFT JOIN county cy1 ON cy1.COUNTY_ID = si.COUNTY_ID
+			LEFT JOIN town n ON n.TOWN_ID = si.TOWN_ID 
+			<!-- WHERE  pa.`COUNTRY_ID`=pa.`PARTY_ID` -->
+			
+			) v_shop
+    <include refid="allWhere"/>
+    order by v_shop.CREATE_DATE desc limit #{start},#{limit}; 
+  </select> 
+  
+  
+  
+  
+    <select id="selectShopName" resultMap="ShopMap">
+ 	SELECT (SELECT party_name FROM party WHERE pa.`COUNTRY_ID`=party_id) AS COUNTRY_NAME, si.`SHOP_NAME`,pa.party_name,ci.`CUSTOMER_CODE` AS CUSTOMER_ID  FROM shop_info si 
+	LEFT JOIN party pa ON pa.`PARTY_ID`=si.`party_id`
+	LEFT JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID`
+    <include refid="listWheres"/>
+    	ORDER BY si.`SHOP_NAME`
+  </select> 
+  
+  
+ <!--  <select id="countShops" resultType="int">
+   select count(*) from (
+   	    select 	si.SHOP_ID,
+			si.SHOP_NAME,
+			si.CUSTOMER_ID,
+			si.COUNTRY_ID,
+			cy.COUNTRY as COUNTRY_NAME,
+			si.CREATE_BY,
+			DATE_FORMAT(si.CREATE_DATE,'%Y-%m-%d') as CREATE_DATE,
+			si.ENTER_DATE,
+			DATE_FORMAT(si.ENTER_DATE,'%Y-%m-%d') as ENTER_DATE_STR,
+			si.PROVINCE_ID,
+			p.PROVINCE as PROVINCE_NAME,
+			si.CITY_ID,
+			t.CITY AS CITY_NAME,
+			si.COUNTY_ID,
+			cy1.COUNTY AS COUNTY_NAME,
+			si.TOWN_ID,
+			n.TOWN AS TOWN_NAME,
+			si.DETAIL_ADDRESS,
+			si.EMAIL,
+			si.CONTACT_NAME,
+			si.PHONE,
+			si.LAT,
+			si.LNG,
+			si.STATUS,
+			si.COMMENTS,
+    	   	ci.CUSTOMER_NAME,
+    	   	ci.party_id,
+    	   	ssm.`user_login_id`,
+    	   	(select party.party_name from party where party_id = ci.party_id) as party_name
+    	   	from shop_info si
+   		    left join customer_info ci on si.CUSTOMER_ID= ci.CUSTOMER_ID 
+			left join country cy on cy.COUNTRY_ID = si.COUNTRY_ID 
+			left join province p on p.PROVINCE_ID = si.PROVINCE_ID
+			left join city t on t.CITY_ID = si.CITY_ID
+			left join county cy1 on cy1.COUNTY_ID = si.COUNTY_ID
+			left join town n on n.TOWN_ID = si.TOWN_ID
+			LEFT JOIN shop_saler_mapping ssm ON si.`SHOP_ID`=ssm.`shop_id`
+   ) v_shop
+    <include refid="listWhere"/>
+  </select> -->
+   <select id="countShops" resultType="int">
+   select count(*) from (
+   	    SELECT 	si.SHOP_ID,
+			si.SHOP_NAME,
+			si.CUSTOMER_ID,
+			si.location,
+			si.COUNTRY_ID,
+			( pa.party_name) AS COUNTRY_NAME,
+			si.CREATE_BY,
+			DATE_FORMAT(si.CREATE_DATE,'%Y-%m-%d') AS CREATE_DATE,
+			si.ENTER_DATE,
+			DATE_FORMAT(si.ENTER_DATE,'%Y-%m-%d') AS ENTER_DATE_STR,
+			si.PROVINCE_ID,
+			p.PROVINCE AS PROVINCE_NAME,
+			si.CITY_ID,
+			t.CITY AS CITY_NAME,
+			si.COUNTY_ID,
+			cy1.COUNTY AS COUNTY_NAME,
+			si.TOWN_ID,
+			n.TOWN AS TOWN_NAME,
+			si.DETAIL_ADDRESS,
+			si.EMAIL,
+			si.CONTACT_NAME,
+			si.PHONE,
+			si.LAT,
+			si.LNG,
+			si.STATUS,
+			si.COMMENTS,
+    	   	ci.CUSTOMER_NAME,
+    	   	si.level,
+    	   <!-- ci.party_id,
+    	   
+    	   	(SELECT party.party_name FROM party WHERE party_id = ci.party_id) AS party_name -->
+    	   	si.party_id,ci.party_id AS cpartyId,
+    	   
+    	   	(SELECT party.party_name FROM party WHERE party_id = si.party_id) AS party_name,
+    	   	si.flag
+    	   	FROM shop_info si
+   		    LEFT JOIN customer_info ci ON si.CUSTOMER_ID= ci.CUSTOMER_ID 
+			LEFT JOIN party pa ON pa.party_id = si.party_id 
+			LEFT JOIN province p ON p.PROVINCE_ID = si.PROVINCE_ID
+			LEFT JOIN city t ON t.CITY_ID = si.CITY_ID
+			LEFT JOIN county cy1 ON cy1.COUNTY_ID = si.COUNTY_ID
+			LEFT JOIN town n ON n.TOWN_ID = si.TOWN_ID 
+			<!-- WHERE  pa.`COUNTRY_ID`=pa.`PARTY_ID` -->
+   ) v_shop
+    <include refid="allWhere"/>
+  </select>
+  
+  <insert id="saveShop" parameterType="Shop" useGeneratedKeys="true" keyProperty="shopId">
+  	insert into shop_info(SHOP_NAME,CUSTOMER_ID,CREATE_BY,CREATE_DATE,ENTER_DATE,COUNTRY_ID,PROVINCE_ID,
+  	CITY_ID,COUNTY_ID,TOWN_ID,DETAIL_ADDRESS,CONTACT_NAME,PHONE,EMAIL,LNG,LAT,STATUS,COMMENTS,PARTY_ID,LEVEL,LOCATION) 
+  	values(#{shopName},#{customerId},#{createBy},#{createDate},#{enterDate},#{countryId},#{provinceId},#{cityId},#{countyId},#{townId},
+  	#{detailAddress},#{contactName},#{phone},#{email},#{lng},#{lat},#{status},#{comments},#{partyId},#{level},#{location});
+  </insert>
+  
+  <insert id="saShopUserRelation">
+  	insert into shop_saler_mapping(shop_id,user_login_id,salertype) 
+  	values(#{shopId},#{user_login_id},#{type});
+  </insert>
+  <select id="getShopUserRelations" resultMap="ShopUserMap" resultType="ShopUser">
+  	 select * from shop_saler_mapping ssm,user_login ul where 
+  	 ssm.user_login_id=ul.user_login_id and ul.party_Id=#{partyId} and SHOP_ID=#{shopId};
+  </select>
+  <delete id="clearShopUserRelations">
+  	 delete from shop_saler_mapping where SHOP_ID=#{sid};
+  </delete>
+  
+  <select id="getShop" resultMap="ShopMap" resultType="Shop">
+  	 select * from shop_info where SHOP_ID=#{sid} limit 1;
+  </select>
+  <update id="editShop" parameterType="Shop">
+  	update shop_info set SHOP_NAME=#{shopName},CUSTOMER_ID=#{customerId},PARTY_ID=#{partyId},ENTER_DATE=#{enterDate},COUNTRY_ID=#{countryId},PROVINCE_ID=#{provinceId},LEVEL=#{level},
+  	CITY_ID=#{cityId},COUNTY_ID=#{countyId},TOWN_ID=#{townId},DETAIL_ADDRESS=#{detailAddress},CONTACT_NAME=#{contactName},PHONE=#{phone},EMAIL=#{email},LNG=#{lng},LAT=#{lat},STATUS=#{status}
+  	,COMMENTS=#{comments} ,LOCATION = #{location}
+  	where SHOP_ID=#{shopId};
+  </update>
+  
+  <!-- 假删除 -->
+  <update id="deleteShop" parameterType="Shop">
+  		update shop_info set flag='-1',del_user_id=#{delUserId} where shop_id=#{shopId};
+  </update>
+ <!--  <delete id="deleteShop">
+  	delete from shop_info where SHOP_ID=#{shopId};
+  </delete> -->
+  
+  <delete id="deleteShopSalerMapping">
+  	delete from shop_saler_mapping where SHOP_ID=#{shopId};
+  </delete>
+  
+  <select id="getShopDataList" resultMap="ShopMap">
+  	select si.* 
+  	from shop_info si
+<!--    	left join customer_info ci on si.CUSTOMER_ID= ci.CUSTOMER_ID
+ -->  	where 1=1
+  	and ${conditions}
+  </select>
+  
+  <select id="getShopGeoCoord" resultMap="ShopMap">
+  	select si.SHOP_NAME,si.LAT,si.LNG
+  	from shop_info si
+<!--    	left join customer_info ci on si.CUSTOMER_ID= ci.CUSTOMER_ID
+ -->  	where 1=1
+  	and ${conditions}
+  	 order by shop_id desc
+  </select>
+  
+  <select id="getShopByName" resultType="int">
+  	select count(*)
+  	from shop_info si where 1=1
+	and si.shop_name = #{shopName} 
+	and si.flag="0"
+	<!-- and si.customer_id = #{customer} -->
+  </select>
+  
+  <select id="getRepeatByName" resultMap="ShopMap">
+	select *   from shop_info si 
+	where  si.shop_name = #{shopName}  
+	and si.flag="0"
+  </select>
+  
+  
+     <select id="selectShopPhotos" resultMap="ShopPhotosMap">
+  		SELECT  sp.*,si.`SHOP_NAME` FROM `store_photos` sp
+		JOIN shop_info  si ON si.`SHOP_ID`=sp.`shop_id`
+		JOIN   party  pa ON   pa.party_id = si.party_id
+  
+    <include refid="listWhere"/>
+    order by sp.upTime desc limit #{start},#{limit}; 
+  </select>
+  <select id="countShopPhotos" resultType="int">
+  	SELECT  COUNT(*) FROM `store_photos` sp
+		JOIN shop_info  si ON si.`SHOP_ID`=sp.`shop_id`
+		JOIN   party  pa ON   pa.party_id = si.party_id
+    <include refid="listWhere"/>
+  </select>
+  
+   <select id="getShopPhotosDataList" resultMap="ShopPhotosMap">
+	SELECT  sp.*,si.`SHOP_NAME` FROM `store_photos` sp
+		JOIN shop_info  si ON si.`SHOP_ID`=sp.`shop_id`
+		JOIN   party  pa ON   pa.party_id = si.party_id
+    	where 1=1
+  	and ${conditions}
+  </select>
+  
+  <select id="getShopByNames" resultMap="ShopMap">
+  	select si.shop_id
+  	from shop_info si where 1=1
+	and si.shop_name = #{shopName} 
+  </select>
+  
+   <select id="getShopByNameOrLocation" resultMap="ShopMap">
+  	select si.shop_id
+  	from shop_info si where 1=1
+	and (si.shop_name = #{shopName} or si.`location` = #{shopName} );
+  </select>
+  
+  <select id="selectPartyByName" resultMap="ShopMap">
+  	select pa.`PARTY_ID`
+  	from party pa where  pa.`PARTY_NAME` =#{partyName} AND pa.`flag` = 0
+  </select>
+  
+   <select id="selectPartyByCount"  resultType="int">
+  	select count(*)
+  	from party pa where  pa.`PARTY_NAME` =#{partyName} AND pa.`flag` = 0
+  </select>
+  
+    <select id="selectParty" parameterType="java.lang.String" resultMap="partyMap" >
+ <!-- select  pa.`PARTY_ID`  as  partyId  ,pa.`PARTY_NAME` as  partyName 
+from  party  pa  
+where pa.`COUNTRY_ID`=#{countryId}
+and pa.`PARTY_ID`!=#{countryId}
+ -->
+
+SELECT * FROM ( 
+   SELECT  pa.`PARTY_ID`  AS  partyId  ,pa.`PARTY_NAME` AS  partyName 
+FROM  party  pa  
+WHERE pa.`COUNTRY_ID`=#{countryId}
+AND pa.`PARTY_ID`!=#{countryId}  AND pa.`flag` = 0
+  <!--  UNION ALL 
+		SELECT '','   All  '  FROM DUAL -->
+   )c
+   
+   ORDER BY c.partyName
+  </select>
+  
+
+ <select id="getShopBySNameAndCName" resultMap="ShopMap">
+ 	select si.* 
+ 	from shop_info si 
+join customer_info ci on si.CUSTOMER_ID=ci.CUSTOMER_ID
+where si.SHOP_NAME=#{shopName} and ci.CUSTOMER_NAME=#{customerName}
+ </select>  
+ 
+ <select id="selectCustomer" resultMap="ShopMap">
+ SELECT * FROM ( 
+  
+ 	SELECT CONCAT(ci.customer_name,'_',ci.customer_code) AS customerName,customer_id AS customerId FROM customer_info  ci
+JOIN party pa ON pa.`PARTY_ID`=ci.`PARTY_ID`
+WHERE pa.`COUNTRY_ID`=#{countryId}
+   UNION ALL 
+		SELECT '   All  ',''  FROM DUAL
+   )c
+   
+ORDER BY c.customerName
+ </select> 
+  
+  <select id="selectShopLevel" resultMap="LevelMap">
+ select DISTINCT t.id,t.value from user_role_mapping urm,role_data_permission rdp,t_level t 
+ where urm.ROLE_ID=rdp.ROLE_ID and rdp.PERMISSION_VALUE=t.countryId and urm.USER_LOGIN_ID=#{partyId} ORDER BY t.id
+  </select>
+  
+  <select id="selectLevelByCountry" resultMap="LevelMap">
+  select * from (select t.id,t.value from t_level t where t.countryId=#{countryId} union select '', 'All' from dual)tt 
+  ORDER BY tt.id ASC  
+  </select>
+   
+  <select id="selectLevelByCountryName" parameterType="java.lang.String" resultType="java.lang.String">
+  	select p.PARTY_ID from party p where p.PARTY_ID=p.COUNTRY_ID and p.PARTY_NAME=#{countryName}
+  </select>
+   
+  <select id="selectLevelName" parameterType="java.lang.String" resultMap="LevelMap">
+  	select t.id,t.value from t_level t where t.value=#{levelName} and t.countryId=#{countryId}
+  </select>
+  
+  
+    <select id="selectUserByCount" parameterType="java.lang.String" resultType="int">
+  SELECT  COUNT(*) FROM user_login WHERE user_login_id=#{user}
+  </select>
+  
+  
+    <select id="selectUserByPro" parameterType="java.lang.String" resultMap="ShopUserMap"  >
+  	SELECT  si.`SHOP_ID`,si.`SHOP_NAME`,ssm.`user_login_id` FROM shop_saler_mapping  ssm
+	LEFT JOIN shop_info si  ON si.`SHOP_ID`=ssm.`shop_id`
+	WHERE user_login_id=#{user}
+
+  </select>
+  
+    <delete id="deleteShopMapping"  >
+  	 delete from shop_saler_mapping where user_login_id=#{user}
+  </delete>
+ 
+
+  <select id="selectUserByRole" parameterType="java.lang.String" resultMap="ShopUserMap"  >
+  	 
+SELECT  * FROM user_role_mapping
+WHERE user_login_id=#{user}
+
+  </select>
+  
+  <select id="selectLocationIsExist" parameterType="java.lang.String" resultType="java.lang.Integer"  >
+	SELECT COUNT(*) FROM `shop_info` si WHERE si.`location` = #{location} OR si.`SHOP_NAME` = #{location}
+  </select>
+  
+  <update id="updateShopName"  parameterType="java.util.List">
+	 
+	      <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+				UPDATE shop_info
+				<set>
+				 shop_name=#{item.shopName}
+				</set>
+				where shop_id=#{item.shopId} 
+		 </foreach>
+		 
+    </update>
+    
+    
+     <select id="selectShopBySupSale" resultMap="ShopMap">
+   select * from (
+     SELECT 	si.SHOP_ID,
+			si.SHOP_NAME,
+			si.location,
+			si.CUSTOMER_ID,
+			si.COUNTRY_ID,
+			( pa.party_name) AS COUNTRY_NAME,
+			si.CREATE_BY,
+			DATE_FORMAT(si.CREATE_DATE,'%Y-%m-%d') AS CREATE_DATE,
+			si.ENTER_DATE,
+			DATE_FORMAT(si.ENTER_DATE,'%Y-%m-%d') AS ENTER_DATE_STR,
+			si.PROVINCE_ID,
+			p.PROVINCE AS PROVINCE_NAME,
+			si.CITY_ID,
+			t.CITY AS CITY_NAME,
+			si.COUNTY_ID,
+			cy1.COUNTY AS COUNTY_NAME,
+			si.TOWN_ID,
+			n.TOWN AS TOWN_NAME,
+			si.DETAIL_ADDRESS,
+			si.EMAIL,
+			si.CONTACT_NAME,
+			si.PHONE,
+			si.LAT,
+			si.LNG,
+			si.STATUS,
+			si.COMMENTS,
+    	   	ci.CUSTOMER_NAME,
+    	   	si.level,
+    	   	<!-- ci.party_id,
+    	   
+    	   	(SELECT party.party_name FROM party WHERE party_id = ci.party_id) AS party_name -->
+    	   	si.party_id,ci.party_id AS cpartyId,
+    	   
+    	   	(SELECT party.party_name FROM party WHERE party_id = si.party_id) AS party_name,
+    	   	si.flag
+    	   	FROM shop_info si
+   		    LEFT JOIN customer_info ci ON si.CUSTOMER_ID= ci.CUSTOMER_ID 
+			LEFT JOIN party pa ON pa.party_id = si.party_id 
+			LEFT JOIN province p ON p.PROVINCE_ID = si.PROVINCE_ID
+			LEFT JOIN city t ON t.CITY_ID = si.CITY_ID
+			LEFT JOIN county cy1 ON cy1.COUNTY_ID = si.COUNTY_ID
+			LEFT JOIN town n ON n.TOWN_ID = si.TOWN_ID 
+			
+			
+			) v_shop
+			LEFT JOIN shop_saler_mapping ssm on ssm.shop_id=v_shop.SHOP_ID
+    <include refid="allWhere"/>
+    order by v_shop.CREATE_DATE desc limit #{start},#{limit}; 
+  </select> 
+    
+    <select id="countShopBySupSale" resultType="int">
+   select count(*) from (
+   	    SELECT 	si.SHOP_ID,
+			si.SHOP_NAME,
+			si.CUSTOMER_ID,
+			si.location,
+			si.COUNTRY_ID,
+			( pa.party_name) AS COUNTRY_NAME,
+			si.CREATE_BY,
+			DATE_FORMAT(si.CREATE_DATE,'%Y-%m-%d') AS CREATE_DATE,
+			si.ENTER_DATE,
+			DATE_FORMAT(si.ENTER_DATE,'%Y-%m-%d') AS ENTER_DATE_STR,
+			si.PROVINCE_ID,
+			p.PROVINCE AS PROVINCE_NAME,
+			si.CITY_ID,
+			t.CITY AS CITY_NAME,
+			si.COUNTY_ID,
+			cy1.COUNTY AS COUNTY_NAME,
+			si.TOWN_ID,
+			n.TOWN AS TOWN_NAME,
+			si.DETAIL_ADDRESS,
+			si.EMAIL,
+			si.CONTACT_NAME,
+			si.PHONE,
+			si.LAT,
+			si.LNG,
+			si.STATUS,
+			si.COMMENTS,
+    	   	ci.CUSTOMER_NAME,
+    	   	si.level,
+    	   <!-- ci.party_id,
+    	   
+    	   	(SELECT party.party_name FROM party WHERE party_id = ci.party_id) AS party_name -->
+    	   	si.party_id,ci.party_id AS cpartyId,
+    	   
+    	   	(SELECT party.party_name FROM party WHERE party_id = si.party_id) AS party_name,
+    	   	si.flag
+    	   	FROM shop_info si
+   		    LEFT JOIN customer_info ci ON si.CUSTOMER_ID= ci.CUSTOMER_ID 
+			LEFT JOIN party pa ON pa.party_id = si.party_id 
+			LEFT JOIN province p ON p.PROVINCE_ID = si.PROVINCE_ID
+			LEFT JOIN city t ON t.CITY_ID = si.CITY_ID
+			LEFT JOIN county cy1 ON cy1.COUNTY_ID = si.COUNTY_ID
+			LEFT JOIN town n ON n.TOWN_ID = si.TOWN_ID 
+			
+   ) v_shop
+    LEFT JOIN shop_saler_mapping ssm on ssm.shop_id=v_shop.SHOP_ID
+    <include refid="allWhere"/>
+  </select>
+</mapper>

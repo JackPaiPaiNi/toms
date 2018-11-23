@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.district.dao.IDistrictDao" >
+	
+  <resultMap id="CountryMap" type="Country" >
+    <result column="COUNTRY_ID" property="countryId" jdbcType="VARCHAR" />
+    <result column="COUNTRY" property="countryName" jdbcType="VARCHAR" />
+    <result column="COUNTRY_EN" property="countryEn" jdbcType="VARCHAR" />
+    <result column="COUNTRY_LOCAL" property="countryLocal" jdbcType="VARCHAR" />
+    <result column="STATUS" property="status" jdbcType="CHAR" />
+  </resultMap>
+  <resultMap id="ProvinceMap" type="Province" >
+    <result column="PROVINCE_ID" property="provinceId" jdbcType="VARCHAR" />
+    <result column="PROVINCE" property="provinceName" jdbcType="VARCHAR" />
+    <result column="PROVINCE_EN" property="provinceEn" jdbcType="VARCHAR" />
+    <result column="PROVINCE_LOCAL" property="provinceLocal" jdbcType="VARCHAR" />
+    <result column="COUNTRY_ID" property="countryId" jdbcType="VARCHAR" />
+    <result column="STATUS" property="status" jdbcType="CHAR" />
+  </resultMap>
+  <resultMap id="CityMap" type="City" >
+    <result column="CITY_ID" property="cityId" jdbcType="VARCHAR" />
+    <result column="CITY" property="cityName" jdbcType="VARCHAR" />
+    <result column="CITY_EN" property="cityEn" jdbcType="VARCHAR" />
+    <result column="CITY_LOCAL" property="cityLocal" jdbcType="VARCHAR" />
+    <result column="PROVINCE_ID" property="provinceId" jdbcType="VARCHAR" />
+    <result column="STATUS" property="status" jdbcType="CHAR" />
+  </resultMap>
+  <resultMap id="CountyMap" type="County" >
+    <result column="COUNTY_ID" property="countyId" jdbcType="VARCHAR" />
+    <result column="COUNTY" property="countyName" jdbcType="VARCHAR" />
+    <result column="COUNTY_EN" property="countyEn" jdbcType="VARCHAR" />
+    <result column="COUNTY_LOCAL" property="countyLocal" jdbcType="VARCHAR" />
+    <result column="CITY_ID" property="cityId" jdbcType="VARCHAR" />
+    <result column="STATUS" property="status" jdbcType="CHAR" />
+  </resultMap>
+  <resultMap id="TownMap" type="Town" >
+    <result column="TOWN_ID" property="townId" jdbcType="VARCHAR" />
+    <result column="TOWN" property="townName" jdbcType="VARCHAR" />
+    <result column="TOWN_EN" property="townEn" jdbcType="VARCHAR" />
+    <result column="TOWN_LOCAL" property="townLocal" jdbcType="VARCHAR" />
+    <result column="COUNTY_ID" property="countyId" jdbcType="VARCHAR" />
+    <result column="STATUS" property="status" jdbcType="CHAR" />
+  </resultMap>
+	
+	<select id="selectCountry" resultMap="CountryMap">
+SELECT DISTINCT  p.party_id AS countryId,p.`PARTY_NAME` AS countryName FROM user_role_mapping rm,role_data_permission dp,party p
+WHERE p.`flag` = 0 AND rm.role_id=dp.role_id AND dp.permission_type='PARTY' AND p.party_id=dp.permission_value
+AND rm.user_login_id=#{conSt} AND p.country_id=p.party_id order by p.`PARTY_ID` 
+
+	</select>
+	
+	<select id="selectProvince" resultMap="CountryMap">
+SELECT c.province_id AS countryId ,c.province AS countryName FROM 
+( SELECT * FROM province  WHERE COUNTRY_ID=#{partyId} UNION ALL SELECT '','All','All','All','','1' FROM DUAL ) c ORDER BY c.province_id
+	
+	</select>
+
+  <select id="getCountryList"  resultMap="CountryMap">
+SELECT DISTINCT  p.party_id AS countryId,p.`PARTY_NAME` AS countryName 
+	,p.`PARTY_NAME` AS COUNTRY_EN ,p.`PARTY_NAME` AS COUNTRY_LOCAL FROM user_role_mapping rm,role_data_permission dp,party p
+WHERE p.`flag` = 0 AND rm.role_id=dp.role_id AND dp.permission_type='PARTY' AND p.party_id=dp.permission_value
+AND rm.user_login_id=#{conStr} AND p.country_id=p.party_id ORDER BY p.`PARTY_ID` 
+  <!--   select * from (
+		select * from country
+  	<if test="conStr!=null">
+		UNION all 
+		select '','All','All','All','1' from DUAL
+  	</if> ) c
+	order by c.country_id; -->
+  </select>
+  
+  <select id="getProvinceList" resultMap="ProvinceMap">
+   <!--  select * from (
+		select * from province  where COUNTRY_ID=#{countryId}
+		<if test="conStr!=null">
+		UNION all 
+		select '','All','All','All','','1' from DUAL
+		</if>) c
+	order by c.province_id; -->
+	select * from ( select * from province where COUNTRY_ID=#{countryId} ) c order by c.province_id; 
+  </select>
+  
+  <select id="getCityList" resultMap="CityMap">
+    select * from (
+		select * from city where PROVINCE_ID=#{provinceId}
+		<if test="conStr!=null">
+		UNION all 
+		select '','All','All','All','All','','1' from DUAL
+		</if>) c
+	order by c.city_id;
+  </select>
+  
+  <select id="getCountyList" resultMap="CountyMap">
+    select * from (
+		select * from county where CITY_ID=#{cityId}
+		<if test="conStr!=null">
+		UNION all 
+		select '','All','All','All','All','','1' from DUAL
+		</if>) c
+	order by c.county_id;
+  </select>
+  
+  <select id="getTownList" resultMap="TownMap">
+    select * from (
+		select * from town where COUNTY_ID=#{countyId}
+		<if test="conStr!=null">
+		UNION all 
+		select '','All','All','All','','1' from DUAL
+		</if>) c
+	order by c.town_id;
+  </select>
+  
+  <select id="loadCityList" resultMap="CityMap">
+  		<!-- select c.city_id as cityId,c.city as cityName from city c where c.country_id =#{countryId}; -->
+  		select * from (
+		select c.city_id as cityId,c.city as cityName from city c where c.country_id =#{countryId} 
+		union all select '','All' from dual
+		) t ORDER BY t.cityId ASC
+  </select>
+  
+</mapper>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.ws.dao.DMXShopDao">
+	<resultMap type="DMXShop" id="shopMap">
+		<result column="shop_code" property="shopCode" jdbcType="VARCHAR"/>
+		<result column="shop_name" property="shopName" jdbcType="VARCHAR"/>
+		<result column="ctime" property="ctime" jdbcType="DATE"/>
+	</resultMap>
+	
+	<sql id="baseselectshop">
+		select sdu.* 
+		from shop_dmx_unmaintained sdu
+	</sql>
+	
+	<!-- 批量插入未维护门店数据 -->
+	<insert id="InsertUnMaintainedShopBatch" parameterType="java.util.List">
+		insert into shop_dmx_unmaintained(shop_code,shop_name,ctime)
+		values
+		<foreach collection="list" item="item" index="index" separator=",">
+		(#{item.shopCode},#{item.shopName},#{item.ctime})
+		</foreach>
+	</insert>
+	
+	<!-- 根据名称查询门店 -->
+	<select id="GetShopByName" resultMap="shopMap">
+		<include refid="baseselectshop"/>
+		where sdu.shop_name=#{shopName} limit 0,5
+	</select>
+</mapper>

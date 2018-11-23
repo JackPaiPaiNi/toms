@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.sale.dao.ISaleDao" >
+	
+  <resultMap id="SaleMap" type="Sale" >
+    <result column="id" property="saleId" jdbcType="VARCHAR" />
+    <result column="user_id" property="userId" jdbcType="VARCHAR" />
+    <result column="user_name" property="userName" jdbcType="VARCHAR" />
+    <result column="model" property="model" jdbcType="INTEGER" />
+    <result column="quantity" property="quantity" jdbcType="INTEGER" />
+    <result column="price" property="price" jdbcType="FLOAT" />
+    <result column="amount" property="amount" jdbcType="FLOAT" />
+    <result column="remark" property="remark" jdbcType="VARCHAR" />
+    <result column="datadate" property="datadate" jdbcType="VARCHAR" />
+    <result column="country" property="country" jdbcType="VARCHAR" />
+    <result column="ctime" property="ctime" jdbcType="DATE" />
+    <result column="shop_id" property="shopId" jdbcType="INTEGER" />
+    <result column="SHOP_NAME" property="shopName" jdbcType="VARCHAR" />
+    
+    <result column="customer_id" property="customerId" jdbcType="VARCHAR" />
+    <result column="customer_name" property="customerName" jdbcType="VARCHAR" />
+    <result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+    <result column="PARTY_NAME" property="partyName" jdbcType="VARCHAR" />
+    <result column="hq_model" property="hqModel" jdbcType="VARCHAR" />
+  </resultMap>
+
+  <sql id="listWhere">
+  	<where>
+		<if test="searchStr != null"> and ${searchStr} </if>
+		<if test="conditions != null"> and ${conditions} </if>
+	</where>
+  </sql>
+  <select id="selectSales" resultMap="SaleMap">
+	<!-- 	select * from (
+			select  vs.id,
+				vs.user_id,
+				tm.hq_model,
+				vs.model,
+				vs.quantity,
+				vs.amount,
+				vs.remark,
+				vs.datadate,
+				vs.ctime as ctime,
+				vs.USER_NAME,
+				vs.shop_id,
+				vs.shop_name,
+				vs.customer_id,
+				vs.customer_name,
+				p.PARTY_ID,
+				p.PARTY_NAME,
+				(select cp.party_name from party cp where cp.PARTY_ID = p.COUNTRY_ID) as country	
+			from v_sale vs
+			left join party p on vs.PARTY_ID = p.PARTY_ID 
+			left join t_modelmap tm on tm.branch_model = vs.model ) a -->
+			
+			SELECT  vs.id,
+				vs.user_id,
+				tm.hq_model,
+				vs.model,
+				vs.quantity,
+				vs.amount,
+				vs.remark,
+				vs.datadate,
+				vs.ctime AS ctime,
+				vs.USER_NAME,
+				vs.shop_id,
+				vs.shop_name,
+				vs.customer_id,
+				vs.customer_name,
+				p.PARTY_ID,
+				p.PARTY_NAME,
+				cp.`PARTY_NAME` AS country
+			FROM v_sale vs
+			 JOIN party p ON vs.PARTY_ID = p.PARTY_ID 
+			 JOIN   party cp  ON  cp.PARTY_ID = p.COUNTRY_ID  
+			 JOIN t_modelmap tm ON tm.branch_model = vs.model  AND p.`COUNTRY_ID`=tm.`party_id`
+			 JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+    <include refid="listWhere"/>
+   order by vs.datadate  desc 
+   limit #{start},#{limit};
+  </select>
+  <select id="countSales" resultType="int">
+    SELECT  count(*)	
+			FROM v_sale vs
+			 JOIN party p ON vs.PARTY_ID = p.PARTY_ID 
+			 JOIN   party cp  ON  cp.PARTY_ID = p.COUNTRY_ID  
+			 JOIN t_modelmap tm ON tm.branch_model = vs.model  AND p.`COUNTRY_ID`=tm.`party_id`
+			 JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+			 
+    <include refid="listWhere"/>
+  
+  </select>
+  
+  
+   <select id="selectCountrySales" resultMap="SaleMap">
+	
+			SELECT  vs.id,
+				vs.user_id,
+				tm.hq_model,
+				vs.model,
+				vs.quantity,
+				vs.amount,
+				vs.remark,
+				vs.datadate,
+				vs.ctime AS ctime,
+				ul.USER_NAME,
+				
+				cp.`PARTY_NAME` AS country
+			FROM t_sale vs
+			LEFT JOIN user_login ul ON ul.`USER_LOGIN_ID`=vs.`user_id`
+			 JOIN party cp ON vs.country = cp.PARTY_ID
+			 JOIN t_modelmap tm ON tm.branch_model = vs.model  AND cp.`COUNTRY_ID`=tm.`party_id`
+			 JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+			
+    <include refid="listWhere"/>
+      AND (VS.SHOP_ID IS NULL OR  vs.shop_id=""  or vs.shop_id=0)
+       AND (VS.CUSTOMER_ID IS NULL OR  vs.CUSTOMER_id=""  OR vs.CUSTOMER_id=0)
+   order by vs.datadate  desc 
+   limit #{start},#{limit};
+  </select>
+  <select id="countCountrySales" resultType="int">
+    SELECT  count(*)	
+			FROM t_sale vs
+			LEFT JOIN user_login ul ON ul.`USER_LOGIN_ID`=vs.`user_id`
+			 JOIN party cp ON vs.country = cp.PARTY_ID
+			 JOIN t_modelmap tm ON tm.branch_model = vs.model  AND cp.`COUNTRY_ID`=tm.`party_id`
+			 JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+			
+    <include refid="listWhere"/>
+      AND (VS.SHOP_ID IS NULL OR  vs.shop_id=""  or vs.shop_id=0)
+       AND (VS.CUSTOMER_ID IS NULL OR  vs.CUSTOMER_id=""  OR vs.CUSTOMER_id=0)
+  
+  </select>
+  
+  
+   <select id="selectCustomerSales" resultMap="SaleMap">
+	
+		
+			SELECT  vs.id,
+				vs.user_id,
+				tm.hq_model,
+				vs.model,
+				vs.quantity,
+				vs.amount,
+				vs.remark,
+				vs.datadate,
+				vs.ctime AS ctime,
+				ul.USER_NAME,
+				
+				vs.customer_id,
+				ci.customer_name,
+				p.PARTY_ID,
+				p.PARTY_NAME,
+				cp.`PARTY_NAME` AS country
+			FROM t_sale vs
+			JOIN customer_info ci ON ci.`CUSTOMER_ID`=vs.`customer_id`
+			LEFT JOIN user_login ul ON ul.`USER_LOGIN_ID`=vs.`user_id`
+			LEFT  JOIN party p ON  ci.`PARTY_ID` = p.PARTY_ID 
+			 JOIN   party cp  ON  cp.PARTY_ID = vs.COUNTRY  
+			 JOIN t_modelmap tm ON tm.branch_model = vs.model  AND vs.`COUNTRY`=tm.`party_id`
+			 JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+			 
+    <include refid="listWhere"/>
+   order by vs.datadate  desc 
+   limit #{start},#{limit};
+  </select>
+  <select id="countCustomerSales" resultType="int">
+    SELECT  count(*)	
+		FROM t_sale vs
+			JOIN customer_info ci ON ci.`CUSTOMER_ID`=vs.`customer_id`
+			LEFT JOIN user_login ul ON ul.`USER_LOGIN_ID`=vs.`user_id`
+			LEFT  JOIN party p ON  ci.`PARTY_ID` = p.PARTY_ID 
+			 JOIN   party cp  ON  cp.PARTY_ID = vs.COUNTRY  
+			 JOIN t_modelmap tm ON tm.branch_model = vs.model  AND vs.`COUNTRY`=tm.`party_id`
+			 JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+			 
+    <include refid="listWhere"/>
+  
+  </select>
+  <select id="getSale" resultMap="SaleMap" resultType="Sale">
+    select * from v_sale where id=#{sid} limit 1;
+  </select>
+  
+    <update id="updateSale" parameterType="Sale">
+ 	UPDATE v_sale vs SET vs.`quantity` = #{quantity}, vs.`amount` = #{amount},vs.`shop_id` = #{shopId},vs.`user_id`=#{userId},vs.`model`=#{model},vs.`datadate`=#{datadate},vs.`remark`=#{remark}
+  	WHERE 1=1 AND vs.id = #{saleId}
+  </update>
+  
+   <delete id="deleteSale" parameterType="Sale">
+  	delete from t_sale where id = #{saleId};
+  </delete>
+  
+  <insert id="saveSale" parameterType="Sale">
+  	insert into t_sale(user_id,model,quantity,amount,remark,datadate,country,ctime) 
+  	values(#{userId},#{model},#{quantity},#{amount},#{remark},#{datadate},#{country},#{ctime});
+  </insert>
+  
+  
+  <insert id="saveSales" parameterType="Sale">
+  	insert into t_sale(user_id,model,price,quantity,amount,remark,datadate,shop_id,country,ctime) 
+  	values(#{userId},#{model},#{price},#{quantity},#{amount},#{remark},#{datadate},#{shopId},#{country},#{ctime});
+  </insert>
+  
+  
+  <select id="searchExporSale" resultMap="SaleMap">
+	SELECT  vs.id,
+				vs.user_id,
+				tm.hq_model,
+				vs.model,
+				vs.quantity,
+				vs.amount,
+				vs.remark,
+				vs.datadate,
+				vs.ctime AS ctime,
+				vs.USER_NAME,
+				vs.shop_id,
+				vs.shop_name,
+				vs.customer_id,
+				vs.customer_name,
+				p.PARTY_ID,
+				p.PARTY_NAME,
+				cp.`PARTY_NAME` AS country
+			FROM v_sale vs
+			 JOIN party p ON vs.PARTY_ID = p.PARTY_ID 
+			  JOIN   party cp  ON  cp.PARTY_ID = p.COUNTRY_ID  
+			 JOIN t_modelmap tm ON tm.branch_model = vs.model  AND p.`COUNTRY_ID`=tm.`party_id`
+			 JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+			 
+    <include refid="listWhere"/>
+   order by vs.datadate  desc 
+  </select>
+  
+  
+  <select id="searchCustomerExporSale" resultMap="SaleMap">
+		SELECT  vs.id,
+				vs.user_id,
+				tm.hq_model,
+				vs.model,
+				vs.quantity,
+				vs.amount,
+				vs.remark,
+				vs.datadate,
+				vs.ctime AS ctime,
+				ul.USER_NAME,
+				
+				vs.customer_id,
+				ci.customer_name,
+				p.PARTY_ID,
+				p.PARTY_NAME,
+				cp.`PARTY_NAME` AS country
+			FROM t_sale vs
+			JOIN customer_info ci ON ci.`CUSTOMER_ID`=vs.`customer_id`
+			LEFT JOIN user_login ul ON ul.`USER_LOGIN_ID`=vs.`user_id`
+			LEFT  JOIN party p ON  ci.`PARTY_ID` = p.PARTY_ID 
+			 JOIN   party cp  ON  cp.PARTY_ID = vs.COUNTRY  
+			 JOIN t_modelmap tm ON tm.branch_model = vs.model  AND vs.`COUNTRY`=tm.`party_id`
+			 JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+			 
+    <include refid="listWhere"/>
+   order by vs.datadate  desc 
+  </select>
+  
+  <select id="searchCountryExporSale" resultMap="SaleMap">
+	SELECT  vs.id,
+				vs.user_id,
+				tm.hq_model,
+				vs.model,
+				vs.quantity,
+				vs.amount,
+				vs.remark,
+				vs.datadate,
+				vs.ctime AS ctime,
+				ul.USER_NAME,
+				
+				cp.`PARTY_NAME` AS country
+			FROM t_sale vs
+			LEFT JOIN user_login ul ON ul.`USER_LOGIN_ID`=vs.`user_id`
+			 JOIN party cp ON vs.country = cp.PARTY_ID
+			 JOIN t_modelmap tm ON tm.branch_model = vs.model  AND cp.`COUNTRY_ID`=tm.`party_id`
+			 JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+			
+    <include refid="listWhere"/>
+    AND (VS.SHOP_ID IS NULL OR  vs.shop_id="" or vs.shop_id=0)
+   order by vs.datadate  desc 
+  </select>
+  
+  <select id="getSaleCategoryData" resultMap="SaleMap">
+		select vs.SHOP_NAME,vs.datadate,sum(vs.quantity) as quantity from v_sale vs 
+		left join party p on vs.PARTY_ID = p.PARTY_ID 
+		where 1=1 
+		and ${searchStr}
+		${searchStr1}
+  		and ${conditions}
+  		group by vs.SHOP_NAME,vs.datadate
+  		order by vs.datadate desc
+  </select>
+  
+   <select id="getSaleCompletionList" resultMap="SaleMap">
+		select * from (
+			select  vs.id,
+				vs.user_id,
+				tm.hq_model,
+				vs.model,
+				vs.quantity,
+				vs.amount,
+				vs.remark,
+				vs.datadate,
+				DATE_FORMAT(vs.ctime,'%Y-%m-%d') as ctime,
+				vs.USER_NAME,
+				vs.shop_id,
+				vs.shop_name,
+				vs.customer_id,
+				vs.customer_name,
+				p.PARTY_ID,
+				p.PARTY_NAME,
+				(select cp.party_name from party cp where cp.PARTY_ID = p.COUNTRY_ID) as country	
+			from v_sale vs
+			left join party p on vs.PARTY_ID = p.PARTY_ID 
+			left join t_modelmap tm on tm.branch_model = vs.model ) a
+    	<include refid="listWhere"/>
+  </select>
+
+  <select id="getProductSizeSaleList" resultMap="SaleMap"> 
+  	select ps.user_name,sum(ps.quantity) as quantity from (
+		select vs.user_id,
+			   vs.quantity,
+			   vs.datadate,
+				vs.PARTY_ID,
+				tm.hq_model,
+				p.size as user_name
+		from v_sale vs 
+		left join t_modelmap tm on vs.model = tm.branch_model
+		left join product p on p.PRODUCT_ID = tm.hq_model  ) ps
+ 	<include refid="listWhere"/>
+	group by ps.user_name
+  </select>
+  
+  
+  
+  <select id="selectSalesByMobile" resultMap="SaleMap">
+		SELECT * FROM (SELECT 
+	ts.id ,ts.user_id,tm.hq_model,ts.model,ts.quantity,ts.amount,ts.remark,ts.datadate,ts.ctime,ul.USER_NAME,
+ts.shop_id,si.shop_name,ts.price,ci.`customer_id`,ci.customer_name,p.party_id,p.PARTY_NAME,
+(SELECT cp.party_name FROM party cp WHERE cp.PARTY_ID = p.COUNTRY_ID) AS country
+
+ FROM t_sale_mobile  ts
+ JOIN `user_login` ul
+       ON  ul.user_login_id =ts.user_id
+         JOIN `shop_info` si
+      ON  ts.`shop_id` =si.`SHOP_ID`
+      JOIN party p ON si.PARTY_ID = p.PARTY_ID 
+	JOIN t_modelmap tm ON tm.branch_model = ts.model  AND tm.`party_id`=p.`COUNTRY_ID`
+      LEFT JOIN `customer_info` ci
+     ON  si.`CUSTOMER_ID` =ci.`CUSTOMER_ID`
+     ) a
+    <include refid="listWhere"/>
+   order by a.datadate  desc limit #{start},#{limit};
+  </select>
+  <select id="countSalesByMobile" resultType="int">
+    select count(*) FROM (SELECT 
+	ts.id ,ts.user_id,tm.hq_model,ts.model,ts.quantity,ts.amount,ts.remark,ts.datadate,ts.ctime,ul.USER_NAME,
+ts.shop_id,si.shop_name,ts.price,ci.`customer_id`,ci.customer_name,p.party_id,p.PARTY_NAME,
+(SELECT cp.party_name FROM party cp WHERE cp.PARTY_ID = p.COUNTRY_ID) AS country
+
+ FROM t_sale_mobile  ts
+ JOIN `user_login` ul
+       ON  ul.user_login_id =ts.user_id
+         JOIN `shop_info` si
+      ON  ts.`shop_id` =si.`SHOP_ID`
+      JOIN party p ON si.PARTY_ID = p.PARTY_ID 
+	JOIN t_modelmap tm ON tm.branch_model = ts.model  AND tm.`party_id`=p.`COUNTRY_ID`
+      LEFT JOIN `customer_info` ci
+     ON  si.`CUSTOMER_ID` =ci.`CUSTOMER_ID`
+     ) a
+    <include refid="listWhere"/>
+  </select>
+  
+  
+</mapper>

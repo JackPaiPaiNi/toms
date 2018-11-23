@@ -1,0 +1,1190 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.sample.dao.SampleTargetDao" >
+	<resultMap id="sampleTargetMap" type="SampleTarget" >
+	    <result column="id" property="id" jdbcType="INTEGER" />
+	    <result column="shop_id" property="shopId" jdbcType="VARCHAR" />
+	    <result column="model" property="model" jdbcType="VARCHAR" />
+	    <result column="quantity" property="quantity" jdbcType="INTEGER" />
+	    <result column="datadate" property="dataDate" jdbcType="VARCHAR" />
+	   	<result column="user_id" property="userId" jdbcType="VARCHAR" />
+		<result column="user_name" property="userName" jdbcType="VARCHAR" />
+		<result column="country_id" property="countryId" jdbcType="VARCHAR" />
+		<result column="country_name" property="countryName" jdbcType="VARCHAR" />
+		<result column="shop_name" property="shopName" jdbcType="VARCHAR" />
+		<result column="party_id" property="partyId" jdbcType="VARCHAR" />
+		<result column="party_name" property="partyName" jdbcType="VARCHAR" />
+		<result column="customer_id" property="customerId" jdbcType="VARCHAR" />
+		<result column="customer_name" property="customerName" jdbcType="VARCHAR" />
+		<result column="hq_model" property="hqModel" jdbcType="VARCHAR" />
+		<result column="changeQty" property="changeQty" jdbcType="INTEGER" />
+		<result column="lastQty" property="lastQty" jdbcType="INTEGER" />
+	    
+	    <result column="sampleQty" property="sampleQty" jdbcType="INTEGER" />
+	    <result column="sampleTarget" property="sampleTarget" jdbcType="INTEGER" />
+	    <result column="ach" property="ach" jdbcType="VARCHAR" />
+	    
+	    <result column="saleQty" property="saleQty" jdbcType="INTEGER" />
+	    <result column="maxQty" property="maxQty" jdbcType="INTEGER" />
+	    <result column="soAch" property="soAch" jdbcType="DOUBLE" />
+	    
+	     <result column="sampleQtyTTL" property="sampleQtyTTL" jdbcType="INTEGER" />
+	    <result column="sampleTargetTTL" property="sampleTargetTTL" jdbcType="INTEGER" />
+	    <result column="achTTL" property="achTTL" jdbcType="VARCHAR" />
+	    
+	    <result column="targetTTL" property="targetTTL" jdbcType="INTEGER" />
+	    
+	    <result column="minDate" property="minDate" jdbcType="VARCHAR" />
+	    
+	    <result column="product_Line" property="productLine" jdbcType="VARCHAR" />
+	    
+	   	<result column="rows" property="rows" jdbcType="INTEGER" />
+	    
+	</resultMap>
+	
+	<sql id="listWhere">
+		<if test="searchStr != null"> ${searchStr} </if>
+		<where>
+			<if test="conditions != null"> and ${conditions} </if>
+		</where>
+	</sql>
+	
+	
+	
+	<select id = "selectSampleTargetList" parameterType="java.util.Map" resultMap="sampleTargetMap">
+
+	SELECT  target.* ,COALESCE(SUM(sst.`quantity`),0) AS targetTTl,DATE_FORMAT(MIN(sst.datadate),'%m/%Y') AS minDate
+	FROM (SELECT tts.*,tm.hq_model,si.`shop_name`,pa.`party_name`,pa.`PARTY_ID`,cs.customer_name,ul.`user_name`,
+	par.`PARTY_NAME` AS country_name,par.`PARTY_ID` AS country_id,pt.product_line
+	FROM sample_target tts 
+		JOIN shop_info si ON si.`SHOP_ID`=tts.`shop_id`
+		JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID`
+		JOIN t_modelmap tm ON tm.`branch_model`=tts.`model` AND pa.`COUNTRY_ID`=tm.`party_id`
+		JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+		LEFT JOIN user_login ul ON ul.user_login_id =tts.`user_id`
+		LEFT JOIN customer_info cs ON cs.customer_id=si.`CUSTOMER_ID`
+		LEFT JOIN party par ON par.`PARTY_ID`=pa.`COUNTRY_ID` 
+		<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+
+			AND tts.datadate  BETWEEN  #{beginDate}  AND  #{endDate} 
+		
+		
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND pa.country_id =#{searchCountry}
+		</if>
+		
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND pa.party_id=#{searchPatry}
+		</if>
+		
+		
+		<if test = "searchShop != '' and searchShop != null">
+		AND si.shop_id=#{searchShop}
+		</if>
+		
+		
+		<if test = "searchCustomer != '' and searchCustomer != null">
+		AND cs.customer_id=#{searchCustomer}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+				${searchLine}
+		</if>
+		<if test = "searchModel != '' and searchModel != null">
+		AND tts.model LIKE CONCAT('%', #{searchModel},'%')
+		</if>
+		
+		<if test = "searchHqModel != '' and searchHqModel != null">
+		AND tm.hq_Model LIKE CONCAT('%', #{searchHqModel},'%')
+		</if>
+		
+		)target
+		
+		LEFT JOIN  sample_target sst ON sst.`shop_id`=target.shop_id  AND sst.`model`=target.model
+		AND sst.datadate &lt;= #{endDate} 
+		
+		GROUP BY target.shop_id,target.model
+
+		
+		ORDER BY target.SHOP_NAME,target.product_line
+			
+	</select>
+	
+	<select id = "selectSampleTargetListCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+	SELECT COUNT(*) FROM (SELECT target.* ,COALESCE(SUM(sst.`quantity`),0) AS targetTTl,DATE_FORMAT(MIN(sst.datadate),'%m/%Y') AS minDate
+	FROM (SELECT tts.*,tm.hq_model,si.`shop_name`,pa.`party_name`,pa.`PARTY_ID`,cs.customer_name,ul.`user_name`,
+	par.`PARTY_NAME` AS country_name,par.`PARTY_ID` AS country_id,pt.product_line
+	FROM sample_target tts 
+		JOIN shop_info si ON si.`SHOP_ID`=tts.`shop_id`
+		JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID`
+		JOIN t_modelmap tm ON tm.`branch_model`=tts.`model` AND pa.`COUNTRY_ID`=tm.`party_id`
+		JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+		LEFT JOIN user_login ul ON ul.user_login_id =tts.`user_id`
+		LEFT JOIN customer_info cs ON cs.customer_id=si.`CUSTOMER_ID`
+		LEFT JOIN party par ON par.`PARTY_ID`=pa.`COUNTRY_ID` 
+		<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+
+			AND tts.datadate  BETWEEN  #{beginDate}  AND  #{endDate} 
+		
+		
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND pa.country_id =#{searchCountry}
+		</if>
+		
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND pa.party_id=#{searchPatry}
+		</if>
+		
+		
+		<if test = "searchShop != '' and searchShop != null">
+		AND si.shop_id=#{searchShop}
+		</if>
+		
+		
+		<if test = "searchCustomer != '' and searchCustomer != null">
+		AND cs.customer_id=#{searchCustomer}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+			${searchLine}
+		</if>
+		<if test = "searchModel != '' and searchModel != null">
+		AND tts.model LIKE CONCAT('%', #{searchModel},'%')
+		</if>
+		
+		<if test = "searchHqModel != '' and searchHqModel != null">
+		AND tm.hq_Model LIKE CONCAT('%', #{searchHqModel},'%')
+		</if>
+		
+		)target
+		
+		LEFT JOIN  sample_target sst ON sst.`shop_id`=target.shop_id  AND sst.`model`=target.model
+		AND sst.datadate &lt;= #{endDate} 
+		
+		GROUP BY target.shop_id,target.model
+
+		
+		ORDER BY target.SHOP_NAME,target.product_line)V
+	</select>
+	
+	
+	
+	<select id = "selectSampleTargetListByLine" parameterType="java.util.Map" resultMap="sampleTargetMap">
+
+	SELECT  
+total.shop_id,total.datadate,COALESCE(SUM(total.quantity),0) AS quantity,
+total.user_name,total.shop_name,total.party_name,total.party_id,total.customer_name,total.country_name,total.country_id,
+total.product_line,COALESCE(SUM(total.targetTTl),0) AS targetTTl,DATE_FORMAT(MIN(total.minDate),'%m/%Y') AS minDate
+
+ FROM (SELECT target.* ,COALESCE(SUM(sst.`quantity`),0) AS targetTTl,MIN(sst.datadate) AS minDate
+	FROM (SELECT tts.*,tm.hq_model,si.`shop_name`,pa.`party_name`,pa.`PARTY_ID`,cs.customer_name,ul.`user_name`,
+	par.`PARTY_NAME` AS country_name,par.`PARTY_ID` AS country_id,pt.product_line
+	FROM sample_target tts 
+		JOIN shop_info si ON si.`SHOP_ID`=tts.`shop_id`
+		JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID`
+		JOIN t_modelmap tm ON tm.`branch_model`=tts.`model` AND pa.`COUNTRY_ID`=tm.`party_id`
+		JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+		LEFT JOIN user_login ul ON ul.user_login_id =tts.`user_id`
+		LEFT JOIN customer_info cs ON cs.customer_id=si.`CUSTOMER_ID`
+		LEFT JOIN party par ON par.`PARTY_ID`=pa.`COUNTRY_ID` 
+		
+		<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+
+			AND tts.datadate  BETWEEN  #{beginDate}  AND  #{endDate} 
+		
+		
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND pa.country_id =#{searchCountry}
+		</if>
+		
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND pa.party_id=#{searchPatry}
+		</if>
+		
+		
+		<if test = "searchShop != '' and searchShop != null">
+		AND si.shop_id=#{searchShop}
+		</if>
+		
+		
+		<if test = "searchCustomer != '' and searchCustomer != null">
+		AND cs.customer_id=#{searchCustomer}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+		${searchLine}
+		</if>
+		<if test = "searchModel != '' and searchModel != null">
+		AND tts.model LIKE CONCAT('%', #{searchModel},'%')
+		</if>
+		
+		<if test = "searchHqModel != '' and searchHqModel != null">
+		AND tm.hq_Model LIKE CONCAT('%', #{searchHqModel},'%')
+		</if>
+		
+		)target
+		
+		LEFT JOIN  sample_target sst ON sst.`shop_id`=target.shop_id  AND sst.`model`=target.model
+		AND sst.datadate &lt;=#{endDate} 
+		
+		GROUP BY target.shop_id,target.model)total
+		GROUP BY total.product_line,total.SHOP_id
+		
+		
+		ORDER BY total.SHOP_NAME,total.product_line
+		limit #{start},#{limit};
+	</select>
+	
+	<select id = "selectSampleTargetListCountByLine" parameterType="java.util.Map" resultType="java.lang.Integer">
+	SELECT count(*) 
+	FROM (SELECT 
+total.shop_id,total.datadate,COALESCE(SUM(total.quantity),0) AS quantity,
+total.user_name,total.shop_name,total.party_name,total.party_id,total.customer_name,total.country_name,total.country_id,
+total.product_line,COALESCE(SUM(total.targetTTl),0) AS targetTTl,DATE_FORMAT(MIN(total.minDate),'%m/%Y') AS minDate
+
+ FROM (SELECT target.* ,COALESCE(SUM(sst.`quantity`),0) AS targetTTl,MIN(sst.datadate) AS minDate
+	FROM (SELECT tts.*,tm.hq_model,si.`shop_name`,pa.`party_name`,pa.`PARTY_ID`,cs.customer_name,ul.`user_name`,
+	par.`PARTY_NAME` AS country_name,par.`PARTY_ID` AS country_id,pt.product_line
+	FROM sample_target tts 
+		JOIN shop_info si ON si.`SHOP_ID`=tts.`shop_id`
+		JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID`
+		JOIN t_modelmap tm ON tm.`branch_model`=tts.`model` AND pa.`COUNTRY_ID`=tm.`party_id`
+		JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+		LEFT JOIN user_login ul ON ul.user_login_id =tts.`user_id`
+		LEFT JOIN customer_info cs ON cs.customer_id=si.`CUSTOMER_ID`
+		LEFT JOIN party par ON par.`PARTY_ID`=pa.`COUNTRY_ID` 
+		
+		<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+
+			AND tts.datadate  BETWEEN  #{beginDate}  AND  #{endDate} 
+		
+		
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND pa.country_id =#{searchCountry}
+		</if>
+		
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND pa.party_id=#{searchPatry}
+		</if>
+		
+		
+		<if test = "searchShop != '' and searchShop != null">
+		AND si.shop_id=#{searchShop}
+		</if>
+		
+		
+		<if test = "searchCustomer != '' and searchCustomer != null">
+		AND cs.customer_id=#{searchCustomer}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+		${searchLine}
+		</if>
+		<if test = "searchModel != '' and searchModel != null">
+		AND tts.model LIKE CONCAT('%', #{searchModel},'%')
+		</if>
+		
+		<if test = "searchHqModel != '' and searchHqModel != null">
+		AND tm.hq_Model LIKE CONCAT('%', #{searchHqModel},'%')
+		</if>
+		
+		)target
+		
+		LEFT JOIN  sample_target sst ON sst.`shop_id`=target.shop_id  AND sst.`model`=target.model
+		AND sst.datadate &lt;=#{endDate} 
+		
+		GROUP BY target.shop_id,target.model)total
+		GROUP BY total.product_line,total.shop_id
+		
+		
+		ORDER BY total.SHOP_NAME,total.product_line)v
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<insert id ="saveSampleTarget" parameterType="java.util.List" >
+              <selectKey resultType ="java.lang.Integer" keyProperty= "id"
+                   order= "AFTER">
+                  SELECT LAST_INSERT_ID()
+              </selectKey >
+       INSERT INTO
+		`sample_target`(shop_id,datadate,model,quantity,user_id,ctime)
+             values
+             <foreach collection ="list" item="reddemCode" index= "index" separator =",">
+               (#{reddemCode.shopId},#{reddemCode.dataDate},#{reddemCode.model},#{reddemCode.quantity},
+               	#{reddemCode.userId},#{reddemCode.ctime})
+            </foreach >
+     </insert >
+     
+     
+     <select id="selectSampleTargetsCount" parameterType="java.lang.String"
+		resultType="int">
+		SELECT COUNT(*) FROM `sample_target` t
+		WHERE t.shop_id=#{shopId}
+		AND t.model=#{model}
+		AND t.datadate between #{beginDate} and #{endDate}		
+	</select>
+	
+	
+	    <update id="updateSampleTarget" parameterType="java.util.List">  
+        <foreach close="" collection="list" index="index" item="item" open="" separator=";">  
+            update sample_target set quantity=#{item.quantity},
+					datadate=#{item.dataDate}
+           WHERE	model=#{item.model}  AND shop_id=#{item.shopId}  and 
+           datadate between #{item.beginDate} and #{item.endDate}	 
+        </foreach>  
+    </update> 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <select id = "selectShopByParty" parameterType="java.lang.String"  resultMap="sampleTargetMap">
+
+		
+		
+		 SELECT * FROM ( 
+  
+ 	SELECT si.`SHOP_ID` AS shop_id,si.`SHOP_NAME` AS shop_Name FROM shop_info si 
+		JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID` 
+		WHERE pa.`COUNTRY_ID`= #{countryId} 
+
+		<if test = "partyId != '' and partyId != null">
+			AND pa.party_id=#{partyId}
+		</if>
+   UNION ALL 
+		SELECT '','   All  '  FROM DUAL
+   )c
+   
+   
+		ORDER BY c.shop_Name
+		
+		
+	</select>
+	
+	
+	 <select id = "selectModelByCountry" parameterType="java.lang.String"  resultMap="sampleTargetMap">
+
+		SELECT tm.`branch_model` AS model FROM t_modelmap  tm
+		WHERE tm.`party_id`=#{countryId} 
+		ORDER BY  tm.`branch_model`
+	</select>
+	
+	 <update id="updateSampleTargetById" parameterType="SampleTarget">  
+       	UPDATE sample_target  SET quantity=#{quantity},shop_id=#{shopId},model=#{model},user_id=#{userId},datadate=#{dataDate} WHERE id=#{id}
+       
+    </update> 
+    
+    
+      <delete id="deleteSampleTarget">
+  	 delete from sample_target where id=#{id};
+  </delete>
+  
+  
+  <select id = "selectSampleAchList" parameterType="java.lang.String"  resultMap="sampleTargetMap">
+   
+     
+ SELECT  stOne.*,
+  COALESCE(SUM(st.`quantity`),0) AS sampleTarget,
+ (stOne.maxQty) AS sampleQty,
+COALESCE(COALESCE(stOne.maxQty,0)-COALESCE(stTwo.minQty,0),0) AS changeQty,
+
+CONCAT(ROUND(COALESCE( (stOne.maxQty)/(st.`quantity` ),0.00)*100,1),'%') AS ach,
+COALESCE(SUM(s.`quantity`),0) AS saleQty,
+ROUND(COALESCE( SUM(s.quantity)/(stOne.maxQty),0.0),1) AS soAch 
+FROM (SELECT  pt.`product_line`,coun.country_id,coun.country_name,ci.`CUSTOMER_ID`,ci.`CUSTOMER_NAME`,
+pa.party_id,pa.party_name,tm.hq_model,
+si.`SHOP_ID`,si.`SHOP_NAME`,sr.`model`,COALESCE(SUM(sr.`quantity`),0) maxQty
+,DATE_FORMAT(sr.`datadate`,'%m/%Y') dataDate
+FROM sample_record sr
+ JOIN shop_info si ON si.`SHOP_ID`=sr.`shop_id` 
+ JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID` 
+ LEFT JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID` 
+ JOIN t_modelmap tm ON tm.`branch_model`=sr.`model` AND pa.`COUNTRY_ID`=tm.`party_id` 
+ JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` 
+ JOIN (SELECT party_id AS country_id,party_name AS country_name FROM party ) coun ON coun.country_id=pa.country_id
+<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if> 
+
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND pa.country_id =#{searchCountry}
+		</if>
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND pa.party_id=#{searchPatry}
+		</if>
+		<if test = "searchCustomer != '' and searchCustomer != null">
+			AND ci.customer_id=#{searchCustomer}
+		</if>
+		
+		<if test = "searchShop != '' and searchShop != null">
+		AND si.shop_id=#{searchShop}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+				${searchLine}
+		</if>
+		
+		<if test = "searchModel != '' and searchModel != null">
+		AND ts.model LIKE CONCAT('%', #{searchModel},'%')
+		</if>
+		<if test = "searchHqModel != '' and searchHqModel != null">
+		AND tm.hq_Model LIKE CONCAT('%', #{searchHqModel},'%')
+		</if>
+
+
+AND sr.`datadate`  BETWEEN #{beginDate}  AND #{endDate} 
+GROUP BY si.`SHOP_ID`,sr.`model`)stOne
+LEFT JOIN (SELECT  ci.`CUSTOMER_ID`,ci.`CUSTOMER_NAME`,
+si.`SHOP_ID`,si.`SHOP_NAME`,sr.`model`,COALESCE(SUM(sr.`quantity`),0) minQty
+FROM sample_record sr
+ JOIN shop_info si ON si.`SHOP_ID`=sr.`shop_id` 
+ JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID` 
+ LEFT JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID` 
+ JOIN t_modelmap tm ON tm.`branch_model`=sr.`model` AND pa.`COUNTRY_ID`=tm.`party_id` 
+ JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` 
+
+ <if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+ 
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND pa.country_id =#{searchCountry}
+		</if>
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND pa.party_id=#{searchPatry}
+		</if>
+		<if test = "searchCustomer != '' and searchCustomer != null">
+			AND ci.customer_id=#{searchCustomer}
+		</if>
+		
+		<if test = "searchShop != '' and searchShop != null">
+		AND si.shop_id=#{searchShop}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+				${searchLine}
+		</if>
+		
+		<if test = "searchModel != '' and searchModel != null">
+		AND ts.model LIKE CONCAT('%', #{searchModel},'%')
+		</if>
+		<if test = "searchHqModel != '' and searchHqModel != null">
+		AND tm.hq_Model LIKE CONCAT('%', #{searchHqModel},'%')
+		</if>
+ AND sr.`datadate` BETWEEN  #{lastBeginDate}  AND #{lastEndDate}
+GROUP BY si.`SHOP_ID`,sr.`model`)stTwo  ON stOne.shop_id=stTwo.shop_id AND stOne.model=stTwo.model
+LEFT JOIN sample_target st ON st.`shop_id`=stOne.shop_id AND st.`model`=stOne.model  AND st.`datadate` BETWEEN #{beginDate}  AND #{endDate}  
+LEFT JOIN t_sale s ON s.`shop_id`=stOne.shop_id AND stOne.model=s.`model` AND s.`datadate` BETWEEN   #{beginDate}  AND #{endDate}  
+GROUP BY stOne.model,stOne.shop_id
+
+   
+     HAVING ( 1=1
+      <if test = "ach != null">
+		AND ROUND(COALESCE( SUM(stOne.maxQty)/SUM(st.`quantity` ),0.00)*100,1) &lt;=  #{ach}
+		</if>
+		
+		<if test = "soAch != null">
+		AND ROUND(COALESCE( SUM(s.quantity)/SUM(stOne.maxQty),0.0),1) &lt;=  #{soAch}
+		</if>
+		
+      )
+ORDER BY (stOne.maxQty)/(st.`quantity` ) DESC
+
+
+	</select>
+	
+	
+	
+	 
+  
+  
+  
+  
+  
+  
+   <select id = "selectSampleAchListByLine" parameterType="java.lang.String"  resultMap="sampleTargetMap">
+
+ SELECT  stOne.*,
+ COALESCE(SUM(st.`quantity`),0) AS sampleTarget,
+ SUM(stOne.maxQty) AS sampleQty,
+ SUM(stTwo.minQty) AS lastQty,
+COALESCE(COALESCE(SUM(stOne.maxQty),0)-COALESCE(SUM(stTwo.minQty),0),0) AS changeQty,
+
+CONCAT(ROUND(COALESCE( SUM(stOne.maxQty)/SUM(st.`quantity` ),0.00)*100,1),'%') AS ach,
+COALESCE(SUM(s.`quantity`),0) AS saleQty,
+ROUND(COALESCE( SUM(s.quantity)/SUM(stOne.maxQty),0.0),1) AS soAch 
+FROM (SELECT  pt.`product_line`,coun.country_id,coun.country_name,ci.`CUSTOMER_ID`,ci.`CUSTOMER_NAME`,
+pa.party_id,pa.party_name,tm.hq_model,
+si.`SHOP_ID`,si.`SHOP_NAME`,sr.`model`,COALESCE(SUM(sr.`quantity`),0) maxQty
+,DATE_FORMAT(sr.`datadate`,'%m/%Y') dataDate
+FROM sample_record sr
+ JOIN shop_info si ON si.`SHOP_ID`=sr.`shop_id` 
+ JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID` 
+ LEFT JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID` 
+ JOIN t_modelmap tm ON tm.`branch_model`=sr.`model` AND pa.`COUNTRY_ID`=tm.`party_id` 
+ JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` 
+ JOIN (SELECT party_id AS country_id,party_name AS country_name FROM party ) coun ON coun.country_id=pa.country_id
+<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if> 
+
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND pa.country_id =#{searchCountry}
+		</if>
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND pa.party_id=#{searchPatry}
+		</if>
+		<if test = "searchCustomer != '' and searchCustomer != null">
+			AND ci.customer_id=#{searchCustomer}
+		</if>
+		
+		<if test = "searchShop != '' and searchShop != null">
+		AND si.shop_id=#{searchShop}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+				${searchLine}
+		</if>
+		
+		<if test = "searchModel != '' and searchModel != null">
+		AND ts.model LIKE CONCAT('%', #{searchModel},'%')
+		</if>
+		<if test = "searchHqModel != '' and searchHqModel != null">
+		AND tm.hq_Model LIKE CONCAT('%', #{searchHqModel},'%')
+		</if>
+
+
+AND sr.datadate BETWEEN #{beginDate}  AND #{endDate} 
+GROUP BY si.`SHOP_ID`,pt.product_line
+)stOne
+LEFT JOIN (SELECT  ci.`CUSTOMER_ID`,ci.`CUSTOMER_NAME`,
+si.`SHOP_ID`,si.`SHOP_NAME`,sr.`model`,COALESCE(SUM(sr.`quantity`),0) minQty,pt.product_line
+FROM sample_record sr
+ JOIN shop_info si ON si.`SHOP_ID`=sr.`shop_id` 
+ JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID` 
+ LEFT JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID` 
+ JOIN t_modelmap tm ON tm.`branch_model`=sr.`model` AND pa.`COUNTRY_ID`=tm.`party_id` 
+ JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` 
+ <if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+ 
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND pa.country_id =#{searchCountry}
+		</if>
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND pa.party_id=#{searchPatry}
+		</if>
+		<if test = "searchCustomer != '' and searchCustomer != null">
+			AND ci.customer_id=#{searchCustomer}
+		</if>
+		
+		<if test = "searchShop != '' and searchShop != null">
+		AND si.shop_id=#{searchShop}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+				${searchLine}
+		</if>
+		
+		<if test = "searchModel != '' and searchModel != null">
+		AND ts.model LIKE CONCAT('%', #{searchModel},'%')
+		</if>
+		<if test = "searchHqModel != '' and searchHqModel != null">
+		AND tm.hq_Model LIKE CONCAT('%', #{searchHqModel},'%')
+		</if>
+ AND sr.`datadate` BETWEEN  #{lastBeginDate}  AND #{lastEndDate}
+GROUP BY si.`SHOP_ID`,pt.product_line)stTwo  ON stOne.shop_id=stTwo.shop_id AND stOne.product_line=stTwo.product_line
+
+
+LEFT JOIN 
+( select sum(st.quantity) as quantity,pt.product_line,st.shop_id  from sample_target st
+JOIN shop_info si ON si.`SHOP_ID`=st.`shop_id` 
+ JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID` 
+ LEFT JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID` 
+ JOIN t_modelmap tm ON tm.`branch_model`=st.`model` AND pa.`COUNTRY_ID`=tm.`party_id` 
+ JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` 
+<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+ AND st.`datadate` BETWEEN #{beginDate}  AND #{endDate}
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND pa.country_id =#{searchCountry}
+		</if>
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND pa.party_id=#{searchPatry}
+		</if>
+		<if test = "searchCustomer != '' and searchCustomer != null">
+			AND ci.customer_id=#{searchCustomer}
+		</if>
+		
+		<if test = "searchShop != '' and searchShop != null">
+		AND si.shop_id=#{searchShop}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+				${searchLine}
+		</if>
+		
+		<if test = "searchModel != '' and searchModel != null">
+		AND ts.model LIKE CONCAT('%', #{searchModel},'%')
+		</if>
+		<if test = "searchHqModel != '' and searchHqModel != null">
+		AND tm.hq_Model LIKE CONCAT('%', #{searchHqModel},'%')
+		</if>
+group by pt.product_line,st.shop_id
+
+
+) st ON st.`shop_id`=stOne.shop_id AND st.`product_line`=stOne.product_line   
+
+
+LEFT JOIN 
+(select  s.shop_id,pt.product_line ,sum(s.quantity) as quantity from t_sale s
+JOIN shop_info si ON si.`SHOP_ID`=s.`shop_id` 
+ JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID` 
+ LEFT JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID` 
+ JOIN t_modelmap tm ON tm.`branch_model`=s.`model` AND pa.`COUNTRY_ID`=tm.`party_id` 
+ JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` 
+<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+AND s.`datadate` BETWEEN   #{beginDate}  AND #{endDate}
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND pa.country_id =#{searchCountry}
+		</if>
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND pa.party_id=#{searchPatry}
+		</if>
+		<if test = "searchCustomer != '' and searchCustomer != null">
+			AND ci.customer_id=#{searchCustomer}
+		</if>
+		
+		<if test = "searchShop != '' and searchShop != null">
+		AND si.shop_id=#{searchShop}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+				${searchLine}
+		</if>
+		
+		<if test = "searchModel != '' and searchModel != null">
+		AND ts.model LIKE CONCAT('%', #{searchModel},'%')
+		</if>
+		<if test = "searchHqModel != '' and searchHqModel != null">
+		AND tm.hq_Model LIKE CONCAT('%', #{searchHqModel},'%')
+		</if>
+		group by pt.product_line,s.shop_id
+		
+
+ )s
+ ON s.`shop_id`=stOne.shop_id AND stOne.product_line=s.`product_line`   
+GROUP BY stOne.product_line,stOne.shop_id
+
+   
+      HAVING ( 1=1
+      <if test = "ach != null">
+		AND ROUND(COALESCE( SUM(stOne.maxQty)/SUM(st.`quantity` ),0.00)*100,1) &lt;=  #{ach}
+		</if>
+		
+		<if test = "soAch != null">
+		AND ROUND(COALESCE( SUM(s.quantity)/SUM(stOne.maxQty),0.0),1) &lt;=  #{soAch}
+		</if>
+		
+      )
+ORDER BY SUM(stOne.maxQty)/SUM(st.`quantity` ) DESC
+
+
+		
+	</select>
+	
+	
+	
+	
+    
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<select id = "selectSampleTargetSumListByLine" parameterType="java.util.Map" resultMap="sampleTargetMap">
+
+	SELECT 
+COALESCE(SUM(total.quantity),0) AS quantity,
+total.product_line,COALESCE(SUM(total.targetTTl),0) AS targetTTl,DATE_FORMAT(MIN(total.minDate),'%m/%Y') AS minDate
+
+ FROM (SELECT target.* ,COALESCE(SUM(sst.`quantity`),0) AS targetTTl,MIN(sst.datadate) AS minDate
+	FROM (SELECT tts.*,tm.hq_model,si.`shop_name`,pa.`party_name`,pa.`PARTY_ID`,cs.customer_name,ul.`user_name`,
+	par.`PARTY_NAME` AS country_name,par.`PARTY_ID` AS country_id,pt.product_line
+	FROM sample_target tts 
+		JOIN shop_info si ON si.`SHOP_ID`=tts.`shop_id`
+		JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID`
+		JOIN t_modelmap tm ON tm.`branch_model`=tts.`model` AND pa.`COUNTRY_ID`=tm.`party_id`
+		JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+		LEFT JOIN user_login ul ON ul.user_login_id =tts.`user_id`
+		LEFT JOIN customer_info cs ON cs.customer_id=si.`CUSTOMER_ID`
+		LEFT JOIN party par ON par.`PARTY_ID`=pa.`COUNTRY_ID` 
+		
+		<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+
+			AND tts.datadate  BETWEEN  #{beginDate}  AND  #{endDate} 
+		
+		
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND pa.country_id =#{searchCountry}
+		</if>
+		
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND pa.party_id=#{searchPatry}
+		</if>
+		
+		
+		<if test = "searchShop != '' and searchShop != null">
+		AND si.shop_id=#{searchShop}
+		</if>
+		
+		
+		<if test = "searchCustomer != '' and searchCustomer != null">
+		AND cs.customer_id=#{searchCustomer}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+				${searchLine}
+		</if>
+		<if test = "searchModel != '' and searchModel != null">
+		AND tts.model LIKE CONCAT('%', #{searchModel},'%')
+		</if>
+		
+		<if test = "searchHqModel != '' and searchHqModel != null">
+		AND tm.hq_Model LIKE CONCAT('%', #{searchHqModel},'%')
+		</if>
+		
+		)target
+		
+		LEFT JOIN  sample_target sst ON sst.`shop_id`=target.shop_id  AND sst.`model`=target.model
+		AND sst.datadate &lt;=#{endDate} 
+		
+		GROUP BY target.shop_id,target.model)total
+		GROUP BY total.product_line
+		
+		
+		ORDER BY total.product_line
+		limit #{start},#{limit};
+	</select>
+	
+	<select id = "selectSampleTargetSumListCountByLine" parameterType="java.util.Map" resultType="java.lang.Integer">
+	SELECT count(*) 
+	FROM (SELECT 
+COALESCE(SUM(total.quantity),0) AS quantity,
+total.product_line,COALESCE(SUM(total.targetTTl),0) AS targetTTl,
+DATE_FORMAT(MIN(total.minDate),'%m/%Y') AS minDate
+
+ FROM (SELECT target.* ,COALESCE(SUM(sst.`quantity`),0) AS targetTTl,MIN(sst.datadate) AS minDate
+	FROM (SELECT tts.*,tm.hq_model,si.`shop_name`,pa.`party_name`,pa.`PARTY_ID`,cs.customer_name,ul.`user_name`,
+	par.`PARTY_NAME` AS country_name,par.`PARTY_ID` AS country_id,pt.product_line
+	FROM sample_target tts 
+		JOIN shop_info si ON si.`SHOP_ID`=tts.`shop_id`
+		JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID`
+		JOIN t_modelmap tm ON tm.`branch_model`=tts.`model` AND pa.`COUNTRY_ID`=tm.`party_id`
+		JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+		LEFT JOIN user_login ul ON ul.user_login_id =tts.`user_id`
+		LEFT JOIN customer_info cs ON cs.customer_id=si.`CUSTOMER_ID`
+		LEFT JOIN party par ON par.`PARTY_ID`=pa.`COUNTRY_ID` 
+		
+		<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+
+			AND tts.datadate  BETWEEN  #{beginDate}  AND  #{endDate} 
+		
+		
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND pa.country_id =#{searchCountry}
+		</if>
+		
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND pa.party_id=#{searchPatry}
+		</if>
+		
+		
+		<if test = "searchShop != '' and searchShop != null">
+		AND si.shop_id=#{searchShop}
+		</if>
+		
+		
+		<if test = "searchCustomer != '' and searchCustomer != null">
+		AND cs.customer_id=#{searchCustomer}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+			${searchLine}
+		</if>
+		<if test = "searchModel != '' and searchModel != null">
+		AND tts.model LIKE CONCAT('%', #{searchModel},'%')
+		</if>
+		
+		<if test = "searchHqModel != '' and searchHqModel != null">
+		AND tm.hq_Model LIKE CONCAT('%', #{searchHqModel},'%')
+		</if>
+		
+		)target
+		
+		LEFT JOIN  sample_target sst ON sst.`shop_id`=target.shop_id  AND sst.`model`=target.model
+		AND sst.datadate &lt;=#{endDate} 
+		
+		GROUP BY target.shop_id,target.model)total
+		GROUP BY total.product_line
+		
+		
+		ORDER BY  total.product_line)v
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	 <select id = "selectSampleAchSumListByLine" parameterType="java.lang.String"  resultMap="sampleTargetMap">
+ SELECT  stOne.*,
+ COALESCE(SUM(st.`quantity`),0) AS sampleTarget,
+ SUM(stOne.maxQty) AS sampleQty,
+COALESCE(COALESCE(SUM(stOne.maxQty),0)-COALESCE(SUM(stTwo.minQty),0),0) AS changeQty,
+
+CONCAT(ROUND(COALESCE( SUM(stOne.maxQty)/SUM(st.`quantity` ),0.00)*100,1),'%') AS ach,
+COALESCE(SUM(s.`quantity`),0) AS saleQty,
+ROUND(COALESCE( SUM(s.quantity)/SUM(stOne.maxQty),0.0),1) AS soAch 
+FROM (SELECT  pt.`product_line`,coun.country_id,coun.country_name,ci.`CUSTOMER_ID`,ci.`CUSTOMER_NAME`,
+si.`SHOP_ID`,si.`SHOP_NAME`,sr.`model`,COALESCE(SUM(sr.`quantity`),0) maxQty
+,DATE_FORMAT(sr.`datadate`,'%m/%Y') dataDate
+FROM sample_record sr
+ JOIN shop_info si ON si.`SHOP_ID`=sr.`shop_id` 
+ JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID` 
+ LEFT JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID` 
+ JOIN t_modelmap tm ON tm.`branch_model`=sr.`model` AND pa.`COUNTRY_ID`=tm.`party_id` 
+ JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` 
+ JOIN (SELECT party_id AS country_id,party_name AS country_name FROM party ) coun ON coun.country_id=pa.country_id
+<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if> 
+
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND pa.country_id =#{searchCountry}
+		</if>
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND pa.party_id=#{searchPatry}
+		</if>
+		<if test = "searchCustomer != '' and searchCustomer != null">
+			AND ci.customer_id=#{searchCustomer}
+		</if>
+		
+		<if test = "searchShop != '' and searchShop != null">
+		AND si.shop_id=#{searchShop}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+				${searchLine}
+		</if>
+		
+		<if test = "searchModel != '' and searchModel != null">
+		AND ts.model LIKE CONCAT('%', #{searchModel},'%')
+		</if>
+		<if test = "searchHqModel != '' and searchHqModel != null">
+		AND tm.hq_Model LIKE CONCAT('%', #{searchHqModel},'%')
+		</if>
+
+
+AND sr.`datadate` BETWEEN #{beginDate}  AND #{endDate}
+GROUP BY pt.product_line
+)stOne
+LEFT JOIN (SELECT ci.`CUSTOMER_ID`,ci.`CUSTOMER_NAME`,
+si.`SHOP_ID`,si.`SHOP_NAME`,sr.`model`,COALESCE(SUM(sr.`quantity`),0) minQty,pt.product_line
+FROM sample_record sr
+ JOIN shop_info si ON si.`SHOP_ID`=sr.`shop_id` 
+ JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID` 
+ LEFT JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID` 
+ JOIN t_modelmap tm ON tm.`branch_model`=sr.`model` AND pa.`COUNTRY_ID`=tm.`party_id` 
+ JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` 
+ <if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+ 
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND pa.country_id =#{searchCountry}
+		</if>
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND pa.party_id=#{searchPatry}
+		</if>
+		<if test = "searchCustomer != '' and searchCustomer != null">
+			AND ci.customer_id=#{searchCustomer}
+		</if>
+		
+		<if test = "searchShop != '' and searchShop != null">
+		AND si.shop_id=#{searchShop}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+				${searchLine}
+		</if>
+		
+		<if test = "searchModel != '' and searchModel != null">
+		AND ts.model LIKE CONCAT('%', #{searchModel},'%')
+		</if>
+		<if test = "searchHqModel != '' and searchHqModel != null">
+		AND tm.hq_Model LIKE CONCAT('%', #{searchHqModel},'%')
+		</if>
+ AND sr.`datadate` BETWEEN  #{lastBeginDate}  AND #{lastEndDate}
+GROUP BY pt.product_line)stTwo  ON  stOne.product_line=stTwo.product_line
+
+
+LEFT JOIN 
+( select sum(st.quantity) as quantity,pt.product_line,st.shop_id  from sample_target st
+JOIN shop_info si ON si.`SHOP_ID`=st.`shop_id` 
+ JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID` 
+ LEFT JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID` 
+ JOIN t_modelmap tm ON tm.`branch_model`=st.`model` AND pa.`COUNTRY_ID`=tm.`party_id` 
+ JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` 
+<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+ AND st.`datadate` BETWEEN #{beginDate}  AND #{endDate}
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND pa.country_id =#{searchCountry}
+		</if>
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND pa.party_id=#{searchPatry}
+		</if>
+		<if test = "searchCustomer != '' and searchCustomer != null">
+			AND ci.customer_id=#{searchCustomer}
+		</if>
+		
+		<if test = "searchShop != '' and searchShop != null">
+		AND si.shop_id=#{searchShop}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+				${searchLine}
+		</if>
+		
+		<if test = "searchModel != '' and searchModel != null">
+		AND ts.model LIKE CONCAT('%', #{searchModel},'%')
+		</if>
+		<if test = "searchHqModel != '' and searchHqModel != null">
+		AND tm.hq_Model LIKE CONCAT('%', #{searchHqModel},'%')
+		</if>
+
+group by pt.product_line
+
+)st ON  st.`product_line`=stOne.product_line   
+
+
+LEFT JOIN 
+(select  s.shop_id,pt.product_line ,sum(s.quantity) as quantity from t_sale s
+JOIN shop_info si ON si.`SHOP_ID`=s.`shop_id` 
+ JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID` 
+ LEFT JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID` 
+ JOIN t_modelmap tm ON tm.`branch_model`=s.`model` AND pa.`COUNTRY_ID`=tm.`party_id` 
+ JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` 
+<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+AND s.`datadate` BETWEEN   #{beginDate}  AND #{endDate}
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND pa.country_id =#{searchCountry}
+		</if>
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND pa.party_id=#{searchPatry}
+		</if>
+		<if test = "searchCustomer != '' and searchCustomer != null">
+			AND ci.customer_id=#{searchCustomer}
+		</if>
+		
+		<if test = "searchShop != '' and searchShop != null">
+		AND si.shop_id=#{searchShop}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+				${searchLine}
+		</if>
+		
+		<if test = "searchModel != '' and searchModel != null">
+		AND ts.model LIKE CONCAT('%', #{searchModel},'%')
+		</if>
+		<if test = "searchHqModel != '' and searchHqModel != null">
+		AND tm.hq_Model LIKE CONCAT('%', #{searchHqModel},'%')
+		</if>
+group by pt.product_line
+ )s
+ ON  stOne.product_line=s.`product_line`   
+GROUP BY stOne.product_line
+
+   
+      HAVING ( 1=1
+      <if test = "ach != null">
+		AND ROUND(COALESCE( SUM(stOne.maxQty)/SUM(st.`quantity` ),0.00)*100,1) &lt;=  #{ach}
+		</if>
+		
+		<if test = "soAch != null">
+		AND ROUND(COALESCE( SUM(s.quantity)/SUM(stOne.maxQty),0.0),1) &lt;=  #{soAch}
+		</if>
+		
+      )
+ORDER BY SUM(stOne.maxQty)/SUM(st.`quantity` ) DESC
+
+
+		
+	</select>
+	
+	
+	
+	
+    	 <select id = "selectSampleAchSumListCountByLine" parameterType="java.util.Map" resultType="java.lang.Integer">
+
+	SELECT COUNT(*) FROM (
+
+SELECT DATE_FORMAT(sr.`datadate`,'%m/%Y') AS datadate, coun.country_id,coun.country_name, 
+		 pa.party_id,pa.party_name, ci.customer_id,ci.customer_name, si.`shop_id`,si.`SHOP_NAME`,
+		 sr.`model`,tm.hq_model,pt.product_line, COALESCE(SUM(sr.`quantity`),0) AS quantity 
+		 FROM sample_record sr 
+		 JOIN shop_info si ON si.`SHOP_ID`=sr.`shop_id` 
+		 JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID` 
+		 LEFT JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID` 
+		 JOIN t_modelmap tm ON tm.`branch_model`=sr.`model` AND pa.`COUNTRY_ID`=tm.`party_id` 
+		 JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` 
+		 JOIN (SELECT party_id AS country_id,party_name AS country_name FROM party ) coun ON coun.country_id=pa.country_id
+		 
+	
+<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+	AND sr.`datadate` BETWEEN #{beginDate}  AND #{endDate}
+
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND pa.country_id =#{searchCountry}
+		</if>
+		
+		 <if test = "searchPatry != '' and searchPatry != null">
+			AND pa.party_id=#{searchPatry}
+		</if>
+		<if test = "searchCustomer != '' and searchCustomer != null">
+			AND ci.customer_id=#{searchCustomer}
+		</if>
+		
+		<if test = "searchShop != '' and searchShop != null">
+		AND si.shop_id=#{searchShop}
+		</if>
+		
+		<if test = "searchLine != '' and searchLine != null">
+		${searchLine}
+		</if>
+	
+
+
+ GROUP BY sr.`shop_id`,sr.`model` 
+
+) stOne
+LEFT JOIN 
+ (SELECT  sale.`shop_id`,sale.`model`,COALESCE(SUM(sale.`quantity`))AS saleQty
+		 FROM t_sale   sale
+		 JOIN shop_info si ON si.`SHOP_ID`=sale.`shop_id` 
+		 JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID` 
+		 LEFT JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID` 
+		 JOIN t_modelmap tm ON tm.`branch_model`=sale.`model` AND pa.`COUNTRY_ID`=tm.`party_id` 
+		 JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` 
+<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+		 AND sale.`datadate`  BETWEEN #{beginDate}  AND #{endDate}
+		 
+		 GROUP BY sale.`shop_id`,sale.`model`
+		 )stTwo
+		 ON stOne.shop_id=stTwo.shop_id AND stOne.model=stTwo.model 
+		 
+		 
+		 LEFT JOIN (SELECT sr.*,COALESCE(SUM(st.quantity),0) AS sampleTargetTTL,#当月目标
+   ROUND(COALESCE((SUM(sr.`sampleQtyTTL`) /SUM(st.quantity) ),0.00)*100,2) AS achTTL#当月上样达成 
+   FROM ( SELECT si.`shop_id`,sr.`model`,pt.product_line, COALESCE(SUM(sr.`quantity`),0) AS sampleQtyTTL 
+   #当月累计上样 
+   FROM sample_record sr JOIN shop_info si ON si.`SHOP_ID`=sr.`shop_id` JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID`
+    LEFT JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID`
+     JOIN t_modelmap tm ON tm.`branch_model`=sr.`model` AND pa.`COUNTRY_ID`=tm.`party_id`
+      JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` 
+     JOIN (SELECT party_id AS country_id,party_name AS country_name FROM party ) coun ON coun.country_id=pa.country_id
+<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+      AND sr.`datadate` &lt;=#{endDate} GROUP BY sr.`shop_id`,sr.`model` 
+      
+      )sr 
+      LEFT JOIN sample_target st ON st.`shop_id`=sr.`shop_id` AND st.`model`=sr.`model` 
+      AND st.`datadate` &lt;=#{endDate}
+      GROUP BY sr.`shop_id`,sr.`model`)stThree
+       ON stOne.shop_id=stThree.shop_id 
+       AND stOne.model=stThree.model 
+       LEFT JOIN sample_target st ON st.`shop_id`=stOne.`shop_id` AND st.`model`=stOne.`model` 
+      AND st.`datadate` BETWEEN #{beginDate}  AND #{endDate}
+     GROUP BY stOne.product_line
+       
+       ORDER BY SUM(stOne.quantity)/SUM(st.`quantity`) DESC
+
+	HAVING(
+	1=1
+	
+	<if test = "soAch != null">
+		AND SUM(stTwo.saleQty)/SUM(stThree.sampleQtyTTL) &lt;=  #{soAch}
+		</if>
+		 <if test = "ach != null">
+		AND SUM(stOne.quantity)/SUM(st.`quantity`) &lt;=  #{ach}
+		</if>
+	
+	
+	)
+	</select>
+	
+	
+	
+	
+		<select id="selectModel" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+				
+	SELECT tm.branch_model,tm.`price` FROM t_modelmap tm
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+JOIN party pa ON pa.`COUNTRY_ID`=tm.`party_id`
+		    <include refid="listWhere"/>
+		    AND pa.`PARTY_ID`=pa.`COUNTRY_ID` 
+		    
+		ORDER BY tm.branch_model
+	</select>
+
+	
+	
+	
+	
+	
+	
+</mapper>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.cfgparam.dao.CfgParameterDAO" >
+  <resultMap id="CfgParameterMap" type="CfgParameter" >
+    <result column="UIID" property="uiid" jdbcType="DECIMAL" />
+    <result column="PDOMAIN" property="pdomain" jdbcType="VARCHAR" />
+    <result column="PTYPE" property="ptype" jdbcType="VARCHAR" />
+    <result column="PKEY" property="pkey" jdbcType="VARCHAR" />
+    <result column="PVALUE" property="pvalue" jdbcType="VARCHAR" />
+    <result column="PDESC" property="pdesc" jdbcType="VARCHAR" />
+    <result column="SYS_CREATE_BY" property="sysCreateBy" jdbcType="VARCHAR" />
+    <result column="SYS_CREATE_DATE" property="sysCreateDate" jdbcType="DATE" />
+    <result column="SYS_UPDATE_BY" property="sysUpdateBy" jdbcType="VARCHAR" />
+    <result column="SYS_UPDATE_DATE" property="sysUpdateDate" jdbcType="DATE" />
+    <result column="PSEQ" property="pseq" jdbcType="DECIMAL" />
+  </resultMap>
+  
+  <sql id="CfgParameter_Base_Where">
+	<if test="conditions!=null">
+       	<![CDATA[  ${conditions} ]]>
+  	</if>
+  </sql>
+  
+  <sql id="CfgParameter_Base_Column_List" >
+    UIID, PDOMAIN, PTYPE, PKEY, PVALUE, PDESC, SYS_CREATE_BY, SYS_CREATE_DATE, SYS_UPDATE_BY, 
+    SYS_UPDATE_DATE, PSEQ
+  </sql>
+  
+  <select id="selectCfgParameter" resultMap="CfgParameterMap" parameterType="java.util.Map">
+    select 
+   	<include refid="CfgParameter_Base_Column_List" />
+    from cfg_parameter 
+    where 1=1
+   	<include refid="CfgParameter_Base_Where"/>
+  </select>
+  
+</mapper>

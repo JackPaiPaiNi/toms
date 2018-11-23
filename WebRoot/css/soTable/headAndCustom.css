@@ -1,0 +1,24 @@
+*{
+	padding: 0;
+	margin: 0;
+}
+.fl{float: left;}
+.fr{float: right;}
+.inb{display: inline-block;}
+.position_re{position: relative;}
+.position_ab{position: absolute;}
+li{list-style-type: none;}
+body{
+	background-color: #f8f8f8;
+}
+button{
+	border-radius: 4px;
+	border-width: 1px;
+	padding: 0 2px;
+	background-color: #007FFF;
+	color: #fff;
+	}
+html,body,.parent{
+		height: 100%;
+		overflow: hidden;
+	}

@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.customer.dao.ICustomerDao" >
+	
+  <resultMap id="CustomerMap" type="Customer" >
+    <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR" />
+    <result column="CUSTOMER_NAME" property="customerName" jdbcType="VARCHAR" />
+    <result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+    <result column="CREATE_BY" property="createBy" jdbcType="VARCHAR" />
+    <result column="CREATE_DATE" property="createDate" jdbcType="CHAR" />
+    <result column="ENTER_DATE" property="enterDate" jdbcType="DATE" />
+    <result column="COUNTRY_ID" property="countryId" jdbcType="VARCHAR" />
+    <result column="PROVINCE_ID" property="provinceId" jdbcType="VARCHAR" />
+    <result column="CITY_ID" property="cityId" jdbcType="DATE" />
+    <result column="COUNTY_ID" property="countyId" jdbcType="VARCHAR" />
+    <result column="TOWN_ID" property="townId" jdbcType="VARCHAR" />
+    <result column="DETAIL_ADDRESS" property="detailAddress" jdbcType="VARCHAR" />
+    <result column="CONTACT_NAME" property="contactName" jdbcType="VARCHAR" />
+    <result column="PHONE" property="phone" jdbcType="VARCHAR" />
+    <result column="EMAIL" property="email" jdbcType="VARCHAR" />
+    <result column="WEBSITE" property="website" jdbcType="VARCHAR" />
+    <result column="STATUS" property="status" jdbcType="VARCHAR" />
+    <result column="CUSTOMER_CODE" property="customerCode" jdbcType="VARCHAR" />
+    <result column="CHANNEL_TYPE" property="channelType" jdbcType="VARCHAR" />
+    <result column="CUSTOMER_ANAME" property="customerAname" jdbcType="VARCHAR" />
+    
+    <result column="CREATE_DATE_STR" property="createDateStr" jdbcType="VARCHAR" />
+    <result column="ENTER_DATE_STR" property="enterDateStr" jdbcType="VARCHAR" />
+    <result column="PARTY_NAME" property="partyName" jdbcType="VARCHAR" />
+    <result column="COUNTRY_NAME" property="countryName" jdbcType="VARCHAR" />
+    <result column="PROVINCE_NAME" property="provinceName" jdbcType="VARCHAR" />
+    <result column="CITY_NAME" property="cityName" jdbcType="VARCHAR" />
+    <result column="COUNTY_NAME" property="countyName" jdbcType="VARCHAR" />
+    <result column="TOWN_NAME" property="townName" jdbcType="VARCHAR" />
+    <result column="CHANNEL_TYPE_NAME" property="channelTypeName" jdbcType="VARCHAR" />
+  </resultMap>
+
+	<resultMap id="partyMap" type="Party" >
+   
+    	<result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+    	<result column="PARTY_NAME" property="partyName" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap type="userLogin" id="userLoginMap">
+		<result column="USER_LOGIN_ID" property="userLoginId" jdbcType="VARCHAR" />
+	    <result column="USER_NAME" property="userName" jdbcType="VARCHAR" />
+	    <result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap type="customerUser" id="customerUserMap">
+		<result column="custeomr_id" property="customerId" jdbcType="INTEGER"></result>
+		<result column="user_login_id" property="userLoginId" jdbcType="VARCHAR"></result>
+		<result column="salertype" property="salerType" jdbcType="INTEGER"></result>
+	</resultMap>
+	
+  <sql id="listWhere">
+  	<where>
+		<if test="searchStr != null"> and ${searchStr} </if>
+		<if test="countryId != null"> and c.COUNTRY_ID=#{countryId}</if>
+		<if test="provinceId != null"> and c.PROVINCE_ID=#{provinceId}</if>
+		<if test="conditions != null"> and ${conditions} and c.flag=0</if>
+	</where>
+  </sql>
+  
+  
+  <sql id="listWhereTwo">
+  	<where>
+		<if test="searchStr != null"> and ${searchStr} and ci.flag=0</if>
+		<if test="conditions != null"> and ${conditions}</if>
+	</where>
+  </sql>
+ <!--  <select id="selectCustomers" resultMap="CustomerMap">
+		 select c.CUSTOMER_ID,
+				c.CUSTOMER_NAME,
+				c.PARTY_ID,
+				a.PARTY_NAME,
+				c.CREATE_BY,
+				c.CREATE_DATE,
+				DATE_FORMAT(c.CREATE_DATE,'%Y-%m-%d') as CREATE_DATE_STR,
+				c.ENTER_DATE,
+				DATE_FORMAT(c.ENTER_DATE,'%Y-%m-%d') as ENTER_DATE_STR,
+				c.COUNTRY_ID,
+				cy.COUNTRY as COUNTRY_NAME,
+				c.PROVINCE_ID,
+				p.PROVINCE as PROVINCE_NAME,
+				c.CITY_ID,
+				t.CITY AS CITY_NAME,
+				c.COUNTY_ID,
+				cy1.COUNTY AS COUNTY_NAME,
+				c.TOWN_ID,
+				n.TOWN AS TOWN_NAME,
+				c.DETAIL_ADDRESS,
+				c.CONTACT_NAME,
+				c.PHONE,
+				c.EMAIL,
+				c.WEBSITE,
+				c.STATUS,
+				c.CUSTOMER_CODE,
+				C.CHANNEL_TYPE,
+				CONCAT(c.customer_name,'_',c.customer_code) as shopCustomerName,
+				(select cp.pvalue from cfg_parameter cp where 1=1 and cp.pdomain = 'TCL_CHANNEL' and cp.pkey = c.CHANNEL_TYPE and cp.ptype = 'CHANNEL') as CHANNEL_TYPE_NAME
+			from customer_info c 
+			left join party a on a.PARTY_ID = c.PARTY_ID
+			left join country cy on cy.COUNTRY_ID = c.COUNTRY_ID 
+			left join province p on p.PROVINCE_ID = c.PROVINCE_ID
+			left join city t on t.CITY_ID = c.CITY_ID
+			left join county cy1 on cy1.COUNTY_ID = c.COUNTY_ID
+			left join town n on n.TOWN_ID = c.TOWN_ID
+    <include refid="listWhere"/>
+    <if test="bt != null">
+	    and c.status = '1'
+    </if>
+    order by c.CREATE_DATE desc 
+    <if test="bt == null">
+	    limit #{start},#{limit}; 
+    </if>
+  </select> -->
+  <select id="selectCustomers" resultMap="CustomerMap">
+		 SELECT c.CUSTOMER_ID,
+				c.CUSTOMER_NAME,
+				c.PARTY_ID,
+				a.PARTY_NAME,
+				c.CREATE_BY,
+				c.CREATE_DATE,
+				DATE_FORMAT(c.CREATE_DATE,'%Y-%m-%d') AS CREATE_DATE_STR,
+				c.ENTER_DATE,
+				DATE_FORMAT(c.ENTER_DATE,'%Y-%m-%d') AS ENTER_DATE_STR,
+				c.COUNTRY_ID,
+				c.PROVINCE_ID,
+				p.PROVINCE AS PROVINCE_NAME,
+				c.CITY_ID,
+				t.CITY AS CITY_NAME,
+				c.COUNTY_ID,
+				c.TOWN_ID,
+				n.TOWN AS TOWN_NAME,
+				c.DETAIL_ADDRESS,
+				c.CONTACT_NAME,
+				c.PHONE,
+				c.EMAIL,
+				c.WEBSITE,
+				c.STATUS,
+				c.CUSTOMER_CODE,
+				C.CHANNEL_TYPE,
+				CONCAT(c.customer_name,'_',c.customer_code) AS shopCustomerName,
+				(SELECT cp.pvalue FROM cfg_parameter cp WHERE 1=1 AND cp.pdomain = 'TCL_CHANNEL' AND cp.pkey = c.CHANNEL_TYPE AND cp.ptype = 'CHANNEL') AS CHANNEL_TYPE_NAME
+			FROM customer_info c 
+			LEFT JOIN party a ON a.PARTY_ID = c.PARTY_ID
+			LEFT JOIN province p ON p.PROVINCE_ID = c.PROVINCE_ID
+			LEFT JOIN city t ON t.CITY_ID = c.CITY_ID
+			LEFT JOIN county cy1 ON cy1.COUNTY_ID = c.COUNTY_ID
+			LEFT JOIN town n ON n.TOWN_ID = c.TOWN_ID
+    <include refid="listWhere"/>
+    <if test="bt != null">
+	    and c.status = '1'
+    </if>
+    order by c.CREATE_DATE desc 
+    <if test="bt == null">
+	    limit #{start},#{limit}; 
+    </if>
+  </select>
+  <select id="countCustomers" resultType="int">
+		 select count(*)
+			from customer_info c 
+			LEFT join party a on a.PARTY_ID = c.PARTY_ID
+    <include refid="listWhere"/>
+  </select>
+  
+
+  
+  <select id="getOneCustomerByName" parameterType="java.lang.String" resultMap="CustomerMap"  resultType="Customer">
+  	select * from customer_info where CUSTOMER_CODE=#{customerCode};
+  </select>
+  
+  <insert id="saveCustomer" parameterType="Customer" useGeneratedKeys="true" keyProperty="customerId">
+  	insert into customer_info(CUSTOMER_NAME,PARTY_ID,CREATE_BY,CREATE_DATE,ENTER_DATE,COUNTRY_ID,PROVINCE_ID,CITY_ID,COUNTY_ID,TOWN_ID,
+  	DETAIL_ADDRESS,CONTACT_NAME,PHONE,EMAIL,WEBSITE,STATUS,CUSTOMER_CODE,CHANNEL_TYPE,CUSTOMER_ANAME) 
+  	values(#{customerName},#{partyId},#{createBy},#{createDate},#{enterDate},#{countryId},#{provinceId},#{cityId},#{countyId},#{townId},
+  	#{detailAddress},#{contactName},#{phone},#{email},#{website},#{status},#{customerCode},#{channelType},#{customerAname});
+  </insert>
+  
+  <select id="getCustomer" resultMap="CustomerMap" resultType="Customer">
+    select * from customer_info where CUSTOMER_ID=#{cid} limit 1;
+  </select>
+  
+  <update id="editCustomer" parameterType="Customer">
+  	update customer_info set CUSTOMER_NAME=#{customerName},PARTY_ID=#{partyId},ENTER_DATE=#{enterDate},COUNTRY_ID=#{countryId},
+  	PROVINCE_ID=#{provinceId},CITY_ID=#{cityId},COUNTY_ID=#{countyId},TOWN_ID=#{townId},
+  	DETAIL_ADDRESS=#{detailAddress},CONTACT_NAME=#{contactName},PHONE=#{phone},EMAIL=#{email},WEBSITE=#{website},STATUS=#{status},
+  	CUSTOMER_CODE=#{customerCode},CHANNEL_TYPE=#{channelType},CUSTOMER_ANAME=#{customerAname}
+  	where CUSTOMER_ID=#{customerId};
+  </update>
+  
+  <!-- 假删除渠道 -->
+  <update id="deleteCustomer" parameterType="Customer">
+  		update customer_info set flag='-1',del_user_id=#{delUserId} where customer_id=#{customerId}
+  	
+  </update>
+  
+  <!-- <delete id="deleteCustomer" parameterType="Customer">
+  		delete from customer_info where CUSTOMER_ID = #{customerId};
+  </delete> -->
+  
+ <select id="getCountryByName" parameterType="java.lang.String" resultType="java.lang.String">
+ 		select c.COUNTRY_ID from country c where c.COUNTRY = #{name}
+ </select>
+ <select id="getProvinceByName" parameterType="java.lang.String" resultType="java.lang.String">
+ 		select p.PROVINCE_ID from province p where p.PROVINCE = #{name}
+ </select>
+ <select id="getCityByName" parameterType="java.lang.String" resultType="java.lang.String">
+ 		select c.city_id from city c where c.city = #{name}
+ </select>
+ <select id="getCountyByName" parameterType="java.lang.String" resultType="java.lang.String">
+ 		select c.county_id from county c where c.county = #{name}
+ </select>
+ <select id="getTownByName" parameterType="java.lang.String" resultType="java.lang.String">
+ 		select t.town_id from town t where t.town = #{name}
+ </select>
+ <select id="getRepeatByCustomerCode" resultMap="CustomerMap" resultType="Customer">
+ 		select * from customer_info ci where ci.CUSTOMER_CODE = #{code}
+ </select>
+ <select id="getChannelByName" parameterType="java.lang.String" resultType="java.lang.String">
+ 		select cp.PKEY from cfg_parameter cp where 1=1 
+ 		and cp.PDOMAIN = 'TCL_CHANNEL' and cp.PTYPE = 'CHANNEL'  
+ 		and cp.PVALUE = #{name}
+ </select>
+   <select id="getCountByChannel" resultType="int">
+		select count(*)
+			from cfg_parameter cp 
+		where 1=1 
+		and cp.PDOMAIN = 'TCL_CHANNEL' 
+		and cp.PTYPE = 'CHANNEL' 
+		and cp.PVALUE = #{channelType}
+  </select>
+  
+  <select id="getCountryByNameCount" resultType="int">
+		select count(*) from country c where c.COUNTRY = #{searchName}
+  </select>
+  <select id="getProvinceByNameCount" resultType="int">
+		select count(*) from province p where p.PROVINCE = #{searchName}
+  </select>
+  <select id="getCityByNameCount" resultType="int">
+		select count(*) from city c where c.city = #{searchName}
+  </select>
+  <select id="getCountyByNameCount" resultType="int">
+		select count(*) from county c where c.county = #{searchName}
+  </select>
+  <select id="getTownByNameCount" resultType="int">
+		select count(*) from town t where t.town = #{searchName}
+  </select>
+  <select id="getCustomerByName" resultMap="CustomerMap">
+  	 select * from customer_info where CUSTOMER_NAME=#{CustomerName} limit 0,5;
+  </select>
+  
+  
+  
+  <select id="selectCustomerName" resultMap="CustomerMap">
+		SELECT  ci.`CUSTOMER_NAME`,ci.CUSTOMER_CODE  FROM customer_info ci
+		LEFT JOIN party pa ON pa.`PARTY_ID`=ci.`PARTY_ID`
+    <include refid="listWhereTwo"/>
+    
+  </select>
+  
+  <select id="selectParty" parameterType="java.lang.String" resultMap="partyMap">
+  SELECT * FROM ( 
+   SELECT  pa.`PARTY_ID`  AS  partyId  ,pa.`PARTY_NAME` AS  partyName 
+FROM  party  pa  
+WHERE pa.`COUNTRY_ID`=#{countryId}
+AND  pa.`flag` = 0
+AND pa.`PARTY_ID`!=#{countryId}
+   UNION ALL 
+		SELECT '','All'  FROM DUAL
+   )c
+   
+   ORDER BY c.partyId
+  </select>
+  
+  <sql id="listAllwhere">
+  	<if test="conditions!=null">
+  		${conditions} and ul.ENABLED='1' 
+  	</if>
+  </sql>
+  
+  <select id="selectCustomerSaler" resultMap="userLoginMap">
+	select DISTINCT ul.USER_LOGIN_ID,ul.USER_NAME from user_login ul,user_role_mapping urm	
+	where urm.USER_LOGIN_ID=ul.USER_LOGIN_ID 
+	<if test="type==0">
+		and urm.ROLE_ID like 'sales_%'
+	</if>
+	<if test="type==1">
+		AND urm.role_id LIKE 'prom_%' AND (ul.`USER_LOGIN_ID` NOT IN 
+		(SELECT csm.`user_login_id` FROM customer_saler_mapping csm  WHERE 
+		csm.`salertype`=1 )
+		<if test="customerId !=null">
+		or ul.`USER_LOGIN_ID`  IN    
+		(SELECT csm.`user_login_id` FROM customer_saler_mapping csm,user_login ul WHERE csm.`salertype`=1 
+		and ul.USER_LOGIN_ID=csm.user_login_id and csm.customer_id=#{customerId}
+		) 
+		</if>
+		)
+	</if>
+	<if test="type==2">
+		and urm.role_id like 'SUPERVISOR_%'
+	</if>
+	<include refid="listAllwhere"/>
+  </select>
+  
+  <insert id="insertSalers" >
+  	insert into customer_saler_mapping(customer_id,user_login_id,salertype)
+  	values(#{customerId},#{userLoginId},#{salertype});
+  </insert>
+  
+  <delete id="deleteRelation">
+  	delete from customer_saler_mapping where customer_id=#{customerId};
+  </delete>
+  
+  <select id="getCustomerUserRelations" resultMap="customerUserMap" parameterType="java.lang.String">
+  	select * from customer_saler_mapping csm,USER_LOGIN ul  
+  	where ul.USER_LOGIN_ID=csm.user_login_id and ul.PARTY_ID=#{partyId} and csm.customer_id=#{customerId}
+  </select>
+  
+  <select id="getCustomerByCountry" resultMap="CustomerMap">
+  	SELECT * FROM `customer_info` ci WHERE ci.`COUNTRY_ID` = #{countryId} ORDER BY ci.`CUSTOMER_NAME`
+  </select>
+  
+  
+  <select id="selectCustomerSalerData" resultMap="userLoginMap">
+	select DISTINCT ul.USER_LOGIN_ID,ul.USER_NAME from user_login ul,user_role_mapping urm	
+	where urm.USER_LOGIN_ID=ul.USER_LOGIN_ID 
+	<if test="type==0">
+		and urm.ROLE_ID like 'sales_%'
+	</if>
+	<if test="type==1">
+		AND urm.role_id LIKE 'prom_%' AND (ul.`USER_LOGIN_ID` NOT IN 
+		(SELECT csm.`user_login_id` FROM customer_saler_mapping csm  WHERE 
+		csm.`salertype`=1 )
+		)
+	</if>
+	<if test="type==2">
+		and urm.role_id like 'SUPERVISOR_%'
+	</if>
+	<include refid="listAllwhere"/>
+  </select>
+</mapper>

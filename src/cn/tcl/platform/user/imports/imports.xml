@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<import>
+	<mapping bean="cn.tcl.platform.user.vo.UserLogin">
+		<property column="用户ID" propertyName="userLoginId" required="true" javaType="java.lang.String"></property>
+		<property column="用户名" propertyName="userName" required="true" javaType="java.lang.String"></property>
+		<property column="密码" propertyName="password" required="true" javaType="java.lang.String"></property>
+		<property column="密码提醒" propertyName="passwordHint" required="true" javaType="java.lang.String"></property>
+		<property column="是否可用" propertyName="enabled" required="true" javaType="java.lang.Integer"></property>
+		<property column="失效日期" propertyName="disabledDateTime" required="true" javaType="java.util.Date"></property>
+		<property column="登录方式" propertyName="loginType" required="true" javaType="java.lang.String"></property>
+		<property column="邮箱" propertyName="userEmail" required="true" javaType="java.lang.String"></property>
+		<property column="微信号" propertyName="userMcId" required="true" javaType="java.lang.String"></property>
+		<property column="电话号码" propertyName="userTelNum" required="true" javaType="java.lang.String"></property>
+		<property column="用户语言" propertyName="userLocale" required="true" javaType="java.lang.String"></property>
+	</mapping>
+	<volidate dateFormat="yyyy-MM-dd" volidateClass="cn.tcl.platform.user.imports.VolidateImportUser" volidateMethod="volidate"></volidate>
+	<service serviceBean="userLoginService" serviceMethod="importUser"></service>
+</import>

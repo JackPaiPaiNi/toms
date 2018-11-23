@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.excel.dao.IStatementTableDao">
+
+	<resultMap id="statementTableMap" type="Excel">
+		<result column="REG" property="reg" jdbcType="VARCHAR" />
+		<result column="shop_id" property="shopId" jdbcType="VARCHAR" />
+		<result column="REG" property="reg" jdbcType="VARCHAR" />
+		<result column="TYPE" property="type" jdbcType="VARCHAR" />
+		<result column="NO_OF_SHOP" property="noOfShop" jdbcType="INTEGER" />
+		<result column="DEALER" property="dealer" jdbcType="VARCHAR" />
+		<result column="BRANCH" property="branch" jdbcType="VARCHAR" />
+		<result column="TV_FPS" property="tvFps" jdbcType="INTEGER" />
+		<result column="AC_FPS" property="acFps" jdbcType="INTEGER" />
+		<result column="PROM_NAME" property="promName" jdbcType="VARCHAR" />
+		<result column="DATE" property="dateOfHired" jdbcType="CHAR" />
+		<result column="SHOP_NAME" property="shopName" jdbcType="VARCHAR" />
+		<result column="ACFO" property="acfo" jdbcType="VARCHAR" />
+		<result column="AREA" property="area" jdbcType="VARCHAR" />
+		<result column="SALESMAN" property="salesMan" jdbcType="VARCHAR" />
+		<result column="AGENCY" property="agency" jdbcType="VARCHAR" />
+		<result column="SHOP_CLASS" property="shopClass" jdbcType="VARCHAR" />
+		<result column="SALERTYPE" property="salerType" jdbcType="INTEGER" />
+		<result column="USERID" property="userId" jdbcType="INTEGER" />
+		<result column="LEVEL" property="level" jdbcType="VARCHAR" />
+		
+	</resultMap>
+
+	<resultMap id="statementModelMap" type="Excel">
+		<result column="shop_id" property="shopId" jdbcType="VARCHAR" />
+		<result column="model" property="model" jdbcType="VARCHAR" />
+		<result column="quantity" property="quantity" jdbcType="INTEGER" />
+		<result column="amount" property="amount" jdbcType="INTEGER" />
+		<result column="country_id" property="countryId" jdbcType="VARCHAR" />
+	</resultMap>
+
+
+	<resultMap id="statementSumMap" type="Excel">
+		<result column="targetSum" property="targetSum"  />
+		<result column="challengeSum" property="challengeSum"  />
+		<result column="targetQty" property="targetQty"  />
+		<result column="challengeQty" property="challengeQty"  />
+		<result column="saleSum" property="saleSum" jdbcType="VARCHAR" />
+		<result column="saleQty" property="saleQty" />
+	</resultMap>
+
+
+	<resultMap id="statementDateMap" type="Excel">
+		<result column="shopId" property="shopId" jdbcType="VARCHAR" />
+		<result column="quantity" property="quantity" jdbcType="INTEGER" />
+		<result column="model" property="model" jdbcType="VARCHAR" />
+	</resultMap>
+
+
+
+	<sql id="listWhere">
+		<if test="searchStr != null"> ${searchStr} </if>
+		<where>
+			<if test="conditions != null"> and ${conditions} </if>
+		</where>
+	</sql>
+	
+	
+	
+	<select id="selectSelloutByDealer" parameterType="java.util.Map" 
+		resultType="java.util.HashMap">
+	
+SELECT  	sv.party_id,sv.partyId, sv.customer_name AS customer_name,
+		sv.DEALER AS DEALER,
+		sv.REG AS REG,
+		SUM( sv.shop) AS noOfShops ,
+		SUM(sv.tvFps) AS tvFps, 
+
+		COALESCE(SUM(sv.saleQty),0) AS saleQty,
+		COALESCE(SUM(sv.saleSum),0) AS saleSum
+		FROM (
+		SELECT
+		 c.customer_id AS customer_id,s.`shop_id`,
+		COUNT(DISTINCT ssm.`user_login_id`) AS tvFps, 
+		PA.`PARTY_ID` AS party_id,
+		c.`CUSTOMER_NAME` AS customer_name,
+		COUNT(DISTINCT s.shop_id) AS shop , 
+		(SELECT p.party_name
+		FROM party p WHERE p.party_id=pa.`PARENT_PARTY_ID`) REG,
+		c.`CUSTOMER_NAME` AS DEALER ,
+
+		pa.`PARTY_ID` partyId, PA.`PARTY_NAME` AS
+		AREA
+		,
+		
+		<if test="isHq == true ">
+				<if test="check == 'true' ">
+		${"ROUND(COALESCE(SUM(S.`h_quantity`/co.`all_products_coefficient`),0)) AS
+		saleQty,
+		COALESCE(SUM(S.`h_amount`/co.`all_products_coefficient`),0) AS
+		saleSum
+		"}
+		</if>
+				<if test="check == 'false' ">
+		${"ROUND(COALESCE(SUM(S.`h_quantity`),0)) AS
+		saleQty,
+		COALESCE(SUM(S.`h_amount`),0) AS
+		saleSum
+		"}
+		</if>
+		</if>
+		<if test="isHq == false ">
+			<if test="check == 'true' ">
+						${"ROUND(COALESCE(SUM(S.`quantity`/co.`all_products_coefficient`),0)) AS
+		saleQty,
+		COALESCE(SUM(S.`amount`/co.`all_products_coefficient`),0) AS
+		saleSum
+		"}
+		</if>
+		<if test="check == 'false' ">
+						${"ROUND(COALESCE(SUM(S.`quantity`),0)) AS
+		saleQty,
+		COALESCE(SUM(S.`amount`),0) AS
+		saleSum
+		"}
+		</if>
+		</if>
+
+		FROM t_sale s  
+		JOIN shop_info p ON p.`SHOP_ID`=s.`shop_id`
+		JOIN
+		customer_info c ON p.customer_id=c.customer_id
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND  pr.head_type_id =1
+		<if test="filter != '' and filter != null ">
+			${filter}
+		</if>
+		JOIN coefficient co ON co.`country`=pa.`COUNTRY_ID`
+		LEFT JOIN `shop_saler_mapping` ssm ON  ssm.`shop_id`=s.`shop_id`
+		<include refid="listWhere" />
+		AND  s.`datadate` BETWEEN #{beginDate} AND #{endDate}
+		AND  ssm.salertype=1 
+		
+		GROUP BY  s.shop_id
+		)sv
+		
+		
+		GROUP BY
+		sv.`PARTY_ID` ,sv.customer_id
+	</select>
+	
+	
+	
+	
+	<select id="selectSelloutByDealerInfo"  parameterType="java.util.Map" 
+		resultType="java.util.HashMap">
+
+		SELECT pa.party_name  AS REG,
+		c.`CUSTOMER_NAME` AS DEALER
+
+		FROM
+		customer_info c 
+		
+		JOIN party pa ON pa.party_id = c.party_id
+		<include refid="listWhere" />
+		GROUP BY PA.`PARTY_ID` ,c.`CUSTOMER_ID`
+		
+		
+	</select>
+	
+	
+</mapper>

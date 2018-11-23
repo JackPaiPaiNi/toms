@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<mapper namespace="cn.tcl.platform.incentive.dao.IncentiveDao">
+	<resultMap type="Incentive" id="IncentiveMap">
+		<result column="id" property="id" jdbcType="INTEGER"/>
+		<result column="country_id" property="partyId" jdbcType="VARCHAR"/>
+		<result column="branch_model" property="branchModel" jdbcType="VARCHAR"/>
+		<result column="size" property="size" jdbcType="VARCHAR"/>
+		<result column="retail_price" property="retailPrice" jdbcType="VARCHAR"/>
+		<result column="incentive" property="incentive" jdbcType="VARCHAR"/>
+		<result column="quantity" property="quantity" jdbcType="VARCHAR"/>
+		<result column="creat_date" property="creatDate" jdbcType="VARCHAR"/>
+		<result column="remark" property="remark" jdbcType="VARCHAR"/>
+		<result column="party_name" property="partyName" jdbcType="VARCHAR" />
+		<result column="party_id" property="partyId" jdbcType="VARCHAR" />
+		<result column="flag" property="flag" jdbcType="VARCHAR" />
+		<result column="date" property="date" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	
+	<resultMap type="ModelMap" id="ModelMap_Map">
+		<result column="id" property="id" jdbcType="VARCHAR"/>
+		<result column="branch_model" property="branchModel" jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	<sql id="listwhere">
+		<where>
+			<if test="searchStr!=null"> ${searchStr}</if>
+			<if test="conditions!=null"> ${conditions} and tp.flag=0</if>
+		</where>
+	</sql>
+	
+	<select id="selectIncentiveList" resultMap="IncentiveMap">
+		select 
+		p.PARTY_NAME partyName,
+		p.party_id partyId,
+		tp.branch_model  branchModel,
+		<!-- tp.size, -->
+		tp.incentive,
+		<!-- tp.quantity, -->
+		tp.retail_price retailPrice,
+		tp.id,
+		tp.remark,
+		tp.date 
+		from t_incentive tp,party p 
+		<include refid="listwhere"/>
+		and	p.PARTY_ID=tp.country_id  ORDER BY tp.creat_date DESC 
+		LIMIT #{start},#{limit};
+	</select>
+	
+	<select id="countIncentive" resultType="java.lang.Integer">
+		select count(*) from t_incentive tp
+		<include refid="listwhere"/> 
+	</select>
+	
+	<!-- 添加提成 -->
+	<insert id="addIncentive" parameterType="Incentive">
+		insert into t_incentive(country_id,branch_model,retail_price,incentive,remark,date)
+		values (#{partyId},#{branchModel},#{retailPrice},#{incentive},#{remark},#{date});
+	</insert>
+	
+	<!-- 删除提成 -->
+	<update id="deleteIncentive" parameterType="Incentive">
+		update  t_incentive set flag='-1' where id=#{id};
+	</update>
+	<!-- <delete id="deleteIncentive" parameterType="Incentive">
+		delete from t_incentive where id=#{id}
+	</delete> -->
+	
+	
+	<select id="queryIncentive" resultMap="IncentiveMap">
+		select * from t_incentive where id=#{id}
+	</select>
+	
+	<update id="updateIncentive" parameterType="Incentive">
+		update t_incentive set country_id=#{partyId},branch_model=#{branchModel},
+		retail_price=#{retailPrice},incentive=#{incentive},remark=#{remark},date=#{date}
+		where id=#{id}
+	</update>	
+	
+	<select id="getPartyIdByCountryName" parameterType="Incentive" resultType="java.lang.String">
+		select p.party_id from party p where p.party_name=#{partyId}
+	</select>
+	
+	
+	<select id="countIncentiveByCondition" parameterType="java.lang.String" resultType="java.lang.Integer">
+		select count(*) from t_incentive t where t.country_id=#{partyId} and t.branch_model=#{branchModel}
+		and t.date=#{date} and t.flag=0;
+	</select>
+	
+	<update id="updateIncentiveByCondition" parameterType="Incentive">
+		update t_incentive set retail_price=#{retailPrice},incentive=#{incentive},remark=#{remark}
+		where country_id=#{partyId} and branch_model=#{branchModel} and date=#{date}
+	</update>
+	
+	<select id="countBranchModel" parameterType="java.lang.String" resultType="java.lang.Integer">
+		select count(*) from t_modelmap tm where tm.branch_model=#{branchModel} and tm.party_id=#{countryId} and tm.flag=0;
+	</select>
+	
+	<!-- excel添加提成 -->
+	<insert id="addExcelIncentive" parameterType="Incentive">
+		insert into t_incentive(country_id,branch_model,retail_price,incentive,date,remark)
+		values (#{partyId},#{branchModel},#{retailPrice},#{incentive},#{date},#{remark});
+	</insert>
+	
+	<!-- 根据国家查询分公司型号 -->
+	<select id="selectBranchModel" parameterType="java.lang.String" resultMap="ModelMap_Map">
+		select t.id,t.branch_model  from t_modelmap t where t.party_id=#{countryId}
+	</select>
+</mapper>

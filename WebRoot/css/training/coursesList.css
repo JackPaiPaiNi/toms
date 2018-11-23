@@ -1,0 +1,38 @@
+.roleType{
+	text-indent: 76px;
+    display: inline-block;
+}
+.roleTypeName{
+	width: 400px;
+    height: 22px;
+    text-indent: 5px;
+    margin-left: 10px
+}
+.inb{
+	display: inline-block;
+}
+.leftToright select{
+	width: 182px;
+}
+.select_from{
+	/* margin-left:12px; */
+}
+
+#selectLeft,#selectRight{
+	width: 170px;
+	height: 140px;
+}
+
+#addCourseWin{
+	position: relative;
+}
+#imgUrl{
+	width: 100px;
+    height: 100px;
+    z-index: 10000;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-left: -50px;
+    margin-top: -50px;
+}

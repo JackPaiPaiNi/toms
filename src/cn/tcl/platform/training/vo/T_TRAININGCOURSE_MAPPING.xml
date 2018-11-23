@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.training.dao.TrainingCourseDao">
+	<resultMap type="TrainingCourse" id="courseMap">
+		<result column="course_id" property="courseId" jdbcType="INTEGER"/>
+		<result column="type_id" property="typeId" jdbcType="INTEGER"/>
+		<result column="corresponding_party_id" property="correspondingPartyId" jdbcType="VARCHAR"/>
+		<result column="course_title" property="courseTitle" jdbcType="VARCHAR"/>
+		<result column="course_summary" property="courseSummary" jdbcType="VARCHAR"/>
+		<result column="coverimg_url" property="coverImgUrl" jdbcType="VARCHAR"/>
+		<result column="attach_url" property="attachUrl" jdbcType="VARCHAR"/>
+		<result column="course_content" property="courseContent" jdbcType="VARCHAR"/>
+		<result column="message_type" property="messageType" jdbcType="CHAR"/>
+		<result column="create_date" property="createDate" jdbcType="DATE"/>
+		<result column="create_by" property="createBy" jdbcType="VARCHAR"/>
+		<result column="creater_role_id" property="createrRoleId" jdbcType="VARCHAR"/>
+		<result column="creater_party_id" property="createrPartyId" jdbcType="VARCHAR"/>
+		<result column="last_modify_user" property="lastModifyUser" jdbcType="VARCHAR"/>
+		<result column="last_modify_date" property="lastModifyDate" jdbcType="DATE"/>
+		
+		<result column="corresponding_region_id" property="correspondingRegionId" jdbcType="VARCHAR"/>
+		<result column="corresponding_country_id" property="correspondingCountryId" jdbcType="VARCHAR"/>
+		<result column="state" property="state" jdbcType="VARCHAR"/>
+		<result column="levelone_type_id" property="levelOneTypeId" jdbcType="INTEGER"/>
+		<result column="leveltwo_type_id" property="levelTwoTypeId" jdbcType="INTEGER"/>
+		<result column="levelthree_type_id" property="levelThreeTypeId" jdbcType="INTEGER"/>
+	</resultMap>
+	
+	<resultMap type="party" id="partyMap">
+		<result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+		<result column="PARTY_NAME" property="partyName" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap type="courseType" id="courseTypeMap">
+		<result column="type_id" property="typeId" jdbcType="VARCHAR" />
+		<result column="type_name" property="typeName" jdbcType="VARCHAR" />
+	</resultMap>
+	<!-- 基本查询语句 -->
+	<sql id="baseSelectCourse">
+		select tc.course_id,
+			   tc.type_id,
+			   tc.corresponding_party_id,
+			   tc.course_title,
+			   tc.course_summary,
+			   tc.coverimg_url,
+			   tc.course_content,
+			   tc.attach_url,
+			   tc.message_type,
+			   tc.create_date,
+			   tc.create_by,
+			   tc.creater_role_id,
+			   tc.creater_party_id,
+			   tc.last_modify_user,
+			   tc.last_modify_date 
+		from training_course tc 
+	</sql>
+	<!-- 查询培训课程列表 -->
+	<select id="GetCourseList" resultMap="courseMap" parameterType="TrainingCourse">
+		<include refid="baseSelectCourse"/>
+		<where>
+			1=1
+			<if test="null != courseId and 0 != courseId">
+			and tc.course_id=#{courseId}
+			</if>
+			<if test="null != typeId and 0 != typeId">
+			and tc.type_id=#{typeId}
+			</if>
+			<if test="null != courseTitle and '' != courseTitle">
+			and tc.course_title=#{courseTitle}
+			</if>
+			<if test="null != createrRoleId and '' != createrRoleId">
+			and tc.creater_role_id=#{createrRoleId}
+			</if>
+			<if test="null != createrPartyId and '' != createrPartyId">
+			and tc.creater_party_id=#{createrPartyId}
+			</if>
+			<if	test="null != keyword and '' != keyword">
+			and tc.course_title like CONCAT('%',#{keyword},'%')
+			</if>
+		</where>
+		order by tc.create_date desc
+	</select>
+	<!-- 根据条件查询培训课程列表 -->
+	<select id="SelectCourseDataList" resultMap="courseMap">
+		<include refid="baseSelectCourse"/>
+		<where>
+			1=1
+			<if test="null != trainingCourse and 0 != trainingCourse.typeId">
+			and tc.type_id=#{trainingCourse.typeId}
+			</if>
+			<if test="null != keyword and '' != keyword">
+			and tc.course_title like CONCAT('%',#{keyword},'%')
+			</if>
+		</where>
+		order by tc.create_date desc
+	</select>
+	<!-- 根据条件查询课程列表 -->
+	<!-- <select id="SelectCourseList" resultMap="courseMap">
+	<include refid="baseSelectCourse"/>
+	</select> -->
+	<!-- 修改培训课程 -->
+	<update id="UpdateCourse" parameterType="TrainingCourse">
+		update training_course
+		<set>
+			<if test="null != typeId and 0 != typeId">
+			type_id=#{typeId},
+			</if>
+			<if test="null != courseTitle and '' != courseTitle">
+			course_title=#{courseTitle},
+			</if>
+			<if test="null != courseSummary and '' != courseSummary">
+			course_summary=#{courseSummary},
+			</if>
+			<if test="null != coverImgUrl and '' != coverImgUrl">
+			coverimg_url=#{coverImgUrl},
+			</if>
+			<if test="null != courseContent and '' != courseContent">
+			course_content=#{courseContent},
+			</if>
+			<if test="null != messageType and '' != messageType">
+			message_type=#{messageType},
+			</if>
+			<if test="null != lastModifyUser and '' != lastModifyUser">
+			last_modify_user=#{lastModifyUser},
+			</if>
+			<if test="null != lastModifyDate and '' != lastModifyDate" >
+			last_modify_date=#{lastModifyDate}
+			</if>
+		</set>
+		where course_id=#{courseId}
+	</update>
+	<!-- 批量修改培训课程 -->
+	<update id="UpdateCourseBatch"></update>
+	<!-- 新增培训课程 -->
+	<insert id="InsertCourse">
+		insert into 
+		training_course(type_id,course_title,course_summary,coverimg_url,course_content,message_type,
+		 create_date,create_by,creater_role_id,creater_party_id,corresponding_party_id,attach_url,corresponding_region_id,corresponding_country_id,state,levelone_type_id,leveltwo_type_id,levelthree_type_id)
+		values(#{typeId},#{courseTitle},#{courseSummary},#{coverImgUrl},#{courseContent},#{messageType},
+		#{createDate},#{createBy},#{createrRoleId},#{createrPartyId},#{correspondingPartyId},#{attachUrl},#{correspondingRegionId},#{correspondingCountryId},#{state},#{levelOneTypeId},#{levelTwoTypeId},#{levelThreeTypeId})
+		<selectKey keyProperty="courseId" order="AFTER" resultType="java.lang.Integer">
+				SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	<!-- 批量新增培训课程 -->
+	<insert id="InsertCourseBatch"></insert>
+	
+	<select id="count" resultType="java.lang.Integer">
+		<!-- select count(DISTINCT tc.course_id) from training_course tc,t_msg_text tmt,t_msg_mapping tmm -->
+		select  count(DISTINCT t.course_id) from (
+		select DISTINCT tc.course_id , tc.type_id , tc.corresponding_party_id , tc.course_title , tc.course_summary , tc.coverimg_url ,
+		 tc.course_content , tc.message_type , DATE_FORMAT(tc.create_date,'%Y-%m-%d') as create_date, tc.create_by , tc.creater_role_id , tc.creater_party_id ,
+		  tc.last_modify_user, tc.last_modify_date, tc.corresponding_region_id,tc.corresponding_country_id, tc.state, tc.levelone_type_id as levelOneTypeId, tc.leveltwo_type_id as levelTwoTypeId, 
+		  tc.levelthree_type_id as levelThreeTypeId, p.PARTY_NAME as partyName, tmt.msg_role_id as msgRoleId from training_course tc,t_msg_text tmt,t_msg_mapping tmm,party p 
+		<include refid="listwhere"/>
+		and p.PARTY_ID=tc.creater_party_id)t
+		<include refid="listwheres"/>
+	</select>
+	
+	<sql id="listwhere">
+		<where>
+		<if test="conditions!=null">  and tmt.course_id=tc.course_id and tmt.msg_role_id=tmm.msg_role_id  and	${conditions} </if>
+		</where>
+	</sql>
+	
+	<sql id="listwheres">
+		<where>
+		
+		<if test="partyId!=null"> and t.creater_party_id=#{partyId}</if>
+		<if test="typeId!=null"> and t.levelOneTypeId=#{typeId}</if>
+		<if test="typeIdSubId!=null"> and t.levelTwoTypeId=#{typeIdSubId}</if>
+		<if test="typeIdSubtoId!=null"> and t.levelThreeTypeId=#{typeIdSubtoId}</if>
+		<if test="MessagetypeId!=null"> and t.message_type=#{MessagetypeId}</if>
+		<if test="searchStr != null"> and ${searchStr} </if>
+		</where>
+	</sql>
+	
+	<select	id="SelectCourseList"  resultMap="courseMap">
+		select * from (
+			select DISTINCT	tc.course_id ,
+			   tc.type_id ,
+			   tc.corresponding_party_id ,
+			   tc.course_title ,
+			   tc.course_summary ,
+			   tc.coverimg_url ,
+			   tc.course_content ,
+			   tc.message_type ,
+			   DATE_FORMAT(tc.create_date,'%Y-%m-%d') as create_date,
+			   tc.create_by ,
+			   tc.creater_role_id ,
+			   tc.creater_party_id ,
+			   tc.last_modify_user,
+			   tc.last_modify_date,
+			   tc.corresponding_region_id,tc.corresponding_country_id,
+			   tc.state,
+			   tc.levelone_type_id as levelOneTypeId,
+			   tc.leveltwo_type_id as levelTwoTypeId,
+			   tc.levelthree_type_id as levelThreeTypeId,
+			   p.PARTY_NAME as partyName,
+			   tmt.msg_role_id as msgRoleId
+		from training_course tc,party p,t_msg_text tmt,t_msg_mapping tmm
+	<include refid="listwhere"/>
+	and p.PARTY_ID=tc.creater_party_id)t
+	<include refid="listwheres"/>
+	order by t.create_date desc limit #{start},#{limit};
+	</select>
+	
+	<select id="selectTrainCourseById" resultMap="courseMap" parameterType="java.lang.String">
+		select tc.course_title,tc.course_summary,tc.course_content,tc.message_type,tc.corresponding_region_id,tc.corresponding_country_id
+		 from training_course tc where tc.course_id=#{courseId}
+	</select>
+	
+	
+	<update id="updateTrainCourse" parameterType="TrainingCourse">
+		<!-- update training_course
+		<set>
+			<if test="null != courseTitle and '' != courseTitle">
+			course_title=#{courseTitle},
+			</if>
+			<if test="null != courseSummary and '' != courseSummary">
+			course_summary=#{courseSummary},
+			</if>
+			<if test="null != coverImgUrl and '' != coverImgUrl">
+			coverimg_url=#{coverImgUrl},
+			</if>
+			<if test="null != courseContent and '' != courseContent">
+			course_content=#{courseContent},
+			</if>
+			<if test="null != messageType and '' != messageType">
+			message_type=#{messageType},
+			</if>
+			<if test="null != correspondingPartyId and '' != correspondingPartyId">
+			corresponding_party_id=#{correspondingPartyId},
+			</if>
+		</set>
+		where course_id=#{courseId} -->
+		update training_course tc
+		<trim prefix="set" suffix="" suffixOverrides="," >
+	      <if test="courseTitle!=null" >
+	        tc.course_title = #{courseTitle},
+	      </if>
+	      <if test="courseSummary!=null" >
+	        tc.course_summary = #{courseSummary},
+	      </if>
+	      <if test="coverImgUrl!=null" >
+	        tc.coverimg_url = #{coverImgUrl},
+	      </if>
+	      <if test="courseContent!=null" >
+	        tc.course_content = #{courseContent},
+	      </if>
+	       <if test="messageType!=null" >
+	        tc.message_type = #{messageType},
+	      </if>
+	       <if test="correspondingRegionId!=null" >
+	        tc.corresponding_region_id = #{correspondingRegionId},
+	      </if>
+	      <if test="correspondingCountryId!=null" >
+	        tc.corresponding_country_id = #{correspondingCountryId},
+	      </if>
+	      <if test="state!=null" >
+	        tc.state = #{state},
+	      </if>
+	      <if test="levelOneTypeId!=null">
+	      	tc.levelone_type_id=#{levelOneTypeId},
+	      </if>
+	      <if test="levelOneTypeId!=null">
+	      	tc.leveltwo_type_id=#{levelTwoTypeId},
+	      </if>
+	      <if test="levelOneTypeId!=null">
+	      	tc.levelthree_type_id=#{levelThreeTypeId},
+	      </if>
+	      <if test="typeId!=null">
+	      	tc.type_id=#{typeId}
+	      </if>
+	</trim>
+	where 1=1 and tc.course_id=#{courseId}
+	</update>
+	
+	<!-- <insert id="saveTrainCourse" parameterType="TrainingCourse">
+		insert into 
+		training_course(type_id,course_title,course_summary,coverimg_url,course_content,message_type,corresponding_party_id)
+		values(#{typeId},#{courseTitle},#{courseSummary},#{coverImgUrl},#{courseContent},#{messageType},#{correspondingPartyId})
+	</insert> -->
+	
+	<delete id="delectTrainCourse" parameterType="TrainingCourse">
+		delete from training_course where course_id=#{courseId}
+	</delete>
+	
+	<select id="selectRegion" resultMap="partyMap">
+		select t.PARTY_ID as partyId,
+		       t.PARTY_NAME as partyName		       
+		  from party t
+ 		 where t.PARTY_ID = #{partyId}
+	</select>
+	
+	<select id="selectAllParty" resultMap="partyMap">
+		<!-- select p.party_id as partyId,p.party_name as partyName from party p where p.`STATUS`='1' and p.PARTY_NAME like '%SC%' -->
+		select * from (
+select p.party_id,p.party_name from party p where p.status = '1' and upper(p.party_name) like '%SC%' 
+union all select pa.PARTY_ID,pa.party_name from party pa where pa.PARTY_ID=999
+union all select '-1','All' from dual
+)t ORDER BY t.party_id desc
+	</select>
+	
+	<select id="selectAllCountry" resultMap="partyMap" parameterType="java.lang.String">
+		<!-- select * from ( -->
+		select * from (
+		select p.party_id as partyId,p.party_name as partyName from party p 
+		where p.status = '1' 
+		
+		<if test="partyId!=null">
+			<choose>
+				<when test="partyId==2">
+					and p.PARENT_PARTY_ID in (select pa.PARTY_ID from party pa where pa.PARENT_PARTY_ID=#{partyId}  
+				and pa.flag=0)
+				</when>
+				<otherwise>
+					and	 p.PARENT_PARTY_ID=#{partyId} 
+			  		 AND p.`flag` = 0 and	p.country_id=p.party_id
+				</otherwise>
+			</choose>
+		</if>
+		
+		<if test="partyId==999">
+		and p.party_id=999
+		union all select pa.PARTY_ID as partyId,pa.party_name as partyName from party pa where pa.PARTY_ID=999
+		<!-- union all select '-1','All' from dual	 -->
+		</if>
+		)t   ORDER BY t.partyId desc
+			 <!--  union select '','All' from dual) t order by t.partyId -->
+	</select>
+	
+	<select id="getLevelOneTypeId" resultMap="courseTypeMap">
+		select ct.type_id as typeId,ct.type_name as typeName from course_type ct where ct.type_level='1' and ct.status='1' order by ct.type_code 
+	</select>
+	
+	<select id="getLevelTwoOrthreeTypeId" resultMap="courseTypeMap">
+		select ct.type_id as typeId,ct.type_name as typeName from course_type ct where ct.parent_type_id=#{typeId} and ct.status='1' order by ct.type_code 
+	</select>
+	
+	<select id="getLevelthreeTypeId" resultMap="courseTypeMap">
+		select ct.type_id as typeId,ct.type_name as typeName from course_type ct where ct.parent_type_id=#{typeId} and ct.status='1' order by ct.type_code 
+	</select>
+	
+	<select id="getPartyList" parameterType="java.lang.String"  resultMap="partyMap">
+		select * from (
+		SELECT DISTINCT  p.party_id AS partyId,p.`PARTY_NAME` AS partyName FROM user_role_mapping rm,role_data_permission dp,party p
+WHERE rm.role_id=dp.role_id AND p.`flag` = 0 AND dp.permission_type='PARTY' AND p.party_id=dp.permission_value
+AND rm.user_login_id=#{userLoginId} AND p.country_id=p.party_id union all select '','All' from dual
+) t order by t.partyId ASC
+	
+	</select>
+	
+	<select id="getBranchPartyList" parameterType="java.lang.String"  resultMap="partyMap">
+		select * from (
+		SELECT DISTINCT  p.party_id AS partyId,p.`PARTY_NAME` AS partyName FROM user_role_mapping rm,role_data_permission dp,party p
+WHERE rm.role_id=dp.role_id AND p.`flag` = 0 AND  dp.permission_type='PARTY' AND p.party_id=dp.permission_value
+AND rm.user_login_id=#{userLoginId} AND p.country_id=p.party_id 
+		union all  select p.party_id AS partyId,p.`PARTY_NAME` AS partyName 
+		from party p where p.PARTY_ID=999 union all select '','All' from dual 
+		)t order by t.partyId
+	</select>
+	
+	<select id="deleteTrainMsg" parameterType="TrainingCourse">
+		delete tmm.*,tmt.*  from t_msg_text tmt LEFT JOIN t_msg_mapping  tmm on tmt.msg_role_id=tmm.msg_role_id 
+		LEFT JOIN training_course tc on tc.course_id=tmt.course_id	where tmt.course_id=#{courseId};
+	</select>
+	
+	<select id="deleteMsgUrl" parameterType="TrainingCourse">
+		UPDATE t_msg_text set msg_title_url=' ' where course_id=#{courseId}
+	</select>
+</mapper>

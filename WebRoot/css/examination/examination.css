@@ -1,0 +1,70 @@
+@CHARSET "UTF-8";
+.preview_title{
+	line-height: 30px;
+    font-size: 17px;
+    text-align: center;
+}
+.preview_title_code{
+	line-height: 30px;
+    font-size: 17px;
+    text-align: center;
+}
+.preview>div{
+	height: 350px;
+	overflow: auto;
+	background-color: #fff;
+	padding: 0 10px;
+}
+.preview input[type='radio']{
+	margin: 0;
+	vertical-align: middle;
+}
+.preview>div>div>p{
+	font-size: 15px;
+	/* text-indent: 10px; */
+	display: inline-block;
+	margin-bottom:0;
+}
+.preview>div>div>div>div{
+	margin-top:20px;
+	padding: 0 40px;
+}
+.preview>div>div>div>div:first-child{
+	margin-top:6px;
+}
+.preview>div>div>div>div>p{
+	text-indent: 0px;
+	margin-bottom:4px;
+	padding-left:20px;
+}
+.preview>div>div>div>div>p:first-child{
+	text-indent: 0px;
+	padding: 0;
+}
+.roleType{
+	text-indent: 76px;
+    display: inline-block;
+}
+.roleTypeName{
+	width: 400px;
+    height: 22px;
+    text-indent: 5px;
+    margin-left: 10px
+}
+.inb{
+	display: inline-block;
+}
+.leftToright select{
+	width: 182px;
+}
+.select_from{
+	/* margin-left:12px; */
+}
+.selectLeftCss,.selectRightCss{
+	width: 251px;
+	height: 150px!important;
+}
+.leftToRightBut{
+	vertical-align: top;
+	padding-top: 40px;
+}

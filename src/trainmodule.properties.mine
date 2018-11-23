@@ -1,0 +1,12 @@
+###封面图片保存地址
+##COVER.SAVEDIR=C:/Users/zjunjun/Desktop/AAA/cover/
+COVER.SAVEDIR=E:/Software/apache-tomcat-7.0.76/webapps/topsale/train/cover/
+##COVER.SAVEDIR=/var/www/topsale/topsale/train/cover/
+###附件保存地址
+##ATTACHMENT.SAVEDIR=C:/Users/zjunjun/Desktop/AAA/attachment/
+ATTACHMENT.SAVEDIR=E:/Software/apache-tomcat-7.0.76/webapps/topsale/train/attachment/
+###ATTACHMENT.SAVEDIR=/var/www/topsale/topsale/train/attachment/
+###内容保存地址
+##CONTENT.SAVEDIR=C:/Users/zjunjun/Desktop/AAA/content/
+CONTENT.SAVEDIR=E:/Software/apache-tomcat-7.0.76/webapps/topsale/train/content/
+###CONTENT.SAVEDIR=/var/www/topsale/topsale/train/content/

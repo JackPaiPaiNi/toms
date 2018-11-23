@@ -1,0 +1,692 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.sale.dao.ISaleTargetDao" >
+	
+  <resultMap id="SaleTargetMap" type="SaleTarget" >
+    <result column="id" property="saleTargetId" jdbcType="INTEGER" />
+    <result column="quantity" property="quantity" jdbcType="INTEGER" />
+    <result column="amount" property="amount" jdbcType="FLOAT" />
+    <result column="ctime" property="ctime" jdbcType="VARCHAR" />
+    <result column="shop_id" property="shopId" jdbcType="VARCHAR" />
+    <result column="shop_name" property="shopName" jdbcType="VARCHAR" />
+    <result column="CUSTOMER_NAME" property="customerName" jdbcType="VARCHAR" />
+    <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR" />
+    <result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+    <result column="PARTY_NAME" property="partyName" jdbcType="VARCHAR" />
+	<result column="tz_quantity" property="tzQuantity" jdbcType="INTEGER" />
+	<result column="tz_amount" property="tzAmount" jdbcType="FLOAT" />
+	<result column="TARGET_ID" property="targetId" jdbcType="VARCHAR" />
+	<result column="class_id" property="classId" jdbcType="VARCHAR" />
+	<result column="h_amount" property="hAmount" jdbcType="FLOAT"/>
+	<result column="h_tz_amount" property="hTzAmount" jdbcType="FLOAT"/>
+	<result column="datadate" property="datadate" jdbcType="VARCHAR"/>
+	<result column="country_id" property="countryId" jdbcType="VARCHAR"/>
+	<result column="type" property="type" jdbcType="INTEGER"/>
+  </resultMap>
+  
+  <resultMap  id="ExchangeMap"  type="Exchange">
+  	<result column="country_id" property="countryId" jdbcType="VARCHAR"/>
+  	<result column="exchange" property="exchange" jdbcType="FLOAT"/>
+  </resultMap>
+
+  <sql id="listWhere">
+  	<where>
+		<if test="searchParty != null"> and v_target.party_name like CONCAT('%','${searchParty}','%') </if>
+		<if test="searchCustomer != null"> and v_target.customer_name like CONCAT('%','${searchCustomer}','%') </if>
+		<if test="searchShop != null"> and v_target.shop_name like CONCAT('%','${searchShop}','%') </if>
+		<if test="conditions != null"> and ${conditions} </if>
+	</where>
+  </sql>
+  	<select id="selectCountry" parameterType="java.lang.String"
+		resultType="java.lang.String">
+ 		 SELECT  p.country_id FROM party p WHERE p.`PARTY_ID`=p.`COUNTRY_ID`
+
+		AND  p.`PARTY_NAME`=#{country}	
+  	</select>
+  
+  	<!-- 当前的汇率 -->
+  	<select id="selectExchange" parameterType="java.lang.String"  resultType="java.lang.Float">
+  	SELECT t.exchange FROM t_exchange t WHERE t.country_id=#{countryId} AND t.datadate=(
+	SELECT MAX(t.datadate) FROM t_exchange t WHERE t.country_id=#{countryId} AND SYSDATE()>=t.datadate)
+  	</select>
+ <!--  <select id="selectSaleTargets" resultMap="SaleTargetMap">
+	  select * from (
+	 		select t.*,si.shop_name,
+				ci.CUSTOMER_ID,ci.CUSTOMER_NAME,p.PARTY_ID,p.PARTY_NAME
+		    from t_sale_target t
+		    left join shop_info si on si.shop_id = t.shop_id
+			left join customer_info ci on ci.CUSTOMER_ID = si.CUSTOMER_ID
+			left join party p on p.PARTY_ID = ci.PARTY_ID
+	  ) v_target
+    <include refid="listWhere"/>
+    order by v_target.shop_name desc limit #{start},#{limit};
+  </select> -->
+  <select id="selectSaleTargets" resultMap="SaleTargetMap">
+	<!--   select * from (
+	 		select t.*,si.shop_name,
+				ci.CUSTOMER_ID,ci.CUSTOMER_NAME,p.PARTY_ID,p.PARTY_NAME
+		    from t_sale_target t
+		    left join shop_info si on si.shop_id = t.shop_id
+			left join customer_info ci on ci.CUSTOMER_ID = si.CUSTOMER_ID
+			left join party p on p.PARTY_ID = ci.PARTY_ID 
+	  ) v_target
+    order by v_target.ctime desc; -->
+    
+ <!--  SELECT * FROM (
+	 		SELECT t.*,si.shop_name,
+				p.PARTY_ID,p.PARTY_NAME
+		    FROM t_sale_target t
+		    LEFT JOIN shop_info si ON si.shop_id = t.shop_id			
+			LEFT JOIN party p ON p.`PARTY_ID`=si.`COUNTRY_ID`			
+	  ) v_target WHERE v_target.party_id=#{partyId}
+    ORDER BY v_target.ctime DESC; -->
+
+	 		SELECT si.shop_name,si.`COUNTRY_ID`,t.`ctime`,IFNULL(t.`quantity`,0) AS quantity,IFNULL(t.`amount`,0) AS amount,
+	 		IFNULL(t.`tz_quantity`,0) AS tz_quantity,IFNULL(t.`tz_amount`,0) AS tz_amount 	 		 
+		    FROM t_target t
+		     JOIN shop_info si ON si.shop_id = t.target_id			
+		     JOIN party p ON p.`PARTY_ID`=si.`PARTY_ID`	
+	  WHERE si.country_id=#{partyId} AND t.class_id=4 and t.type=1 AND DATE_FORMAT(t.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') 
+    ORDER BY t.ctime DESC;
+  </select>
+  
+     <select id="selectChannelTargets" resultMap="SaleTargetMap">
+     SELECT ci.`CUSTOMER_NAME`,IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount 
+       FROM t_target ts JOIN shop_info si ON si.`SHOP_ID`=ts.`target_id` 
+		JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID`
+	WHERE si.`COUNTRY_ID`=#{partyId}  
+	AND ts.class_id=4	and ts.type=1 AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') 	GROUP BY ci.`CUSTOMER_NAME` ORDER BY ts.`ctime`
+  
+  </select>
+  
+  <select id="selectOfficeTargets" resultMap="SaleTargetMap">
+  SELECT p.`PARTY_name` ,IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount   FROM t_target ts JOIN shop_info si ON si.`SHOP_ID`=ts.`target_id`
+		JOIN party p ON p.`PARTY_ID`=si.`PARTY_ID`
+		WHERE  si.`PARTY_ID` IN (SELECT party_id FROM party p WHERE p.`PARENT_PARTY_ID` IN (SELECT party_id FROM party p WHERE p.`PARENT_PARTY_ID`=#{partyId})  ) 
+		AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') 
+		AND ts.class_id=4 and ts.type=1 GROUP BY p.`PARTY_NAME`
+ <!--  SELECT pa.`PARTY_name` ,SUM(ts.quantity) AS quantity,
+       SUM(ts.amount) AS amount,  
+       SUM(ts.tz_quantity) AS tz_quantity,
+       SUM(ts.tz_amount) AS tz_amount 
+FROM t_sale_target ts JOIN shop_info si ON si.`SHOP_ID`=ts.`shop_id`
+				JOIN party p ON p.`PARTY_ID`=si.`PARTY_ID`
+				JOIN party pa ON p.`PARTY_ID`=pa.`PARENT_PARTY_ID`
+				WHERE pa.`PARENT_PARTY_ID` IN (SELECT PARTY_ID FROM party p1 WHERE p1.PARENT_PARTY_ID IN(SELECT party_id FROM party p WHERE p.PARENT_PARTY_ID=#{partyId})
+UNION ALL
+SELECT PARTY_ID FROM party p WHERE p.PARENT_PARTY_ID=#{partyId}
+) GROUP BY p.`PARTY_NAME` ORDER BY ts.`ctime` -->
+
+  </select>
+  
+   <select id="selectRegionTargets" resultMap="SaleTargetMap">
+   SELECT p.`PARTY_NAME`,IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount   FROM t_target ts JOIN shop_info si ON si.`SHOP_ID`=ts.`target_id` 
+			       JOIN party p ON p.party_id  = si.`PARTY_ID`
+			      WHERE si.`COUNTRY_ID`=#{partyId} AND ts.class_id=4 and ts.type=1	
+			      AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m')
+			      GROUP BY p.`PARTY_NAME` ORDER BY ts.`ctime`
+  </select>
+  
+  <sql	id="allCountry">
+  	<where>
+  		<if test="conditions != null"> ts.class_id=4 and ts.type=1	AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') and ${conditions} </if>
+  	</where>
+  </sql>
+  
+   <select id="selectBranchTargets" resultMap="SaleTargetMap">
+   SELECT p.`PARTY_NAME` AS party_name,
+       IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount,
+       IFNULL(SUM(ts.h_amount),0) AS h_amount,
+       IFNULL(SUM(ts.h_tz_amount),0) AS h_tz_amount
+		FROM t_target ts 
+		JOIN shop_info si ON si.`SHOP_ID`=ts.`target_id`
+		JOIN party p ON p.`PARTY_ID`=si.`COUNTRY_ID` 
+		<include refid="allCountry"/>
+      GROUP BY p.`PARTY_NAME`;
+
+  </select>
+  
+<!--    <select id="selectPromoterTargets" resultMap="SaleTargetMap">
+      SELECT  u.user_name AS party_name, t.* FROM 
+     t_target t,user_role_mapping urm,user_login u WHERE t.`class_id`=5 AND t.`target_id`=urm.user_login_id AND urm.role_id LIKE '%prom%' AND u.user_login_id=urm.user_login_id ORDER BY t.`ctime` DESC
+
+  </select> -->
+  
+  <select id="selectSupervisorTargets" resultMap="SaleTargetMap">
+ SELECT ul.user_name AS party_name,
+	   IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount 
+FROM t_target ts,user_login ul,shop_saler_mapping ssm,shop_info si  
+WHERE ssm.`user_login_id`=ul.user_login_id AND 
+ssm.`salertype`=2 AND 
+ts.`target_id`=ssm.`shop_id` 
+AND ssm.`shop_id` =si.`shop_id` 
+AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m')
+AND si.country_id=#{partyId} 
+AND ts.class_id=4 and ts.type=1
+GROUP BY ul.user_name ORDER BY ts.`ctime`
+
+  </select>
+  
+  <select id="selectSalesmanTargets" resultMap="SaleTargetMap">
+ SELECT ul.user_name AS party_name ,
+	   IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount 
+FROM t_target ts,user_login ul,shop_saler_mapping ssm,shop_info si  
+WHERE ssm.`user_login_id`=ul.user_login_id AND 
+ssm.`salertype`=0 AND 
+ts.`target_id`=ssm.`shop_id` 
+AND ssm.`shop_id` =si.`shop_id`
+AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') 
+AND si.country_id=#{partyId} 
+AND ts.class_id=4 and ts.type=1
+GROUP BY ul.user_name ORDER BY ts.`ctime`
+  </select>
+  
+   <select id="selectBusinessTargets" resultMap="SaleTargetMap">
+   SELECT  tt.user_name AS party_name,	
+	IFNULL(SUM(t1.quantity),0) AS quantity,
+	IFNULL(SUM(t1.amount),0) AS amount,  
+	IFNULL(SUM(t1.tz_quantity),0) AS tz_quantity,
+	IFNULL(SUM(t1.tz_amount),0) AS tz_amount FROM (SELECT ul.`USER_NAME`,p.`PARTY_ID` FROM user_role_mapping urm JOIN role_data_permission rdp ON rdp.`ROLE_ID`=urm.`ROLE_ID`
+				    JOIN user_login ul ON ul.`USER_LOGIN_ID`=urm.`USER_LOGIN_ID`
+				    JOIN party p ON p.`PARTY_ID`=rdp.`PERMISSION_VALUE`
+				    WHERE rdp.`PERMISSION_TYPE`='party' AND rdp.`ROLE_ID` LIKE 'REGION%' ) tt JOIN 
+				    (SELECT ts.`class_id`,si.`COUNTRY_ID`,si.`PARTY_ID`,ts.type,
+					    IFNULL(SUM(ts.quantity),0) AS quantity, 
+					    IFNULL(SUM(ts.amount),0) AS amount,  
+				        IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+					    IFNULL(SUM(ts.tz_amount),0) AS tz_amount FROM t_target ts JOIN shop_info si ON si.shop_id=ts.`target_id`
+												      JOIN party p ON p.`PARTY_ID`=si.`PARTY_ID` 
+												      AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') 
+												      and ts.type=1	GROUP BY si.`PARTY_ID`
+				    ) t1 ON tt.party_id = t1.party_id
+				    WHERE  t1.`COUNTRY_ID`=#{partyId}  AND t1.class_id=4 	
+				    GROUP BY tt.user_name
+  </select>
+  
+  <update id="updateTarget" parameterType="SaleTarget" >
+	update t_target st set st.quantity = #{quantity}, st.amount = #{amount},st.tz_quantity=#{tzQuantity},st.tz_amount=#{tzAmount},st.`h_quantity`=#{hQuantity},st.`h_tz_quantity`=#{hTzQuantity},
+	st.h_amount=#{hAmount},st.h_tz_amount=#{hTzAmount}
+  	where st.target_id = #{targetId} and DATE_FORMAT(st.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') AND st.type = #{type} 
+		AND st.`class_id`= #{classId} AND st.`country` = #{countryId} 
+		
+	</update>
+  
+  <!-- 当月的门店的数量 -->
+  <select id="selectCount" parameterType="java.lang.String"
+		resultType="java.lang.Integer">
+			<!-- SELECT COUNT(*) FROM t_target t,shop_info s WHERE s.shop_id=t.target_id AND DATE_FORMAT(t.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') 
+		AND s.shop_name=#{shopName} and t.type=#{type} -->
+		
+		SELECT COUNT(*) FROM t_target tt WHERE  
+		DATE_FORMAT(tt.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') 
+		AND tt.`target_id` = #{id} 
+		AND tt.type = #{type} 
+		AND tt.`class_id`= #{clas}
+		AND tt.`country` = #{country}
+	</select>
+  
+  
+  <select id="countSaleTargets" resultType="int">
+  	select count(*) from (
+  		select t.*,si.shop_name,
+				ci.CUSTOMER_ID,ci.CUSTOMER_NAME,p.PARTY_ID,p.PARTY_NAME
+  			from t_sale_target t
+		    left join shop_info si on si.shop_id = t.shop_id
+			left join customer_info ci on ci.CUSTOMER_ID = si.CUSTOMER_ID
+			left join party p on p.PARTY_ID = ci.PARTY_ID
+  	) v_target
+    <include refid="listWhere"/>
+  </select>
+  
+  <select id="getSaleTarget" resultMap="SaleTargetMap" resultType="SaleTarget">
+    select  st.id as saleTargetId,
+		    st.quantity,
+		    st.amount,
+		    st.shop_id
+     from t_sale_target st where 1=1 and st.id =#{sid} limit 1;
+  </select>
+  
+  <insert id="insertSaleTarget" parameterType="SaleTarget">
+  	insert into t_sale_target(quantity,amount,ctime,shop_id)
+  	values(#{quantity},#{amount},#{ctime},#{shopId})
+  </insert>
+  
+    <insert id="saveSales" parameterType="SaleTarget">
+  	insert into t_target(quantity,amount,tz_quantity,tz_amount,target_id,class_id,datadate,country,h_amount,h_tz_amount,h_quantity,h_tz_quantity,type)
+  	values(#{quantity},#{amount},#{tzQuantity},#{tzAmount},#{targetId},#{classId},#{datadate},#{countryId},#{hAmount},#{hTzAmount},#{hQuantity},#{hTzQuantity},#{type})
+  </insert>
+  
+  <update id="updateSaleTarget" parameterType="SaleTarget">
+  	update t_sale_target st set st.quantity = #{quantity}, st.amount = #{amount},st.shop_id = #{shopId}
+  	where 1=1 and st.id = #{saleTargetId}
+  </update>
+  
+  <delete id="deleteSaleTargetData" parameterType="SaleTarget">
+  	delete from t_sale_target where id = #{saleTargetId};
+  </delete>
+  
+  <select id="validationShopId" resultType="int">
+  		select count(*) from t_sale_target where shop_id = #{shopId};
+  </select>
+  
+  <select id="getSaleTargetCompletionList" resultMap="SaleTargetMap">
+	  select * from (
+	 		select t.*,si.shop_name,
+				ci.CUSTOMER_ID,ci.CUSTOMER_NAME,p.PARTY_ID,p.PARTY_NAME
+		    from t_sale_target t
+		    left join shop_info si on si.shop_id = t.shop_id
+			left join customer_info ci on ci.CUSTOMER_ID = si.CUSTOMER_ID
+			left join party p on p.PARTY_ID = ci.PARTY_ID
+	  ) v_target
+	  where 1=1 
+	  and ${conditionsToSaleTarget}
+  </select>
+  
+  
+  
+  
+  <!-- AC销售目标 -->
+   <select id="selectACSaleTargets" resultMap="SaleTargetMap">
+		SELECT si.shop_name,si.`COUNTRY_ID`,t.`ctime`,IFNULL(t.`quantity`,0) AS quantity,IFNULL(t.`amount`,0) AS amount,
+		IFNULL(t.`tz_quantity`,0) AS tz_quantity,IFNULL(t.`tz_amount`,0) AS tz_amount 	 		 
+    FROM t_target t
+     JOIN shop_info si ON si.shop_id = t.target_id			
+     JOIN party p ON p.`PARTY_ID`=si.`PARTY_ID`	
+ WHERE si.country_id=#{partyId} AND t.class_id=4 and t.type=2 AND DATE_FORMAT(t.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') 
+  ORDER BY t.ctime DESC;
+  </select>
+  
+     <select id="selectACChannelTargets" resultMap="SaleTargetMap">
+     SELECT ci.`CUSTOMER_NAME`,IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount 
+       FROM t_target ts JOIN shop_info si ON si.`SHOP_ID`=ts.`target_id` 
+		JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID`
+	WHERE si.`COUNTRY_ID`=#{partyId}  AND ts.class_id=4	and ts.type=2 AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') 	GROUP BY ci.`CUSTOMER_NAME` ORDER BY ts.`ctime`
+  
+  </select>
+  
+  <select id="selectACOfficeTargets" resultMap="SaleTargetMap">
+  SELECT p.`PARTY_name` ,IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount   FROM t_target ts JOIN shop_info si ON si.`SHOP_ID`=ts.`target_id`
+		JOIN party p ON p.`PARTY_ID`=si.`PARTY_ID`
+		WHERE  si.`PARTY_ID` IN (SELECT party_id FROM party p WHERE p.`PARENT_PARTY_ID` IN (SELECT party_id FROM party p WHERE p.`PARENT_PARTY_ID`=#{partyId})  ) 
+		AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') 
+		AND ts.class_id=4 and ts.type=2 GROUP BY p.`PARTY_NAME`
+  </select>
+  
+   <select id="selectACRegionTargets" resultMap="SaleTargetMap">
+   SELECT p.`PARTY_NAME`,IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount   FROM t_target ts JOIN shop_info si ON si.`SHOP_ID`=ts.`target_id` 
+			       JOIN party p ON p.party_id  = si.`PARTY_ID`
+			      WHERE si.`COUNTRY_ID`=#{partyId} AND ts.class_id=4 and ts.type=2	
+			      AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m')
+			      GROUP BY p.`PARTY_NAME` ORDER BY ts.`ctime`
+  </select>
+  
+  <sql	id="allAC">
+  	<where>
+  		<if test="conditions != null"> ts.class_id=4 and ts.type=2	AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') and ${conditions} </if>
+  	</where>
+  </sql>
+  
+   <select id="selectACBranchTargets" resultMap="SaleTargetMap">
+   SELECT p.`PARTY_NAME` AS party_name,
+       IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount,
+       IFNULL(SUM(ts.h_amount),0) AS h_amount,
+       IFNULL(SUM(ts.h_tz_amount),0) AS h_tz_amount
+		FROM t_target ts 
+		JOIN shop_info si ON si.`SHOP_ID`=ts.`target_id`
+		JOIN party p ON p.`PARTY_ID`=si.`COUNTRY_ID` 
+		<include refid="allAC"/>
+      GROUP BY p.`PARTY_NAME`;
+
+  </select>
+   
+  <select id="selectACSupervisorTargets" resultMap="SaleTargetMap">
+ SELECT ul.user_name AS party_name,
+	   IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount 
+FROM t_target ts,user_login ul,shop_saler_mapping ssm,shop_info si  
+WHERE ssm.`user_login_id`=ul.user_login_id AND 
+ssm.`salertype`=2 AND 
+ts.`target_id`=ssm.`shop_id` 
+AND ssm.`shop_id` =si.`shop_id` 
+AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m')
+AND si.country_id=#{partyId} 
+AND ts.class_id=4 and ts.type=2
+GROUP BY ul.user_name ORDER BY ts.`ctime`
+
+  </select>
+  
+  <select id="selectACSalesmanTargets" resultMap="SaleTargetMap">
+ SELECT ul.user_name AS party_name ,
+	   IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount 
+FROM t_target ts,user_login ul,shop_saler_mapping ssm,shop_info si  
+WHERE ssm.`user_login_id`=ul.user_login_id AND 
+ssm.`salertype`=0 AND 
+ts.`target_id`=ssm.`shop_id` 
+AND ssm.`shop_id` =si.`shop_id`
+AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') 
+AND si.country_id=#{partyId} 
+AND ts.class_id=4 and ts.type=2
+GROUP BY ul.user_name ORDER BY ts.`ctime`
+  </select>
+  
+   <select id="selectACBusinessTargets" resultMap="SaleTargetMap">
+   SELECT  tt.user_name AS party_name,	
+	IFNULL(SUM(t1.quantity),0) AS quantity,
+	IFNULL(SUM(t1.amount),0) AS amount,  
+	IFNULL(SUM(t1.tz_quantity),0) AS tz_quantity,
+	IFNULL(SUM(t1.tz_amount),0) AS tz_amount FROM (SELECT ul.`USER_NAME`,p.`PARTY_ID` FROM user_role_mapping urm JOIN role_data_permission rdp ON rdp.`ROLE_ID`=urm.`ROLE_ID`
+				    JOIN user_login ul ON ul.`USER_LOGIN_ID`=urm.`USER_LOGIN_ID`
+				    JOIN party p ON p.`PARTY_ID`=rdp.`PERMISSION_VALUE`
+				    WHERE rdp.`PERMISSION_TYPE`='party' AND rdp.`ROLE_ID` LIKE 'REGION%' ) tt JOIN 
+				    (SELECT ts.`class_id`,si.`COUNTRY_ID`,si.`PARTY_ID`,ts.type,
+					    IFNULL(SUM(ts.quantity),0) AS quantity, 
+					    IFNULL(SUM(ts.amount),0) AS amount,  
+				        IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+					    IFNULL(SUM(ts.tz_amount),0) AS tz_amount FROM t_target ts JOIN shop_info si ON si.shop_id=ts.`target_id`
+												      JOIN party p ON p.`PARTY_ID`=si.`PARTY_ID` 
+												      AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') 
+												      and ts.type=2	GROUP BY si.`PARTY_ID`
+				    ) t1 ON tt.party_id = t1.party_id
+				    WHERE  t1.`COUNTRY_ID`=#{partyId}  AND t1.class_id=4 	
+				    GROUP BY tt.user_name
+  </select>
+  
+  <select id="selectType" parameterType="java.lang.String" resultType="java.lang.String">
+  	select ptm.category_id from pro_type_msg ptm where ptm.category_name=#{type}
+  </select>
+  
+  <!-- 获取导入的类型 -->
+  <select id="selectSOType" parameterType="java.lang.String" resultType="java.lang.String">
+  	select type from so_type where country_id=#{countryId}
+  </select>
+
+ <!--                           TV目标数据开始  渠道级type为1                             --> 
+  <!-- 查询导入渠道目标数据 -->
+  <select id="getChannelTarget" parameterType="java.lang.String" resultMap="SaleTargetMap">
+  		SELECT ci.`CUSTOMER_NAME`,IFNULL(SUM(ts.quantity),0) AS quantity, IFNULL(SUM(ts.amount),0) AS amount, 
+			IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity, IFNULL(SUM(ts.tz_amount),0) AS tz_amount 
+			FROM t_target ts  JOIN customer_info ci ON ci.`CUSTOMER_ID`=ts.target_id
+			WHERE ci.`COUNTRY_ID`=#{partyId} AND ts.class_id=3 and ts.type=1 AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') 
+			GROUP BY ci.`CUSTOMER_NAME` ORDER BY ts.`ctime` 
+  </select>
+  
+  <!-- 查询导入渠道分公司目标数据 -->
+  <select id="getBranchTarget" parameterType="java.lang.String" resultMap="SaleTargetMap">
+  		   SELECT p.`PARTY_NAME` AS party_name,
+       IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount,
+       IFNULL(SUM(ts.h_amount),0) AS h_amount,
+       IFNULL(SUM(ts.h_tz_amount),0) AS h_tz_amount
+		FROM t_target ts 
+		JOIN customer_info ci on ci.CUSTOMER_ID=ts.target_id
+		JOIN party p ON p.`PARTY_ID`=ci.`COUNTRY_ID` where 
+		ts.class_id=3 and ts.type=1	AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') and ci.COUNTRY_ID=#{partyId}
+  </select>
+  
+  <!-- 查询导入渠道督导目标数据 -->
+  <select id="getSupervisorTarget" parameterType="java.lang.String" resultMap="SaleTargetMap">
+  		 SELECT ul.user_name AS party_name,
+	   IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount 
+FROM t_target ts,user_login ul,customer_saler_mapping csm,customer_info ci
+WHERE csm.user_login_id=ul.user_login_id AND 
+csm.`salertype`=0 AND 
+ts.`target_id`=ci.CUSTOMER_ID
+AND ci.CUSTOMER_ID=csm.customer_id
+AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m')
+AND ci.COUNTRY_ID = #{partyId}
+AND ts.class_id=3 and ts.type=1
+GROUP BY ul.user_name ORDER BY ts.`ctime`
+  </select>
+  
+  <!-- 查询导入渠道业务员目标数据 -->
+  <select id="getSalemanTarget" parameterType="java.lang.String" resultMap="SaleTargetMap">
+  		 SELECT ul.user_name AS party_name,
+	   IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount 
+FROM t_target ts,user_login ul,customer_saler_mapping csm,customer_info ci
+WHERE csm.user_login_id=ul.user_login_id AND 
+csm.`salertype`=2 AND 
+ts.`target_id`=ci.CUSTOMER_ID
+AND ci.CUSTOMER_ID=csm.customer_id
+AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m')
+AND ci.COUNTRY_ID = #{partyId}
+AND ts.class_id=3 and ts.type=1
+GROUP BY ul.user_name ORDER BY ts.`ctime`
+  </select>
+  
+  
+  <!-- 查询导入渠道区域经理目标数据 -->
+  <select id="getBusinessTarget" parameterType="java.lang.String" resultMap="SaleTargetMap">
+  		SELECT  tt.user_name AS party_name,	
+	IFNULL(SUM(t1.quantity),0) AS quantity,
+	IFNULL(SUM(t1.amount),0) AS amount,  
+	IFNULL(SUM(t1.tz_quantity),0) AS tz_quantity,
+	IFNULL(SUM(t1.tz_amount),0) AS tz_amount FROM (SELECT ul.`USER_NAME`,p.`PARTY_ID` FROM user_role_mapping urm JOIN role_data_permission rdp ON rdp.`ROLE_ID`=urm.`ROLE_ID`
+				    JOIN user_login ul ON ul.`USER_LOGIN_ID`=urm.`USER_LOGIN_ID`
+				    JOIN party p ON p.`PARTY_ID`=rdp.`PERMISSION_VALUE`
+				    WHERE rdp.`PERMISSION_TYPE`='party' AND rdp.`ROLE_ID` LIKE 'REGION%' ) tt JOIN 
+				    (SELECT ts.`class_id`,ci.COUNTRY_ID,ci.PARTY_ID,ts.type,
+					    IFNULL(SUM(ts.quantity),0) AS quantity, 
+					    IFNULL(SUM(ts.amount),0) AS amount,  
+				        IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+					    IFNULL(SUM(ts.tz_amount),0) AS tz_amount FROM t_target ts JOIN customer_info ci on ci.CUSTOMER_ID=ts.target_id
+												      JOIN party p ON p.`PARTY_ID`=ci.PARTY_ID
+												      AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') 
+												      and ts.type=1	GROUP BY ci.`PARTY_ID`
+				    ) t1 ON tt.party_id = t1.party_id
+				    WHERE  t1.`COUNTRY_ID`=#{partyId}  AND t1.class_id=3 	
+				    GROUP BY tt.user_name
+  </select>
+  <!--                           TV目标数据结束     渠道级type为1                         --> 
+ 
+  <!-- 					国家级type为0							 -->
+  <!-- 查询导入国家目标数据 -->
+  <select id="getBranchTargetList" parameterType="java.lang.String" resultMap="SaleTargetMap">
+  	  SELECT p.`PARTY_NAME` AS party_name,
+       IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount,
+       IFNULL(SUM(ts.h_amount),0) AS h_amount,
+       IFNULL(SUM(ts.h_tz_amount),0) AS h_tz_amount
+		FROM t_target ts 
+		JOIN party p ON p.`PARTY_ID`=ts.target_id where 
+		ts.class_id=1 and ts.type=1	AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') and p.COUNTRY_ID=#{partyId}
+  </select>
+  <!-- 					国家级type为0							 -->
+  
+ <!--                           AC目标数据开始       渠道级type为1                       --> 
+   <!-- 查询导入渠道目标数据 -->
+  <select id="getACChannelTarget" parameterType="java.lang.String" resultMap="SaleTargetMap">
+  		SELECT ci.`CUSTOMER_NAME`,IFNULL(SUM(ts.quantity),0) AS quantity, IFNULL(SUM(ts.amount),0) AS amount, 
+			IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity, IFNULL(SUM(ts.tz_amount),0) AS tz_amount 
+			FROM t_target ts  JOIN customer_info ci ON ci.`CUSTOMER_ID`=ts.target_id
+			WHERE ci.`COUNTRY_ID`=#{partyId} AND ts.class_id=3 and ts.type=2 AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') 
+			GROUP BY ci.`CUSTOMER_NAME` ORDER BY ts.`ctime` 
+  </select>
+  
+  <!-- 查询导入渠道分公司目标数据 -->
+  <select id="getACBranchTarget" parameterType="java.lang.String" resultMap="SaleTargetMap">
+  	SELECT p.`PARTY_NAME` AS party_name,
+       IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount,
+       IFNULL(SUM(ts.h_amount),0) AS h_amount,
+       IFNULL(SUM(ts.h_tz_amount),0) AS h_tz_amount
+		FROM t_target ts 
+		JOIN customer_info ci on ci.CUSTOMER_ID=ts.target_id
+		JOIN party p ON p.`PARTY_ID`=ci.`COUNTRY_ID` where 
+		ts.class_id=3 and ts.type=2	AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') and ci.COUNTRY_ID=#{partyId}
+  </select>
+  
+  <!-- 查询导入渠道督导目标数据 -->
+  <select id="getACSupervisorTarget" parameterType="java.lang.String" resultMap="SaleTargetMap">
+  		 SELECT ul.user_name AS party_name,
+	   IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount 
+FROM t_target ts,user_login ul,customer_saler_mapping csm,customer_info ci
+WHERE csm.user_login_id=ul.user_login_id AND 
+csm.`salertype`=0 AND 
+ts.`target_id`=ci.CUSTOMER_ID
+AND ci.CUSTOMER_ID=csm.customer_id
+AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m')
+AND ci.COUNTRY_ID = #{partyId}
+AND ts.class_id=3 and ts.type=2
+GROUP BY ul.user_name ORDER BY ts.`ctime`
+  </select>
+  
+  <select id="getACSalemanTarget" parameterType="java.lang.String" resultMap="SaleTargetMap">
+  		 SELECT ul.user_name AS party_name,
+	   IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount 
+FROM t_target ts,user_login ul,customer_saler_mapping csm,customer_info ci
+WHERE csm.user_login_id=ul.user_login_id AND 
+csm.`salertype`=2 AND 
+ts.`target_id`=ci.CUSTOMER_ID
+AND ci.CUSTOMER_ID=csm.customer_id
+AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m')
+AND ci.COUNTRY_ID = #{partyId}
+AND ts.class_id=3 and ts.type=2
+GROUP BY ul.user_name ORDER BY ts.`ctime`
+  </select>
+  
+  <select id="getACBussinessTarget" parameterType="java.lang.String" resultMap="SaleTargetMap">
+  	SELECT  tt.user_name AS party_name,	
+	IFNULL(SUM(t1.quantity),0) AS quantity,
+	IFNULL(SUM(t1.amount),0) AS amount,  
+	IFNULL(SUM(t1.tz_quantity),0) AS tz_quantity,
+	IFNULL(SUM(t1.tz_amount),0) AS tz_amount FROM (SELECT ul.`USER_NAME`,p.`PARTY_ID` FROM user_role_mapping urm JOIN role_data_permission rdp ON rdp.`ROLE_ID`=urm.`ROLE_ID`
+				    JOIN user_login ul ON ul.`USER_LOGIN_ID`=urm.`USER_LOGIN_ID`
+				    JOIN party p ON p.`PARTY_ID`=rdp.`PERMISSION_VALUE`
+				    WHERE rdp.`PERMISSION_TYPE`='party' AND rdp.`ROLE_ID` LIKE 'REGION%' ) tt JOIN 
+				    (SELECT ts.`class_id`,ci.COUNTRY_ID,ci.PARTY_ID,ts.type,
+					    IFNULL(SUM(ts.quantity),0) AS quantity, 
+					    IFNULL(SUM(ts.amount),0) AS amount,  
+				        IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+					    IFNULL(SUM(ts.tz_amount),0) AS tz_amount FROM t_target ts JOIN customer_info ci on ci.CUSTOMER_ID=ts.target_id
+												      JOIN party p ON p.`PARTY_ID`=ci.PARTY_ID
+												      AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') 
+												      and ts.type=2	GROUP BY ci.`PARTY_ID`
+				    ) t1 ON tt.party_id = t1.party_id
+				    WHERE  t1.`COUNTRY_ID`=#{partyId}  AND t1.class_id=3 	
+				    GROUP BY tt.user_name
+  </select>
+  
+  <select id="getACBranchTagetList" parameterType="java.lang.String" resultMap="SaleTargetMap">
+  	SELECT p.`PARTY_NAME` AS party_name,
+       IFNULL(SUM(ts.quantity),0) AS quantity,
+       IFNULL(SUM(ts.amount),0) AS amount,  
+       IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+       IFNULL(SUM(ts.tz_amount),0) AS tz_amount,
+       IFNULL(SUM(ts.h_amount),0) AS h_amount,
+       IFNULL(SUM(ts.h_tz_amount),0) AS h_tz_amount
+		FROM t_target ts 
+		JOIN party p ON p.`PARTY_ID`=ts.target_id where 
+		ts.class_id=1 and ts.type=1	AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') and p.COUNTRY_ID=#{partyId}
+  </select>
+  
+  <select id="getOBCTVBranchTarget" parameterType="java.lang.String" resultMap="SaleTargetMap">
+		select * from (
+		SELECT p.`PARTY_NAME` AS party_name, IFNULL(SUM(ts.quantity),0) AS quantity, 
+		IFNULL(SUM(ts.amount),0) AS amount, IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity, 
+		IFNULL(SUM(ts.tz_amount),0) AS tz_amount, IFNULL(SUM(ts.h_amount),0) AS h_amount, 
+		IFNULL(SUM(ts.h_tz_amount),0) AS h_tz_amount FROM t_target ts 
+		JOIN shop_info si ON si.`SHOP_ID`=ts.`target_id` 
+		JOIN party p ON p.`PARTY_ID`=si.`COUNTRY_ID` 
+		WHERE ts.class_id=4 and ts.type=1 
+		AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') and 1=1 GROUP  BY p.PARTY_NAME
+		union all 
+		SELECT p.`PARTY_NAME` AS party_name, IFNULL(SUM(ts.quantity),0) AS quantity,
+		 IFNULL(SUM(ts.amount),0) AS amount, IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity, 
+		IFNULL(SUM(ts.tz_amount),0) AS tz_amount, IFNULL(SUM(ts.h_amount),0) AS h_amount,
+		 IFNULL(SUM(ts.h_tz_amount),0) AS h_tz_amount FROM t_target ts 
+		JOIN customer_info ci ON ci.CUSTOMER_ID=ts.target_id JOIN party p 
+		ON p.`PARTY_ID`=ci.`COUNTRY_ID` WHERE ts.class_id=3 and ts.type=1 
+		AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') and 1=1 GROUP  BY p.PARTY_NAME
+		union all 
+		SELECT p.`PARTY_NAME` AS party_name, IFNULL(SUM(ts.quantity),0) AS quantity, 
+		IFNULL(SUM(ts.amount),0) AS amount, IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+		 IFNULL(SUM(ts.tz_amount),0) AS tz_amount, IFNULL(SUM(ts.h_amount),0) AS h_amount, 
+		IFNULL(SUM(ts.h_tz_amount),0) AS h_tz_amount FROM t_target ts 
+		JOIN  party p ON p.`PARTY_ID`=ts.target_id WHERE ts.class_id=1 and ts.type=1 
+		AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') and 1=1 GROUP  BY p.PARTY_NAME
+		
+		) t  
+  </select>
+  
+  <select id="getOBCACBranchTarget" parameterType="java.lang.String" resultMap="SaleTargetMap">
+  		select * from (
+		SELECT p.`PARTY_NAME` AS party_name, IFNULL(SUM(ts.quantity),0) AS quantity, 
+		IFNULL(SUM(ts.amount),0) AS amount, IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity, 
+		IFNULL(SUM(ts.tz_amount),0) AS tz_amount, IFNULL(SUM(ts.h_amount),0) AS h_amount, 
+		IFNULL(SUM(ts.h_tz_amount),0) AS h_tz_amount FROM t_target ts 
+		JOIN shop_info si ON si.`SHOP_ID`=ts.`target_id` 
+		JOIN party p ON p.`PARTY_ID`=si.`COUNTRY_ID` 
+		WHERE ts.class_id=4 and ts.type=2 
+		AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') and 1=1 GROUP  BY p.PARTY_NAME
+		union all 
+		SELECT p.`PARTY_NAME` AS party_name, IFNULL(SUM(ts.quantity),0) AS quantity,
+		 IFNULL(SUM(ts.amount),0) AS amount, IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity, 
+		IFNULL(SUM(ts.tz_amount),0) AS tz_amount, IFNULL(SUM(ts.h_amount),0) AS h_amount,
+		 IFNULL(SUM(ts.h_tz_amount),0) AS h_tz_amount FROM t_target ts 
+		JOIN customer_info ci ON ci.CUSTOMER_ID=ts.target_id JOIN party p 
+		ON p.`PARTY_ID`=ci.`COUNTRY_ID` WHERE ts.class_id=3 and ts.type=2 
+		AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') and 1=1 GROUP  BY p.PARTY_NAME
+		union all 
+		SELECT p.`PARTY_NAME` AS party_name, IFNULL(SUM(ts.quantity),0) AS quantity, 
+		IFNULL(SUM(ts.amount),0) AS amount, IFNULL(SUM(ts.tz_quantity),0) AS tz_quantity,
+		 IFNULL(SUM(ts.tz_amount),0) AS tz_amount, IFNULL(SUM(ts.h_amount),0) AS h_amount, 
+		IFNULL(SUM(ts.h_tz_amount),0) AS h_tz_amount FROM t_target ts 
+		JOIN  party p ON p.`PARTY_ID`=ts.target_id WHERE ts.class_id=1 and ts.type=2 
+		AND DATE_FORMAT(ts.`datadate`,'%Y-%m')=DATE_FORMAT(#{datadate},'%Y-%m') and 1=1 GROUP  BY p.PARTY_NAME
+		
+		) t  
+  </select>
+</mapper>

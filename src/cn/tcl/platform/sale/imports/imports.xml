@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<import>
+	<mapping bean="cn.tcl.platform.sale.vo.Sale">
+		<property column="*所属国家" propertyName="country" required="true" javaType="java.lang.String"></property>
+		<property column="*门店名称" propertyName="shopName" required="true" javaType="java.lang.String"></property>
+		<property column="*机型" propertyName="model" required="true" javaType="java.lang.String"></property>
+		<property column="*数量" propertyName="quantity" required="true" javaType="java.lang.Integer"></property>
+		<property column="*单价" propertyName="price" required="true" javaType="java.lang.Double"></property>
+		<property column="*日期" propertyName="datadate" required="true" javaType="java.lang.String"></property>
+		<property column="备注" propertyName="remark" required="false" javaType="java.lang.String"></property>
+	</mapping>
+	<volidate dateFormat="yyyy-MM-dd" volidateClass="cn.tcl.platform.sale.imports.ValidationImportSale" volidateMethod="validationImport"></volidate>
+	<service serviceBean="saleService" serviceMethod="importSale"></service>
+</import>

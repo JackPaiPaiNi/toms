@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.statable.dao.IStaTableDao">
+
+	<sql id="listPartys">
+		<if test="partys != null"> ${partys} </if>
+	</sql>
+	
+	<sql id="listwhere">
+		<if test="listWhe != null"> ${listWhe} </if>
+	</sql>
+	
+	<!-- 2、TOTAL Sellout performances of Regional Head for the month of August 2017 -->
+	<select id="monthlySalesPerformance" resultType="StaTable" parameterType="java.util.Map">
+		SELECT v_s.user_name saleman,
+		IFNULL(SUM(v_u_n.NO_OF_FPS),0) noOfFps,
+		IFNULL(ROUND(SUM(v_n.qty),0),0) ttlTVSOQty,
+		IFNULL(ROUND(SUM(v_n.amt),0),0) ttlTVSOAmt,
+		IFNULL(SUM(v_t.amt),0) targetAmt,
+		COUNT(v_n.amt) noOfShops FROM 
+	 	 <!-- (1)、促销员所处区域 -->
+		(SELECT si.`SHOP_ID`,ul.`USER_LOGIN_ID`,ul.`USER_NAME`,pa.`PARTY_NAME` FROM 
+		`shop_saler_mapping` ssm,user_login ul,shop_info si,party pa
+		 WHERE ssm.`shop_id` = si.`SHOP_ID`
+		 AND si.`PARTY_ID` = pa.`PARTY_ID`
+		 AND <include refid="listPartys" />
+		 AND ssm.`salertype` = '0'
+		 AND ul.`USER_LOGIN_ID` = ssm.`user_login_id`) v_s 
+		 
+	     <!-- (3)、每个门店销售数量 -->
+	      LEFT JOIN (<!-- SELECT SUM(ts.`quantity`/co.`all_products_coefficient`) qty,
+	      					SUM(ts.`amount` / co.`all_products_coefficient`) amt,
+	      					si.`SHOP_ID`
+		 FROM t_sale ts,shop_info si,party pa,t_modelmap tm,product pr ,`coefficient` co
+		 WHERE ts.`shop_id` = si.`SHOP_ID`
+		 AND si.`PARTY_ID` = pa.`PARTY_ID`
+		 AND pr.`head_type_id` = 1
+		 AND co.`country` = pa.`COUNTRY_ID`
+		 AND tm.`party_id` = pa.`COUNTRY_ID`
+		 AND tm.`branch_model` = ts.`model`
+		 AND tm.`hq_model` = pr.`PRODUCT_model`
+		 AND ts.`datadate` BETWEEN #{beginDate} AND #{endDate}
+		 GROUP BY si.`SHOP_ID` -->
+		 SELECT SUM(pr.`coe_quan`) qty,
+	       SUM(pr.`coe_amou`) amt,
+	       pr.`shop_id`
+	       FROM  `vive_tv_sale` pr WHERE
+	       pr.`datadate` BETWEEN #{beginDate} AND #{endDate}
+	       GROUP BY pr.`SHOP_ID`
+		 
+		 )v_n ON v_s.shop_id = v_n.shop_id 
+		 
+		  <!-- (2)、每个门店促销员数量 -->
+	      LEFT JOIN (SELECT COUNT(ssm.`user_login_id`) NO_OF_FPS, 
+	      ssm.`SHOP_ID` FROM `shop_saler_mapping` ssm WHERE ssm.`salertype` = 1
+	      GROUP BY ssm.`SHOP_ID`) v_u_n ON v_n.shop_id = v_u_n.shop_id 
+		 
+	 	<!-- (4)、每个门店目标(1-分公司目标 2-区域目标 3-客户目标 4-门店目标 5-角色目标 6-产品类别目标 7-门店单品目标 8-角色单品目标  9-办事处目标) -->
+		 LEFT JOIN  (SELECT tt.`target_id` shop_id,tt.`quantity` qty,tt.`amount` amt FROM 
+		 `t_target` tt 
+		 WHERE tt.`class_id` = 4
+		 AND tt.type = 1
+		 AND tt.`datadate` BETWEEN #{beginDate} AND #{endDate}) v_t ON v_s.shop_id = v_t.shop_id
+		 GROUP BY v_s.user_name
+	</select>
+	
+	<!-- 6、Growth performances in every Acfo/Area -->
+	<select id="regionalGrowthPerformance" resultType="StaTable" parameterType="java.util.Map">
+	SELECT v_s.user_name saleman,
+	IFNULL(SUM(v_u_n.NO_OF_FPS),0) noOfFps,
+	IFNULL(ROUND(SUM(v_n.qty),0),0) ttlTVSOQty,
+	IFNULL(ROUND(SUM(v_n.amt),0),0) ttlTVSOAmt,
+	COUNT(v_n.amt) noOfShops FROM 
+
+	<!-- (1)、业务人员所处区域门店 -->
+	(SELECT si.`SHOP_ID`,ul.`USER_LOGIN_ID`,ul.`USER_NAME`,pa.`PARTY_NAME` FROM 
+	`shop_saler_mapping` ssm,user_login ul,shop_info si,party pa
+	 WHERE ssm.`shop_id` = si.`SHOP_ID`
+	 AND si.`PARTY_ID` = pa.`PARTY_ID`
+	 AND <include refid="listPartys" />
+	 AND ssm.`salertype` = '2'
+	 AND ul.`USER_LOGIN_ID` = ssm.`user_login_id`) v_s 
+	 
+	<!-- (2)、去年每个门店销售数量 -->
+         LEFT JOIN (
+	 
+	 SELECT SUM(pr.`coe_quan`) qty,
+	       SUM(pr.`coe_amou`) amt,
+	       pr.`shop_id`
+	       FROM  `vive_tv_sale` pr WHERE
+	       pr.`datadate` BETWEEN #{beginDate} AND #{endDate}
+	        <include refid="listwhere" />
+	       GROUP BY pr.`SHOP_ID`
+	 
+	 ) v_n ON v_s.shop_id = v_n.shop_id 
+	 
+	<!-- (3)、每个门店促销员数量 -->
+	 LEFT JOIN ( SELECT COUNT(ssm.`user_login_id`) NO_OF_FPS, ssm.`SHOP_ID` FROM 
+	`shop_saler_mapping` ssm WHERE ssm.`salertype` = 1 GROUP BY ssm.`SHOP_ID`
+	 ) v_u_n ON v_n.shop_id = v_u_n.shop_id 
+	 GROUP BY v_s.user_name
+	</select>
+	
+	<!-- 4、Growth performances in every Region  -->
+	<select id="regionalGrowthPerformanceByPartyId" resultType="StaTable" parameterType="java.util.Map">
+	SELECT v_n.party_id partyId,
+	IFNULL(SUM(v_u_n.NO_OF_FPS),0) noOfFps,
+	IFNULL(ROUND(SUM(v_n.qty),0),0) ttlTVSOQty,
+	IFNULL(ROUND(SUM(v_n.amt),0),0) ttlTVSOAmt,
+	COUNT(v_n.amt) noOfShops FROM 
+	
+	<!-- (2)、去年每个门店销售数量 -->
+     (
+	 	   SELECT SUM(pr.`coe_quan`) qty,
+	       SUM(pr.`coe_amou`) amt,
+	       pr.`shop_id`,
+	       pr.`party_id`
+	       FROM  `vive_tv_sale` pr WHERE
+	       pr.`datadate` BETWEEN #{beginDate} AND #{endDate}
+	       AND <include refid="listPartys" />
+	       GROUP BY pr.`SHOP_ID`,pr.party_id
+	 ) v_n 
+	 
+	 <!-- (3)、每个门店促销员数量 -->
+	 LEFT JOIN   ( SELECT COUNT(ssm.`user_login_id`) NO_OF_FPS, ssm.`SHOP_ID` FROM 
+	`shop_saler_mapping` ssm WHERE ssm.`salertype` = 1 GROUP BY ssm.`SHOP_ID`
+	 ) v_u_n ON v_n.shop_id = v_u_n.shop_id 
+	 GROUP BY v_n.party_id
+	</select>
+	
+	<!-- 获取国家第一级区域包扣指定区域经理 -->
+	<select id="getTheFirstLevel" resultType="StaTable" parameterType="java.util.Map">
+	 SELECT ul.`USER_NAME` userName,
+	 pa.`PARTY_NAME` partyName,
+	 pa.`PARTY_ID` partyId,
+	 getChildLst(pa.`PARTY_ID`) partyIds FROM 
+	 `role_data_permission` rdp,party pa,user_role_mapping rum ,user_login ul
+	 WHERE rdp.`ROLE_ID` LIKE '%REGIONAL%'
+	 AND rdp.`PERMISSION_TYPE` = 'PARTY'
+	 AND rdp.`PERMISSION_VALUE` = pa.`PARTY_ID`
+	 AND pa.`PARENT_PARTY_ID` = #{countryId}
+	 AND rum.`ROLE_ID` = rdp.`ROLE_ID`
+	 AND rum.`USER_LOGIN_ID` = ul.`USER_LOGIN_ID`
+	</select>
+	
+	<!-- 获取国家第一级区域 -->
+	<select id="getTheFirstLevels" resultType="StaTable" parameterType="java.util.Map">
+	  SELECT 
+	  pa.`PARTY_NAME` partyName,
+	  pa.`PARTY_ID` partyId,
+	  getChildLst (pa.`PARTY_ID`) partyIds
+	  FROM
+	  party pa 
+	  WHERE pa.`PARENT_PARTY_ID` = #{countryId}
+	  AND pa.`PARENT_PARTY_ID` = pa.`COUNTRY_ID` 
+	</select>
+	
+	<!-- 22、P2 sellout /display RESULTS in September as of  01-15, 2017 -->
+	<select id="PSeriesSalesStatus" resultType="StaTable" parameterType="java.util.Map">
+	 SELECT 
+	SUM(pr.`coe_quan`) ttlTVSOQtyD,
+        SUM(pr.`coe_amou` ) ttlTVSOAmt,
+	 pr.`SHOP_ID` shopId,
+	 pr.`branch_model` model,
+	 pr.`PARTY_ID` partyId
+FROM
+  `vive_tv_sale` pr ,party pa
+ WHERE <include refid="listPartys" />
+  AND pr.`datadate` BETWEEN #{beginDate} AND #{endDate}
+  AND pa.party_id = pr.party_id
+   AND ${whiles}
+    GROUP BY pr.`branch_model`,pr.`PARTY_ID`
+	</select>
+	
+	<select id="querysaleInfoByWhere" resultType="StaTable" parameterType="java.util.Map">
+	 	SELECT  ROUND(SUM(pa.`coe_quan`),0) ttlTVSOQty,
+		ROUND(SUM(pa.`coe_amou`),0) TTlTVSOAmt,
+		pa.`branch_model` model,
+		pa.`PRODUCT_SPEC_ID` func,
+		pa.`size` size,
+		DATE_FORMAT(pa.`datadate`,'%m') MONTH
+		 FROM `vive_tv_sale` pa
+		 WHERE <include refid="listPartys" />
+		  AND pa.`size` > #{big}
+		 AND pa.`datadate` BETWEEN #{beginDate} AND #{endDate}
+		 GROUP BY pa.`branch_model`,pa.`PRODUCT_SPEC_ID`,pa.`size`,DATE_FORMAT(pa.`datadate`,'%Y%m') ORDER BY pa.`branch_model`,pa.`size`
+ 
+ 
+ </select>
+	
+	<select id="querysaleInfoByMonth" resultType="StaTable" parameterType="java.util.Map">
+			  SELECT 
+	 ROUND(SUM(pa.`coe_quan`),0) ttlTVSOQty,
+ 	ROUND(SUM(pa.`coe_amou` ),0) TTlTVSOAmt,
+ 	DATE_FORMAT(pa.`datadate`,'%m') MONTH
+	FROM
+  	`vive_tv_sale` pa 
+	WHERE <include refid="listPartys" />
+ 	 AND pa.`datadate` BETWEEN #{beginDate} AND #{endDate}
+ 	 GROUP BY DATE_FORMAT(pa.`datadate`,'%Y%m')  
+	</select>
+	
+	<select id="querysaleInfoBySeries" resultType="StaTable" parameterType="java.util.Map">
+	   SELECT 
+	   ROUND(SUM(pa.`coe_quan`),0) ttlTVSOQty,
+	   ROUND(SUM(pa.`coe_amou` ),0) TTlTVSOAmt,
+	   DATE_FORMAT(pa.`datadate`,'%m') MONTH
+	   FROM
+	  `vive_tv_sale` pa 
+	   WHERE <include refid="listPartys" />
+	   AND pa.`datadate` BETWEEN #{beginDate} AND #{endDate}
+	   AND pa.`product_line` LIKE CONCAT('%', #{series},'%')
+	   GROUP BY DATE_FORMAT(pa.`datadate`,'%Y%m') 
+	</select>
+	
+	
+	<!--  去除还原系数   -->
+	
+	
+	<!-- 2、TOTAL Sellout performances of Regional Head for the month of August 2017 -->
+	<select id="monthlySalesPerformanceCheck" resultType="StaTable" parameterType="java.util.Map">
+		SELECT v_s.user_name saleman,
+		IFNULL(SUM(v_u_n.NO_OF_FPS),0) noOfFps,
+		IFNULL(ROUND(SUM(v_n.qty),0),0) ttlTVSOQty,
+		IFNULL(ROUND(SUM(v_n.amt),0),0) ttlTVSOAmt,
+		IFNULL(SUM(v_t.amt),0) targetAmt,
+		COUNT(v_n.amt) noOfShops FROM 
+	 	 <!-- (1)、促销员所处区域 -->
+		(SELECT si.`SHOP_ID`,ul.`USER_LOGIN_ID`,ul.`USER_NAME`,pa.`PARTY_NAME` FROM 
+		`shop_saler_mapping` ssm,user_login ul,shop_info si,party pa
+		 WHERE ssm.`shop_id` = si.`SHOP_ID`
+		 AND si.`PARTY_ID` = pa.`PARTY_ID`
+		 AND <include refid="listPartys" />
+		 AND ssm.`salertype` = '0'
+		 AND ul.`USER_LOGIN_ID` = ssm.`user_login_id`) v_s 
+		 
+	     <!-- (3)、每个门店销售数量 -->
+	      LEFT JOIN (
+	      SELECT SUM(pr.`quantity`) qty,
+	       SUM(pr.`amount`) amt,
+	       pr.`shop_id`
+	       FROM  `vive_tv_sale` pr WHERE
+	       pr.`datadate` BETWEEN #{beginDate} AND #{endDate}
+	       GROUP BY pr.`SHOP_ID`
+	      
+	      <!-- SELECT SUM(ts.`quantity`) qty,
+	      					SUM(ts.`amount`) amt,si.`SHOP_ID`
+		 FROM t_sale ts,shop_info si,party pa,t_modelmap tm,product pr 
+		 WHERE ts.`shop_id` = si.`SHOP_ID`
+		 AND si.`PARTY_ID` = pa.`PARTY_ID`
+		 AND pr.`head_type_id` = 1
+		 AND tm.`party_id` = pa.`COUNTRY_ID`
+		 AND tm.`branch_model` = ts.`model`
+		 AND tm.`hq_model` = pr.`PRODUCT_model`
+		 AND ts.`datadate` BETWEEN #{beginDate} AND #{endDate}
+		 GROUP BY si.`SHOP_ID` -->)v_n ON v_s.shop_id = v_n.shop_id 
+		 
+		  <!-- (2)、每个门店促销员数量 -->
+	      LEFT JOIN (SELECT COUNT(ssm.`user_login_id`) NO_OF_FPS, 
+	      ssm.`SHOP_ID` FROM `shop_saler_mapping` ssm WHERE ssm.`salertype` = 1
+	      GROUP BY ssm.`SHOP_ID`) v_u_n ON v_n.shop_id = v_u_n.shop_id 
+		 
+	 	<!-- (4)、每个门店目标(1-分公司目标 2-区域目标 3-客户目标 4-门店目标 5-角色目标 6-产品类别目标 7-门店单品目标 8-角色单品目标  9-办事处目标) -->
+		 LEFT JOIN  (SELECT tt.`target_id` shop_id,tt.`quantity` qty,tt.`amount` amt FROM 
+		 `t_target` tt 
+		 WHERE tt.`class_id` = 4
+		 AND tt.type = 1
+		 AND tt.`datadate` BETWEEN #{beginDate} AND #{endDate}) v_t ON v_s.shop_id = v_t.shop_id
+		 GROUP BY v_s.user_name
+	</select>
+	
+	<!-- 22、P2 sellout /display RESULTS in September as of  01-15, 2017 -->
+	<select id="PSeriesSalesStatusCheck" resultType="StaTable" parameterType="java.util.Map">
+	 SELECT 
+	SUM(pr.`quantity`) ttlTVSOQtyD,
+        SUM(pr.`amount` ) ttlTVSOAmt,
+	 pr.`SHOP_ID` shopId,
+	 pr.`branch_model` model,
+	 pr.`PARTY_ID` partyId
+FROM
+  `vive_tv_sale` pr ,party pa
+ WHERE <include refid="listPartys" />
+  AND pr.`datadate` BETWEEN #{beginDate} AND #{endDate}
+  AND pa.party_id = pr.party_id
+   AND ${whiles}
+    GROUP BY pr.`branch_model`,pr.`PARTY_ID`
+	</select>
+	
+	<select id="querysaleInfoByWhereCheck" resultType="StaTable" parameterType="java.util.Map">
+ 	    SELECT  ROUND(SUM(pa.`quantity`),0) ttlTVSOQty,
+		ROUND(SUM(pa.`amount`),0) TTlTVSOAmt,
+		pa.`branch_model` model,
+		pa.`PRODUCT_SPEC_ID` func,
+		pa.`size` size,
+		DATE_FORMAT(pa.`datadate`,'%m') MONTH
+		 FROM `vive_tv_sale` pa
+		 WHERE <include refid="listPartys" />
+		  AND pa.`size` > #{big}
+		 AND pa.`datadate` BETWEEN #{beginDate} AND #{endDate}
+		 GROUP BY pa.`branch_model`,pa.`PRODUCT_SPEC_ID`,pa.`size`,DATE_FORMAT(pa.`datadate`,'%Y%m') ORDER BY pa.`branch_model`,pa.`size`
+ </select>
+	
+	<select id="querysaleInfoByMonthCheck" resultType="StaTable" parameterType="java.util.Map">
+		SELECT 
+		 ROUND(SUM(pa.`quantity`),0) ttlTVSOQty,
+	 	ROUND(SUM(pa.`amount` ),0) TTlTVSOAmt,
+	 	DATE_FORMAT(pa.`datadate`,'%m') MONTH
+		FROM
+	  	`vive_tv_sale` pa 
+		WHERE <include refid="listPartys" />
+	 	 AND pa.`datadate` BETWEEN #{beginDate} AND #{endDate}
+	 	 GROUP BY DATE_FORMAT(pa.`datadate`,'%Y%m') 
+	</select>
+	
+	<select id="querysaleInfoBySeriesCheck" resultType="StaTable" parameterType="java.util.Map">
+	   SELECT 
+	   ROUND(SUM(pa.`quantity`),0) ttlTVSOQty,
+	   ROUND(SUM(pa.`amount` ),0) TTlTVSOAmt,
+	   DATE_FORMAT(pa.`datadate`,'%m') MONTH
+	   FROM
+	  `vive_tv_sale` pa 
+	   WHERE <include refid="listPartys" />
+	   AND pa.`datadate` BETWEEN #{beginDate} AND #{endDate}
+	   AND pa.`product_line` LIKE CONCAT('%', #{series},'%')
+	   GROUP BY DATE_FORMAT(pa.`datadate`,'%Y%m') 
+	</select>
+	
+	<!-- 4、Growth performances in every Region  -->
+	<select id="regionalGrowthPerformanceByPartyIdCheck" resultType="StaTable" parameterType="java.util.Map">
+	SELECT v_n.party_id partyId,
+	IFNULL(SUM(v_u_n.NO_OF_FPS),0) noOfFps,
+	IFNULL(ROUND(SUM(v_n.qty),0),0) ttlTVSOQty,
+	IFNULL(ROUND(SUM(v_n.amt),0),0) ttlTVSOAmt,
+	COUNT(v_n.amt) noOfShops FROM 
+	
+	<!-- (2)、去年每个门店销售数量 -->
+     (
+	  	SELECT SUM(pr.`quantity`) qty,
+	       SUM(pr.`amount`) amt,
+	       pr.`shop_id`,
+	       pr.`party_id`
+	       FROM  `vive_tv_sale` pr WHERE
+	       pr.`datadate` BETWEEN #{beginDate} AND #{endDate}
+	       AND <include refid="listPartys" />
+	       GROUP BY pr.`SHOP_ID`,pr.party_id
+	 ) v_n 
+	 
+	 <!-- (3)、每个门店促销员数量 -->
+	 LEFT JOIN   ( SELECT COUNT(ssm.`user_login_id`) NO_OF_FPS, ssm.`SHOP_ID` FROM 
+	`shop_saler_mapping` ssm WHERE ssm.`salertype` = 1 GROUP BY ssm.`SHOP_ID`
+	 ) v_u_n ON v_n.shop_id = v_u_n.shop_id 
+	 GROUP BY v_n.party_id
+	</select>
+	
+	<!-- 6、Growth performances in every Acfo/Area -->
+	<select id="regionalGrowthPerformanceCheck" resultType="StaTable" parameterType="java.util.Map">
+	SELECT v_s.user_name saleman,
+	IFNULL(SUM(v_u_n.NO_OF_FPS),0) noOfFps,
+	IFNULL(ROUND(SUM(v_n.qty),0),0) ttlTVSOQty,
+	IFNULL(ROUND(SUM(v_n.amt),0),0) ttlTVSOAmt,
+	COUNT(v_n.amt) noOfShops FROM 
+
+	<!-- (1)、业务人员所处区域门店 -->
+	(SELECT si.`SHOP_ID`,ul.`USER_LOGIN_ID`,ul.`USER_NAME`,pa.`PARTY_NAME` FROM 
+	`shop_saler_mapping` ssm,user_login ul,shop_info si,party pa
+	 WHERE ssm.`shop_id` = si.`SHOP_ID`
+	 AND si.`PARTY_ID` = pa.`PARTY_ID`
+	 AND <include refid="listPartys" />
+	 AND ssm.`salertype` = '2'
+	 AND ul.`USER_LOGIN_ID` = ssm.`user_login_id`) v_s 
+	 
+	<!-- (2)、去年每个门店销售数量 -->
+         LEFT JOIN (
+	 
+	 SELECT SUM(pr.`quantity`) qty,
+	       SUM(pr.`amount`) amt,
+	       pr.`shop_id`
+	       FROM  `vive_tv_sale` pr WHERE
+	       pr.`datadate` BETWEEN #{beginDate} AND #{endDate}
+	        <include refid="listwhere" />
+	       GROUP BY pr.`SHOP_ID`
+	 
+	 ) v_n ON v_s.shop_id = v_n.shop_id 
+	 
+	<!-- (3)、每个门店促销员数量 -->
+	 LEFT JOIN ( SELECT COUNT(ssm.`user_login_id`) NO_OF_FPS, ssm.`SHOP_ID` FROM 
+	`shop_saler_mapping` ssm WHERE ssm.`salertype` = 1 GROUP BY ssm.`SHOP_ID`
+	 ) v_u_n ON v_n.shop_id = v_u_n.shop_id 
+	 GROUP BY v_s.user_name
+	</select>
+	
+	
+</mapper>

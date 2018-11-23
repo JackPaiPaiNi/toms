@@ -1,0 +1,959 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.BDExcel.dao.IBDExcelDao">
+
+	<resultMap id="ExcelMap" type="BDExcel">
+		<result column="REG" property="reg" jdbcType="VARCHAR" />
+		<result column="shop_id" property="shopId" jdbcType="VARCHAR" />
+		<result column="REG" property="reg" jdbcType="VARCHAR" />
+		<result column="TYPE" property="type" jdbcType="VARCHAR" />
+		<result column="NO_OF_SHOP" property="noOfShop" jdbcType="INTEGER" />
+		<result column="DEALER" property="dealer" jdbcType="VARCHAR" />
+		<result column="BRANCH" property="branch" jdbcType="VARCHAR" />
+		<result column="TV_FPS" property="tvFps" jdbcType="INTEGER" />
+		<result column="AC_FPS" property="acFps" jdbcType="INTEGER" />
+		<result column="PROM_NAME" property="promName" jdbcType="VARCHAR" />
+		<result column="DATE" property="dateOfHired" jdbcType="CHAR" />
+		<result column="SHOP_NAME" property="shopName" jdbcType="VARCHAR" />
+		<result column="ACFO" property="acfo" jdbcType="VARCHAR" />
+		<result column="AREA" property="area" jdbcType="VARCHAR" />
+		<result column="SALESMAN" property="salesMan" jdbcType="VARCHAR" />
+		<result column="AGENCY" property="agency" jdbcType="VARCHAR" />
+		<result column="SHOP_CLASS" property="shopClass" jdbcType="VARCHAR" />
+		<result column="SALERTYPE" property="salerType" jdbcType="INTEGER" />
+		<result column="USERID" property="userId" jdbcType="INTEGER" />
+		<result column="LEVEL" property="level" jdbcType="VARCHAR" />
+		
+	</resultMap>
+
+	<resultMap id="modelMap" type="BDExcel">
+		<result column="shop_id" property="shopId" jdbcType="VARCHAR" />
+		<result column="model" property="model" jdbcType="VARCHAR" />
+		<result column="quantity" property="quantity" jdbcType="INTEGER" />
+		<result column="amount" property="amount" jdbcType="INTEGER" />
+		<result column="country_id" property="countryId" jdbcType="VARCHAR" />
+	</resultMap>
+
+
+	<resultMap id="SumMap" type="BDExcel">
+		<result column="targetSum" property="targetSum"  />
+		<result column="challengeSum" property="challengeSum"  />
+		<result column="targetQty" property="targetQty"  />
+		<result column="challengeQty" property="challengeQty"  />
+		<result column="saleSum" property="saleSum" jdbcType="VARCHAR" />
+		<result column="saleQty" property="saleQty" />
+	</resultMap>
+
+
+	<resultMap id="saleDateMap" type="BDExcel">
+		<result column="shopId" property="shopId" jdbcType="VARCHAR" />
+		<result column="quantity" property="quantity" jdbcType="INTEGER" />
+		<result column="model" property="model" jdbcType="VARCHAR" />
+	</resultMap>
+
+
+
+	<sql id="listWhere">
+		<if test="searchStr != null"> ${searchStr} </if>
+		<where>
+			<if test="conditions != null"> and ${conditions} </if>
+		</where>
+	</sql>
+
+
+<!-- 
+
+<if test="isHq == true ">
+		${"
+		DISTINCT s.hq_model AS model ,
+		COALESCE(SUM(s.`h_price`),0) AS price,"}
+		</if>
+		<if test="isHq == false ">
+		${"
+		DISTINCT s.branch_model AS model ,
+		COALESCE(SUM(s.`price`),0) AS price,"}
+		</if>
+ -->
+
+	<select id="selectModelByHead" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+	
+
+ SELECT 
+ <if test="isHq == true ">
+		${"
+		 tm.hq_model model,"}
+		</if>
+		<if test="isHq == false ">
+		${"
+		 tm.branch_model model,"}
+		</if>
+ 
+ pt.PRODUCT_SPEC_ID spec,
+
+ COALESCE(SUM(t.h_price),0)price ,COUNT(t.country) country 
+ FROM party pa 
+LEFT JOIN t_sale t ON t.`country`=pa.`COUNTRY_ID` AND (t.`shop_id`=0 OR t.`shop_id` IS NULL   OR  t.shop_id="")
+ AND (t.CUSTOMER_ID IS NULL OR  t.CUSTOMER_id=""  OR t.CUSTOMER_id=0)
+JOIN t_modelmap  tm ON tm.`branch_model`=t.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` AND pt.`head_type_id`=1
+<include refid="listWhere" />
+AND  pa.`COUNTRY_ID`=pa.`PARTY_ID`  
+AND t.`datadate` BETWEEN #{beginDate} AND #{endDate} 
+
+
+GROUP BY 
+<if test="isHq == true ">
+		${"
+		tm.hq_model"}
+		</if>
+		<if test="isHq == false ">
+		${"
+		 tm.branch_model"}
+		</if>
+
+,pt.PRODUCT_SPEC_ID
+		
+		
+
+	</select>
+
+
+
+
+
+
+	<select id="selectModelListByHq" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+	
+		SELECT 
+		<if test="isHq == true ">
+		${"
+		 tm.hq_model model,"}
+		</if>
+		<if test="isHq == false ">
+		${"
+		 tm.branch_model model,"}
+		</if>
+		pa.`PARTY_ID` country_id,pa.`PARTY_NAME` country_name,
+		t.`datadate`,
+		
+		
+		COALESCE(SUM(t.quantity),0)
+	saleQty,COALESCE(SUM(t.amount),0)  saleAmt,
+	pt.`PRODUCT_SPEC_ID` spec FROM party pa 
+	LEFT JOIN t_sale t ON t.`country`=pa.`COUNTRY_ID` AND (t.`shop_id`=0 OR t.`shop_id` IS NULL   OR  t.shop_id="")
+ 	AND (t.CUSTOMER_ID IS NULL OR  t.CUSTOMER_id=""  OR t.CUSTOMER_id=0)
+JOIN t_modelmap  tm ON tm.`branch_model`=t.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` AND pt.`head_type_id`=1
+	<include refid="listWhere" />
+AND pa.`COUNTRY_ID`=pa.`PARTY_ID`  
+AND t.`datadate` BETWEEN #{beginDate} AND #{endDate} 
+	
+		GROUP BY pa.`PARTY_ID`,
+		<if test="isHq == true ">
+		${"
+		tm.hq_model"}
+		</if>
+		<if test="isHq == false ">
+		${"
+		 tm.branch_model"}
+		</if>	
+	</select>
+	
+	
+	
+	<select id="selectTargetByshop" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+
+ SELECT pa.`PARTY_ID` country_id,pa.`PARTY_NAME` country_name,
+ COALESCE(SUM(t.quantity),0)  targetQty,COALESCE(SUM(t.amount),0) targetAmt
+FROM t_target t
+JOIN party pa ON pa.`PARTY_ID`=t.`target_id` AND pa.`COUNTRY_ID`=pa.`PARTY_ID`
+WHERE t.`class_id`=1 AND t.`type`=#{type}
+AND t.datadate BETWEEN #{tBeginDate} AND #{tEndDate}
+GROUP BY pa.`PARTY_ID`
+
+	</select>
+	
+	
+	
+	
+	
+	<select id="selectTargetByYear" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+
+ SELECT pa.`PARTY_ID` country_id,pa.`PARTY_NAME` country_name,
+ COALESCE(SUM(t.quantity),0)  targetQty,COALESCE(SUM(t.amount),0) targetAmt
+FROM t_target t
+JOIN party pa ON pa.`PARTY_ID`=t.`target_id` AND pa.`COUNTRY_ID`=pa.`PARTY_ID`
+WHERE t.`class_id`=11 AND t.`type`=#{type}
+AND t.datadate BETWEEN #{tBeginDate} AND #{tEndDate}
+GROUP BY pa.`PARTY_ID`
+
+	</select>
+	
+		<select id="selectDatas" parameterType="java.lang.String"
+		 resultType="java.util.HashMap">
+
+	SELECT GROUP_CONCAT(DISTINCT  ul.`USER_NAME` SEPARATOR ';') user_name,
+	 pa.`PARTY_ID` country_id,pa.`PARTY_NAME` country_name,
+		t.`datadate`,COALESCE(SUM(t.quantity),0)  saleQty,COALESCE(SUM(t.amount),0) saleAmt,
+		P.party_name reg
+	 FROM party pa
+	LEFT JOIN t_sale t ON t.`country`=pa.`COUNTRY_ID` AND (t.`shop_id`=0 OR t.`shop_id` IS NULL   OR  t.shop_id="")
+ 	AND (t.CUSTOMER_ID IS NULL OR  t.CUSTOMER_id=""  OR t.CUSTOMER_id=0)
+ 		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+LEFT JOIN t_modelmap  tm ON tm.`branch_model`=t.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+LEFT JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` AND pt.`head_type_id`=1
+LEFT JOIN user_login ul ON ul.`USER_LOGIN_ID`=t.`user_id`
+JOIN PARTY P ON P.`PARTY_ID`=PA.`PARENT_PARTY_ID`
+			<include refid="listWhere" />
+	    AND ( pa.sort IS NOT  NULL AND pa.`sort`!="" )   
+AND pa.`COUNTRY_ID`=pa.`PARTY_ID`  
+		GROUP BY pa.`PARTY_ID`
+		ORDER BY pa.sort
+	</select>
+	
+
+	
+	
+	
+	
+	<select id="selectSaleDataBySize" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+	
+
+SELECT   pa.country_id,pa.party_name,   CASE  
+WHEN size BETWEEN  20 AND  28  THEN  '20-28'
+	     WHEN size=32  THEN  '32'	
+	     WHEN size BETWEEN  39 AND  43  THEN  '39-43'	
+	     WHEN size BETWEEN  48 AND  50  THEN '48-50'
+	     WHEN size=55 THEN '55'
+	      WHEN size BETWEEN  39 AND  47  THEN '≥39'
+	      WHEN size>=60  THEN '>=60'
+	      ELSE 'settled unsettled'
+		END sizeT  ,
+            ROUND(
+		COALESCE(SUM(t.quantity),0)) AS
+		saleQty
+		 FROM party pa
+	LEFT JOIN t_sale t ON t.`country`=pa.`COUNTRY_ID` AND (t.`shop_id`=0 OR t.`shop_id` IS NULL   OR  t.shop_id="")
+ 	AND (t.CUSTOMER_ID IS NULL OR  t.CUSTOMER_id=""  OR t.CUSTOMER_id=0)
+ 		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+LEFT	JOIN t_modelmap  tm ON tm.`branch_model`=t.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+LEFT JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` AND pt.`head_type_id`=1
+			<include refid="listWhere" />
+	
+		AND pa.country_id=pa.party_id
+		AND (
+				pt.size BETWEEN  20 AND  28 
+				OR pt.size=32 
+					OR pt.size  BETWEEN  39 AND  43
+					OR pt.size BETWEEN  48 AND  50 
+					OR pt.size=55  
+					or  pt.size BETWEEN  39 AND  47  
+					OR pt.size>=60)
+	
+		GROUP  BY pa.country_id,sizeT
+		ORDER BY
+		pa.sort,sizeT
+	
+		
+	</select>
+	
+	
+	
+	
+	<select id="selectSaleDataBySpec" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+	
+
+
+SELECT   pa.country_id,pa.party_name,   CASE 
+  WHEN PRODUCT_SPEC_ID LIKE '%CURVED%' THEN 'CURVED TV'
+	   WHEN PRODUCT_SPEC_ID LIKE '%QUHD%' THEN 'QUHD'
+	  
+	  WHEN PRODUCT_SPEC_ID  LIKE '%UHD%' THEN 'UHD'
+	  WHEN PRODUCT_SPEC_ID LIKE '%SMART%' THEN 'SMART TV'
+	    
+	  WHEN PRODUCT_SPEC_ID LIKE '%INTERNET%'  THEN  'INTERNET TV'
+	    
+	     WHEN PRODUCT_SPEC_ID LIKE '%DIGITAL%'  THEN  'DIGITAL BASIC LED TV'
+	      WHEN PRODUCT_SPEC_ID LIKE '%BASIC LED%'  THEN  'BASIC LED'	
+	      ELSE 'settled unsettled'
+		END  SPEC ,
+            ROUND(
+		COALESCE(SUM(t.quantity),0)) AS
+		saleQty
+		 FROM party pa
+	LEFT JOIN t_sale t ON t.`country`=pa.`COUNTRY_ID` AND (t.`shop_id`=0 OR t.`shop_id` IS NULL   OR  t.shop_id="")
+ 	AND (t.CUSTOMER_ID IS NULL OR  t.CUSTOMER_id=""  OR t.CUSTOMER_id=0)
+	JOIN t_modelmap  tm ON tm.`branch_model`=t.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` AND pt.`head_type_id`=1
+			<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND pa.country_id=pa.party_id
+			AND (
+			pt.PRODUCT_SPEC_ID LIKE '%BASIC%'
+		OR
+		
+		pt.PRODUCT_SPEC_ID LIKE '%DIGITAL%'
+		OR pt.PRODUCT_SPEC_ID LIKE
+		'%INTERNET%'
+		OR pt.PRODUCT_SPEC_ID LIKE '%SMART%'
+		OR pt.PRODUCT_SPEC_ID
+		LIKE '%UHD%'
+		OR pt.PRODUCT_SPEC_ID LIKE '%CURVE%'
+		OR pt.PRODUCT_SPEC_ID LIKE '%QUHD%'
+		)
+		GROUP  BY pa.country_id,SPEC
+		ORDER BY
+		pa.sort,SPEC
+	
+	
+		
+	</select>
+	
+	
+	
+	
+	
+
+	<select id="selectSaleTotalBySize" parameterType="java.lang.String"
+			resultType="java.util.HashMap">
+	
+
+SELECT   pa.country_id,pa.party_name,   CASE  WHEN size BETWEEN  20 AND  28  THEN  '20-28'
+	     WHEN size=32  THEN  '32'	
+	     WHEN size BETWEEN  39 AND  43  THEN  '39-43'	
+	     WHEN size BETWEEN  48 AND  50  THEN '48-50'
+	     WHEN size=55 THEN '55'
+	      WHEN size BETWEEN  39 AND  47  THEN '≥39'
+	      WHEN size>=60  THEN '>=60'
+	      ELSE 'settled unsettled'
+		END sizeT  ,
+            ROUND(
+		COALESCE(SUM(t.quantity),0)) AS
+		saleQty
+		 FROM party pa
+	LEFT JOIN t_sale t ON t.`country`=pa.`COUNTRY_ID` AND (t.`shop_id`=0 OR t.`shop_id` IS NULL   OR  t.shop_id="")
+ 	AND (t.CUSTOMER_ID IS NULL OR  t.CUSTOMER_id=""  OR t.CUSTOMER_id=0)
+	JOIN t_modelmap  tm ON tm.`branch_model`=t.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` AND pt.`head_type_id`=1
+			<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+			AND (pt.size BETWEEN  20 AND  28 OR pt.size=32 
+					OR pt.size  BETWEEN  39 AND  43
+					OR pt.size BETWEEN  48 AND  50 
+					OR pt.size=55  or  pt.size BETWEEN  39 AND  47  
+					OR pt.size>=60)
+		AND pa.country_id=pa.party_id
+		GROUP  BY pa.country_id
+		
+	</select>
+	
+	
+		
+	<select id="selectSaleDataByXCP" parameterType="java.lang.String"
+			resultType="java.util.HashMap">
+	
+	
+	SELECT 
+	<if test="isHq == true ">
+		${"
+		 tm.hq_model model,"}
+		</if>
+		<if test="isHq == false ">
+		${"
+		 tm.branch_model model,"}
+		</if>
+	
+	  pa.country_id,pa.party_name,   CASE 
+  WHEN product_line LIKE 'X%' THEN 'X'
+	   WHEN product_line LIKE 'C%' THEN 'C'
+	  
+	  WHEN product_line  LIKE 'P%' THEN 'P'
+	  
+		END  LINE ,
+            ROUND(
+		COALESCE(SUM(t.quantity),0)) AS
+		saleQty
+		 FROM party pa
+	LEFT JOIN t_sale t ON t.`country`=pa.`COUNTRY_ID` AND (t.`shop_id`=0 OR t.`shop_id` IS NULL   OR  t.shop_id="")
+ 	AND (t.CUSTOMER_ID IS NULL OR  t.CUSTOMER_id=""  OR t.CUSTOMER_id=0)
+	JOIN t_modelmap  tm ON tm.`branch_model`=t.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` AND pt.`head_type_id`=1
+	<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND pa.country_id=pa.party_id
+		AND (product_line  LIKE 'X%' OR product_line  LIKE 'C%' OR product_line  LIKE 'P%')
+		GROUP  BY pa.country_id,LINE,tm.hq_model
+		ORDER BY
+		pa.sort,LINE,<if test="isHq == true ">
+		${"
+		 tm.hq_model "}
+		</if>
+		<if test="isHq == false ">
+		${"
+		 tm.branch_model "}
+		</if>
+		
+		
+		
+	</select>
+	
+	
+	
+		
+	<select id="selectSaleDataByXCPBDSC" parameterType="java.lang.String"
+			resultType="java.util.HashMap">
+	
+	
+	SELECT 
+	<if test="isHq == true ">
+		${"
+		 tm.hq_model model,"}
+		</if>
+		<if test="isHq == false ">
+		${"
+		 tm.branch_model model,"}
+		</if>
+	
+	  pa.country_id,pa.party_name,   CASE 
+  WHEN product_line LIKE 'X%' THEN 'X'
+	   WHEN product_line LIKE 'C%' THEN 'C'
+	  
+	  WHEN product_line  LIKE 'P%' THEN 'P'
+	  
+		END  LINE ,
+            ROUND(
+		COALESCE(SUM(t.quantity),0)) AS
+		saleQty
+		 FROM party pa
+	LEFT JOIN t_sale t ON t.`country`=pa.`COUNTRY_ID` AND (t.`shop_id`=0 OR t.`shop_id` IS NULL   OR  t.shop_id="")
+ 	AND (t.CUSTOMER_ID IS NULL OR  t.CUSTOMER_id=""  OR t.CUSTOMER_id=0)
+	JOIN t_modelmap  tm ON tm.`branch_model`=t.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` AND pt.`head_type_id`=1
+	<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND pa.country_id=pa.party_id
+		AND (product_line  LIKE 'X%' OR product_line  LIKE 'C%' OR product_line  LIKE 'P%')
+		GROUP  BY LINE,tm.hq_model
+		ORDER BY
+		LINE,<if test="isHq == true ">
+		${"
+		 tm.hq_model "}
+		</if>
+		<if test="isHq == false ">
+		${"
+		 tm.branch_model "}
+		</if>
+		
+		
+		
+	</select>
+	
+	
+	<select id="selectSaleTotalByXCP" parameterType="java.lang.String"
+			resultType="java.util.HashMap">
+	
+	
+	SELECT   pa.country_id,pa.party_name,   CASE 
+  WHEN product_line LIKE 'X%' THEN 'X'
+	   WHEN product_line LIKE 'C%' THEN 'C'
+	  
+	  WHEN product_line  LIKE 'P%' THEN 'P'
+	  
+		END  LINE ,tm.hq_model model,
+            ROUND(
+		COALESCE(SUM(t.quantity),0)) AS
+		saleQty
+		 FROM party pa
+	LEFT JOIN t_sale t ON t.`country`=pa.`COUNTRY_ID` AND (t.`shop_id`=0 OR t.`shop_id` IS NULL   OR  t.shop_id="")
+ 	AND (t.CUSTOMER_ID IS NULL OR  t.CUSTOMER_id=""  OR t.CUSTOMER_id=0)
+	JOIN t_modelmap  tm ON tm.`branch_model`=t.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` AND pt.`head_type_id`=1
+	<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND pa.country_id=pa.party_id
+		AND (product_line  LIKE 'X%' OR product_line  LIKE 'C%' OR product_line  LIKE 'P%')
+		GROUP  BY pa.country_id
+	
+		
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	<select id="selectSaleTotalBySpec" parameterType="java.lang.String"
+			resultType="java.util.HashMap">
+	
+
+
+SELECT   pa.country_id,pa.party_name,   CASE 
+  WHEN PRODUCT_SPEC_ID LIKE '%CURVED%' THEN 'CURVED TV'
+	   WHEN PRODUCT_SPEC_ID LIKE '%QUHD%' THEN 'QUHD'
+	  
+	  WHEN PRODUCT_SPEC_ID  LIKE '%UHD%' THEN 'UHD'
+	  WHEN PRODUCT_SPEC_ID LIKE '%SMART%' THEN 'SMART TV'
+	    
+	  WHEN PRODUCT_SPEC_ID LIKE '%INTERNET%'  THEN  'INTERNET TV'
+	    
+	     WHEN PRODUCT_SPEC_ID LIKE '%DIGITAL%'  THEN  'DIGITAL BASIC LED TV'
+	      WHEN PRODUCT_SPEC_ID LIKE '%BASIC LED%'  THEN  'BASIC LED'	
+	      ELSE 'settled unsettled'
+		END  SPEC ,
+            ROUND(
+		COALESCE(SUM(t.quantity),0)) AS
+		saleQty
+		 FROM party pa
+	LEFT JOIN t_sale t ON t.`country`=pa.`COUNTRY_ID` AND (t.`shop_id`=0 OR t.`shop_id` IS NULL   OR  t.shop_id="")
+ 	AND (t.CUSTOMER_ID IS NULL OR  t.CUSTOMER_id=""  OR t.CUSTOMER_id=0)
+	JOIN t_modelmap  tm ON tm.`branch_model`=t.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` AND pt.`head_type_id`=1
+			<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND 
+		(
+		pt.PRODUCT_SPEC_ID LIKE '%BASIC%'
+		OR
+		
+		pt.PRODUCT_SPEC_ID LIKE '%DIGITAL%'
+		OR pt.PRODUCT_SPEC_ID LIKE
+		'%INTERNET%'
+		OR pt.PRODUCT_SPEC_ID LIKE '%SMART%'
+		OR pt.PRODUCT_SPEC_ID
+		LIKE '%UHD%'
+		OR pt.PRODUCT_SPEC_ID LIKE '%CURVE%'
+		OR pt.PRODUCT_SPEC_ID LIKE '%QUHD%'
+		)
+		AND pa.country_id=pa.party_id
+		GROUP  BY pa.country_id
+	
+	
+		
+	</select>
+	
+	
+	
+	
+	
+	<select id="selectSaleTotalBySpecYTD" parameterType="java.lang.String"
+			resultType="java.util.HashMap">
+	
+
+SELECT   pa.country_id,pa.party_name,  DATE_FORMAT(t.datadate,'%m') date,
+            ROUND(
+		COALESCE(SUM(t.quantity),0)) AS
+		saleQty
+		 FROM party pa
+	LEFT JOIN t_sale t ON t.`country`=pa.`COUNTRY_ID` AND (t.`shop_id`=0 OR t.`shop_id` IS NULL   OR  t.shop_id="")
+ 	AND (t.CUSTOMER_ID IS NULL OR  t.CUSTOMER_id=""  OR t.CUSTOMER_id=0)
+	JOIN t_modelmap  tm ON tm.`branch_model`=t.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` AND pt.`head_type_id`=1
+			<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND 
+		(
+		pt.PRODUCT_SPEC_ID LIKE '%BASIC%'
+		OR
+		
+		pt.PRODUCT_SPEC_ID LIKE '%DIGITAL%'
+		OR pt.PRODUCT_SPEC_ID LIKE
+		'%INTERNET%'
+		OR pt.PRODUCT_SPEC_ID LIKE '%SMART%'
+		OR pt.PRODUCT_SPEC_ID
+		LIKE '%UHD%'
+		OR pt.PRODUCT_SPEC_ID LIKE '%CURVE%'
+		OR pt.PRODUCT_SPEC_ID LIKE '%QUHD%'
+		)
+		AND pa.country_id=pa.party_id
+		GROUP  BY pa.country_id,DATE_FORMAT(t.datadate,'%m')
+	
+		
+	</select>
+	
+
+
+
+	<select id="selectSaleDataBySpecYTD" parameterType="java.lang.String"
+			resultType="java.util.HashMap">
+	
+
+SELECT   pa.country_id,pa.party_name,  DATE_FORMAT(t.datadate,'%m') date, CASE 
+  WHEN PRODUCT_SPEC_ID LIKE '%CURVED%' THEN 'CURVED TV'
+	   WHEN PRODUCT_SPEC_ID LIKE '%QUHD%' THEN 'QUHD'
+	  
+	  WHEN PRODUCT_SPEC_ID  LIKE '%UHD%' THEN 'UHD'
+	  WHEN PRODUCT_SPEC_ID LIKE '%SMART%' THEN 'SMART TV'
+	    
+	  WHEN PRODUCT_SPEC_ID LIKE '%INTERNET%'  THEN  'INTERNET TV'
+	    
+	     WHEN PRODUCT_SPEC_ID LIKE '%DIGITAL%'  THEN  'DIGITAL BASIC LED TV'
+	      WHEN PRODUCT_SPEC_ID LIKE '%BASIC LED%'  THEN  'BASIC LED'	
+	      ELSE 'settled unsettled'
+		END  SPEC ,
+            ROUND(
+		COALESCE(SUM(t.quantity),0)) AS
+		saleQty
+		 FROM party pa
+	LEFT JOIN t_sale t ON t.`country`=pa.`COUNTRY_ID` AND (t.`shop_id`=0 OR t.`shop_id` IS NULL   OR  t.shop_id="")
+ 	AND (t.CUSTOMER_ID IS NULL OR  t.CUSTOMER_id=""  OR t.CUSTOMER_id=0)
+	JOIN t_modelmap  tm ON tm.`branch_model`=t.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` AND pt.`head_type_id`=1
+			<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND 
+		(
+		pt.PRODUCT_SPEC_ID LIKE '%BASIC%'
+		OR
+		
+		pt.PRODUCT_SPEC_ID LIKE '%DIGITAL%'
+		OR pt.PRODUCT_SPEC_ID LIKE
+		'%INTERNET%'
+		OR pt.PRODUCT_SPEC_ID LIKE '%SMART%'
+		OR pt.PRODUCT_SPEC_ID
+		LIKE '%UHD%'
+		OR pt.PRODUCT_SPEC_ID LIKE '%CURVE%'
+		OR pt.PRODUCT_SPEC_ID LIKE '%QUHD%'
+		)
+		AND pa.country_id=pa.party_id
+		GROUP  BY pa.country_id,DATE_FORMAT(t.datadate,'%m'),SPEC
+	
+		
+	</select>
+	
+	
+	
+		<select id="selectSaleDataBySpecYTDCUSTOM" parameterType="java.lang.String"
+			resultType="java.util.HashMap">
+	
+
+SELECT   pa.country_id,pa.party_name,  DATE_FORMAT(t.datadate,'%Y-%m') date, CASE 
+  WHEN PRODUCT_SPEC_ID LIKE '%CURVED%' THEN 'CURVED TV'
+	   WHEN PRODUCT_SPEC_ID LIKE '%QUHD%' THEN 'QUHD'
+	  
+	  WHEN PRODUCT_SPEC_ID  LIKE '%UHD%' THEN 'UHD'
+	  WHEN PRODUCT_SPEC_ID LIKE '%SMART%' THEN 'SMART TV'
+	    
+	  WHEN PRODUCT_SPEC_ID LIKE '%INTERNET%'  THEN  'INTERNET TV'
+	    
+	     WHEN PRODUCT_SPEC_ID LIKE '%DIGITAL%'  THEN  'DIGITAL BASIC LED TV'
+	      WHEN PRODUCT_SPEC_ID LIKE '%BASIC LED%'  THEN  'BASIC LED'	
+	      ELSE 'settled unsettled'
+		END  SPEC ,
+            ROUND(
+		COALESCE(SUM(t.quantity),0)) AS
+		saleQty
+		 FROM party pa
+	LEFT JOIN t_sale t ON t.`country`=pa.`COUNTRY_ID` AND (t.`shop_id`=0 OR t.`shop_id` IS NULL   OR  t.shop_id="")
+ 	AND (t.CUSTOMER_ID IS NULL OR  t.CUSTOMER_id=""  OR t.CUSTOMER_id=0)
+	JOIN t_modelmap  tm ON tm.`branch_model`=t.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` AND pt.`head_type_id`=1
+			<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND 
+		(
+		pt.PRODUCT_SPEC_ID LIKE '%BASIC%'
+		OR
+		
+		pt.PRODUCT_SPEC_ID LIKE '%DIGITAL%'
+		OR pt.PRODUCT_SPEC_ID LIKE
+		'%INTERNET%'
+		OR pt.PRODUCT_SPEC_ID LIKE '%SMART%'
+		OR pt.PRODUCT_SPEC_ID
+		LIKE '%UHD%'
+		OR pt.PRODUCT_SPEC_ID LIKE '%CURVE%'
+		OR pt.PRODUCT_SPEC_ID LIKE '%QUHD%'
+		)
+		AND pa.country_id=pa.party_id
+		GROUP  BY pa.country_id,DATE_FORMAT(t.datadate,'%Y-%m'),SPEC
+	
+		
+	</select>
+	
+	
+	
+
+
+
+
+	
+	
+	<select id="selectSaleTotalBySpecYTDCUSTOM" parameterType="java.lang.String"
+			resultType="java.util.HashMap">
+	
+
+SELECT   pa.country_id,pa.party_name,  DATE_FORMAT(t.datadate,'%Y-%m') date,
+            ROUND(
+		COALESCE(SUM(t.quantity),0)) AS
+		saleQty
+		 FROM party pa
+	LEFT JOIN t_sale t ON t.`country`=pa.`COUNTRY_ID` AND (t.`shop_id`=0 OR t.`shop_id` IS NULL   OR  t.shop_id="")
+ 	AND (t.CUSTOMER_ID IS NULL OR  t.CUSTOMER_id=""  OR t.CUSTOMER_id=0)
+	JOIN t_modelmap  tm ON tm.`branch_model`=t.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` AND pt.`head_type_id`=1
+			<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND 
+		(
+		pt.PRODUCT_SPEC_ID LIKE '%BASIC%'
+		OR
+		
+		pt.PRODUCT_SPEC_ID LIKE '%DIGITAL%'
+		OR pt.PRODUCT_SPEC_ID LIKE
+		'%INTERNET%'
+		OR pt.PRODUCT_SPEC_ID LIKE '%SMART%'
+		OR pt.PRODUCT_SPEC_ID
+		LIKE '%UHD%'
+		OR pt.PRODUCT_SPEC_ID LIKE '%CURVE%'
+		OR pt.PRODUCT_SPEC_ID LIKE '%QUHD%'
+		)
+		AND pa.country_id=pa.party_id
+		GROUP  BY pa.country_id,DATE_FORMAT(t.datadate,'%Y-%m')
+	
+		
+	</select>
+	
+
+	<select id="selectSaleDataByModelYTD" parameterType="java.lang.String"
+			resultType="java.util.LinkedHashMap">
+	
+
+SELECT   
+<if test="isHq == true ">
+		${"
+		 tm.hq_model model,"}
+		</if>
+		<if test="isHq == false ">
+		${"
+		 tm.branch_model model,"}
+		</if>
+
+pa.country_id,pa.party_name,DATE_FORMAT(t.datadate,'%m') date, 
+            ROUND(
+		COALESCE(SUM(t.quantity),0)) AS
+		saleQty
+		 FROM party pa
+	LEFT JOIN t_sale t ON t.`country`=pa.`COUNTRY_ID` AND (t.`shop_id`=0 OR t.`shop_id` IS NULL   OR  t.shop_id="")
+ 	AND (t.CUSTOMER_ID IS NULL OR  t.CUSTOMER_id=""  OR t.CUSTOMER_id=0)
+	JOIN t_modelmap  tm ON tm.`branch_model`=t.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` AND pt.`head_type_id`=1
+			<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		
+		AND pa.country_id=pa.party_id
+		GROUP  BY DATE_FORMAT(t.datadate,'%m'),
+		<if test="isHq == true ">
+		${"
+		 tm.hq_model"}
+		</if>
+		<if test="isHq == false ">
+		${"
+		 tm.branch_model "}
+		</if>
+		
+		ORDER BY 
+<if test="isHq == true ">
+		${"
+		 tm.hq_model"}
+		</if>
+		<if test="isHq == false ">
+		${"
+		 tm.branch_model "}
+		</if>
+		
+	</select>
+	
+
+
+	<select id="selectSaleDataByModelYTDCUSTOM" parameterType="java.lang.String"
+			resultType="java.util.LinkedHashMap">
+	
+
+SELECT   
+<if test="isHq == true ">
+		${"
+		 tm.hq_model model,"}
+		</if>
+		<if test="isHq == false ">
+		${"
+		 tm.branch_model model,"}
+		</if>
+
+pa.country_id,pa.party_name,DATE_FORMAT(t.datadate,'%Y-%m') date, 
+            ROUND(
+		COALESCE(SUM(t.quantity),0)) AS
+		saleQty
+		 FROM party pa
+	LEFT JOIN t_sale t ON t.`country`=pa.`COUNTRY_ID` AND (t.`shop_id`=0 OR t.`shop_id` IS NULL   OR  t.shop_id="")
+ 	AND (t.CUSTOMER_ID IS NULL OR  t.CUSTOMER_id=""  OR t.CUSTOMER_id=0)
+	JOIN t_modelmap  tm ON tm.`branch_model`=t.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` AND pt.`head_type_id`=1
+			<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		
+		AND pa.country_id=pa.party_id
+		GROUP  BY DATE_FORMAT(t.datadate,'%Y-%m'),tm.`hq_model`
+		ORDER BY 
+<if test="isHq == true ">
+		${"
+		 tm.hq_model"}
+		</if>
+		<if test="isHq == false ">
+		${"
+		 tm.branch_model "}
+		</if>
+		
+	</select>
+	
+
+
+	
+
+
+
+
+
+
+	<select id="selectPartyByUser" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		SELECT p.`PARTY_NAME` FROM user_login u
+		JOIN party p ON
+		p.`PARTY_ID`=u.`PARTY_ID`
+		WHERE u.user_login_id=#{userId}
+
+	</select>
+
+
+
+	<select id="selectCountryByUser" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		select u.`PARTY_ID` AS countryId from user_login u where
+		u.`USER_LOGIN_ID`=#{userId}
+
+	</select>
+
+
+	
+	
+	    <delete id="deleteCountryTarget"  parameterType="java.util.List">
+	 
+	      <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+				 DELETE  FROM t_target 
+				 WHERE class_id=1  AND DATE_FORMAT(datadate,'%Y%m')=DATE_FORMAT(#{item.dataDate},'%Y%m') 
+		AND target_id=#{item.targetId} AND type=#{item.type}
+			
+		 </foreach>
+		
+    </delete>
+    
+    	    <delete id="deleteCountryTargetYear"  parameterType="java.util.List">
+	 
+	      <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+				 DELETE  FROM t_target 
+				 WHERE class_id=11  AND datadate=#{item.dataDate}
+		AND target_id=#{item.targetId} AND type=#{item.type}
+			
+		 </foreach>
+		
+    </delete>
+    
+    
+    	    <delete id="deleteCountryUDTargetYear"  parameterType="java.util.List">
+	 
+	      <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+				 DELETE  FROM t_target 
+				 WHERE class_id=12  AND datadate=#{item.dataDate}
+		AND target_id=#{item.targetId} AND type=#{item.type}
+			
+		 </foreach>
+		
+    </delete>
+    
+      <delete id="deleteCountryLineTarget"  parameterType="java.util.List">
+	 
+	      <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+				 DELETE  FROM t_target 
+				 WHERE class_id=6  AND DATE_FORMAT(datadate,'%Y%m')=DATE_FORMAT(#{item.dataDate},'%Y%m') 
+		AND target_id=#{item.targetId}
+		AND product_line=#{item.line} AND type=#{item.type}
+			
+		 </foreach>
+		
+    </delete>
+    
+    
+ <insert id ="saveCountryTarget" parameterType="java.util.List" >
+              <selectKey resultType ="java.lang.Integer" keyProperty= "id"
+                   order= "AFTER">
+                  SELECT LAST_INSERT_ID()
+              </selectKey >
+           INSERT INTO t_target (target_id,product_line,class_id,quantity,tz_quantity,h_quantity,
+			h_tz_quantity,datadate,country,type)
+             values
+             <foreach collection ="list" item="reddemCode" index= "index" separator =",">
+               (#{reddemCode.targetId},#{reddemCode.line},#{reddemCode.classId},
+               #{reddemCode.targetQty},
+               #{reddemCode.ChallengeTarget},#{reddemCode.targetQty},#{reddemCode.ChallengeTarget},
+               #{reddemCode.dataDate},#{reddemCode.country},#{reddemCode.type})
+            </foreach >
+     </insert >
+     
+       <select id="selectCountByLine" parameterType="java.lang.String" resultType="int">
+SELECT COUNT(*) FROM cfg_parameter WHERE PTYPE='line' AND pvalue=#{line}
+</select>
+  	<select id="selectCountry" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		SELECT  country_id FROM party p WHERE p.`PARTY_ID`=p.`COUNTRY_ID`
+
+		AND  p.`PARTY_NAME`=#{country}
+</select>
+
+
+	<select id="selectBDSCTarget" parameterType="java.lang.String"
+			resultType="java.util.HashMap">
+	
+SELECT 
+CASE WHEN TYPE=1 THEN 'TV'
+WHEN TYPE=2 THEN 'AC' END TYPE,DATE_FORMAT(t.datadate,'%d/%m/%Y') date,
+pa.`COUNTRY_ID` country_id,t.`product_line` line,t.`class_id`,pa.`PARTY_NAME` country_name,COALESCE(SUM(t.`quantity`),0) targetQty
+FROM t_target t
+JOIN party pa ON pa.`PARTY_ID`=t.`target_id` AND pa.`COUNTRY_ID`=pa.`PARTY_ID`
+   <include refid="listWhere"/>
+AND (t.`class_id`=1 OR t.`class_id`=6)
+AND t.type=#{type}
+	AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+GROUP BY pa.`COUNTRY_ID`,t.`class_id`,t.`product_line`,t.`type`
+ORDER BY pa.sort
+
+
+
+	</select>
+		<select id="selectBDSCTargetYear" parameterType="java.lang.String"
+			resultType="java.util.HashMap">
+	
+SELECT 
+CASE WHEN TYPE=1 THEN 'TV'
+WHEN TYPE=2 THEN 'AC' END TYPE,t.datadate date,
+pa.`COUNTRY_ID` country_id,t.`class_id`,pa.`PARTY_NAME` country_name,COALESCE(SUM(t.`quantity`),0) targetQty
+FROM t_target t
+JOIN party pa ON pa.`PARTY_ID`=t.`target_id` AND pa.`COUNTRY_ID`=pa.`PARTY_ID`
+     <include refid="listWhere"/>
+AND (t.`class_id`=11 OR t.`class_id`=12)
+AND t.type=#{type}
+AND t.datadate=#{date}
+GROUP BY pa.`COUNTRY_ID`,t.`class_id`,t.`product_line`,t.`type`
+ORDER BY pa.sort
+
+
+	</select>
+	
+	
+	
+  	
+</mapper>

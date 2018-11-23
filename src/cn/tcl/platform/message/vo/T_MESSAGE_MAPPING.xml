@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="cn.tcl.platform.message.dao.MessageDao">
+	<resultMap id="messageMap" type="message">
+		<result column="id" property="id" jdbcType="INTEGER"/>
+		<result column="msg_type" property="msgType" jdbcType="VARCHAR"/>
+		<result column="msg_title" property="msgTitle" jdbcType="VARCHAR"/>
+		<result column="msg_comment" property="msgComment" jdbcType="VARCHAR"/>
+		<result column="msg_title_url" property="msgTitleUrl" jdbcType="VARCHAR"/>
+		<result column="create_by" property="createBy" jdbcType="VARCHAR"/>
+		<result column="create_time" property="createTime" jdbcType="DATE"/>
+		<result column="msg_country_id" property="createCountryId" jdbcType="VARCHAR"/>
+		<result column="create_party_id" property="createPartyId" jdbcType="VARCHAR"/>
+		<result column="msg_role_id" property="msgRoleId" jdbcType="VARCHAR"/>
+		<result column="msg_summary" property="msgSummary" jdbcType="VARCHAR"/>
+		<result column="msg_cover_url" property="msgCoverUrl" jdbcType="VARCHAR"/>
+		<result column="course_id" property="courseId" jdbcType="VARCHAR"/>
+		<result column="paper_id" property="paperId" jdbcType="VARCHAR"/>
+		<result column="summary_id" property="summaryId" jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	<resultMap id="userLoginMap" type="userLogin">
+		<result column="USER_LOGIN_ID" property="userLoginId" jdbcType="VARCHAR"/>
+		<result column="USER_NAME" property="userName" jdbcType="VARCHAR"/>
+		<result column="msg_state" property="msgState" jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	<resultMap id="SendMessageUserMap" type="SendMessageUser">
+		<result column="user_login_id" property="userLoginId" jdbcType="VARCHAR"/>
+		<result column="msg_role_id" property="msgRoleId" jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	<sql id="listwhere">
+		<where>
+			<if test="conditions!=null"> ${conditions}</if>
+		</where>
+	</sql>
+	
+	<select id="SelectMessageList" resultMap="messageMap">
+		SELECT id,p.PARTY_NAME as countryName,tmt.`msg_type`,tmt.`msg_title`,tmt.`msg_comment`,tmt.`create_by`,tmt.`create_time`,tmt.msg_role_id  
+		FROM t_msg_text tmt,party p 
+		<include refid="listwhere"/>
+		and p.party_id=tmt.msg_country_id
+		ORDER BY tmt.create_time desc limit #{start},#{limit};
+	</select>
+	
+	<select id="countMessage" resultType="java.lang.Integer">
+		SELECT COUNT(*) FROM t_msg_text tmt
+		<include refid="listwhere"/> 
+	</select>
+	
+	<select id="selectAllUser" parameterType="java.util.Map" resultMap="userLoginMap">
+		select ul.USER_LOGIN_ID as userLoginId,ul.USER_NAME as userName from user_login ul 
+	</select>
+	
+	
+	<insert id="insertMessage" parameterType="message">
+		INSERT INTO t_msg_text(msg_type,msg_title,msg_comment,msg_title_url,create_by,create_time,msg_country_id,create_party_id,msg_role_id,msg_summary,msg_cover_url,course_id) VALUE
+		(#{msgType},#{msgTitle},#{msgComment},#{msgTitleUrl},#{createBy},#{createTime},#{createCountryId},#{createPartyId},#{msgRoleId},#{msgSummary},#{msgCoverUrl},#{courseId});
+	</insert>
+	
+	<insert id="insertPaperMessage" parameterType="message">
+		INSERT INTO t_msg_text(msg_type,msg_title,msg_comment,msg_title_url,create_by,create_time,msg_country_id,create_party_id,msg_role_id,msg_summary,msg_cover_url,paper_id) VALUE
+		(#{msgType},#{msgTitle},#{msgComment},#{msgTitleUrl},#{createBy},#{createTime},#{createCountryId},#{createPartyId},#{msgRoleId},#{msgSummary},#{msgCoverUrl},#{paperId});
+	</insert>
+	
+	<insert id="insertSummaryMessage" parameterType="message">
+		insert into t_msg_text(msg_type,msg_title,msg_comment,msg_title_url,create_by,create_time,msg_country_id,create_party_id,msg_role_id,msg_summary,msg_cover_url,summary_id) value
+		(#{msgType},#{msgTitle},#{msgComment},#{msgTitleUrl},#{createBy},#{createTime},#{createCountryId},#{createPartyId},#{msgRoleId},#{msgSummary},#{msgCoverUrl},#{summaryId});
+	</insert>
+	
+	<delete id="deleteMessage" parameterType="message">
+		delete tmm.*,tmt.*  from t_msg_text tmt LEFT JOIN t_msg_mapping  tmm on tmt.msg_role_id=tmm.msg_role_id where tmt.id=#{id}
+	</delete>
+	
+	<sql id="userList">
+		<if test="searchStr!=null">${searchStr}</if>
+		<where>
+		    ul.`flag` = 0
+			<if test="countryId!=null">and ul.party_id=#{countryId} and ul.`ENABLED`='1'</if>
+			<!-- <if test="conditions!=null">and ${conditions}</if> -->
+		</where>
+	</sql>
+	
+	<select id="getUserByRoleName" resultMap="userLoginMap">
+	select DISTINCT	ul.USER_NAME as userName,ul.user_login_id as userLoginId from user_login ul 
+		<include refid="userList"/>
+	</select>
+	
+	<!-- <insert id="insertSendMessageUser" parameterType="SendMessageUser">
+		insert into t_msg_mapping(user_login_id,msg_role_id,msg_state) value (#{userLoginId},#{msgRoleId},#{msgState});
+	</insert> -->
+	
+	<insert id="insertSendMessageUser" parameterType="java.util.List">
+		insert into t_msg_mapping (user_login_id,msg_role_id,msg_state) 
+		values
+		<foreach collection="list" item="item" index="index"  separator=",">
+			(#{item.userLoginId},#{item.msgRoleId},#{item.msgState})
+		</foreach> 
+	</insert>
+	
+	<select id="selectUserByCondition" parameterType="java.lang.String" resultMap="SendMessageUserMap">
+		select ul.USER_NAME as userName,ul.USER_LOGIN_ID as userLoginId  from t_msg_mapping tmm,user_login ul where ul.USER_LOGIN_ID=tmm.user_login_id and tmm.msg_role_id=#{roleId}		
+	</select>
+	
+	<delete id="deleteMessageByUser" parameterType="Message">
+		delete from t_msg_mapping where msg_role_id=#{msgRoleId} and msg_state="0";
+	</delete>
+	
+	<delete id="deleteMessageByUser2" parameterType="Message">
+		delete from t_msg_mapping where msg_role_id=#{msgRoleId} and msg_state="1" and user_login_id=#{userLoginId};
+	</delete>
+	
+	<update id="updateMsgRoleId" parameterType="message">
+		update t_msg_text 
+		<set>
+			<!-- <if test="null!=msgRoleId and ''!=msgRoleId">
+				 msg_role_id=#{msgRoleId}, 
+			</if> -->
+			<if test="null!=msgTitle and ''!=msgTitle">
+				msg_title=#{msgTitle},
+			</if>
+			<if test="null!=msgSummary and ''!=msgSummary">
+				msg_summary=#{msgSummary},
+			</if>
+			<if test="null!=createCountryId and ''!=createCountryId">
+				msg_country_id=#{createCountryId}
+			</if>
+		</set>
+		where paper_id=#{paperId}
+	</update>
+	
+	<update id="updateMsgRoleIdByCourseId" parameterType="message">
+		update t_msg_text 
+		<set>
+			<!-- <if test="null!=msgRoleId and ''!=msgRoleId">
+				 msg_role_id=#{msgRoleId},
+			</if> -->
+			<if test="null!=msgTitle and ''!=msgTitle">
+				 msg_title=#{msgTitle},
+			</if>
+			<if test="null!=msgSummary and ''!=msgSummary">
+				msg_summary=#{msgSummary},
+			</if>
+			<if test="null!=msgCoverUrl and ''!=msgCoverUrl">
+				msg_cover_url=#{msgCoverUrl},
+			</if>
+			<if test="null!=msgComment and ''!=msgComment">
+				msg_comment=#{msgComment},
+			</if>
+			<if test="null!=createCountryId and ''!=createCountryId">
+				msg_country_id=#{createCountryId}
+			</if>
+		</set> 
+		where course_id=#{courseId}
+	</update>
+	
+	<update id="updateMsgBySummaryId" parameterType="message">
+		update t_msg_text 
+		<set>
+			<!-- <if test="null!=msgRoleId and ''!=msgRoleId">
+				 msg_role_id=#{msgRoleId},
+			</if> -->
+			<if test="null!=msgTitle and ''!=msgTitle">
+				 msg_title=#{msgTitle},
+			</if>
+			<if test="null!=msgSummary and ''!=msgSummary">
+				msg_summary=#{msgSummary},
+			</if>
+			<if test="null!=msgCoverUrl and ''!=msgCoverUrl">
+				msg_cover_url=#{msgCoverUrl},
+			</if>
+			<if test="null!=msgComment and ''!=msgComment">
+				msg_comment=#{msgComment},
+			</if>
+			<if test="null!=createCountryId and ''!=createCountryId">
+				msg_country_id=#{createCountryId}
+			</if>
+		</set> 
+		where summary_id=#{summaryId}
+	</update>
+	
+	<select id="selectUserLoginId" resultType="java.lang.String"  parameterType="java.lang.String">
+		select ul.USER_LOGIN_ID from user_login ul where ul.USER_NAME=#{userName} and ul.`ENABLED`='1'
+	</select>
+	
+	<select id="deleteMsgUrl" parameterType="java.lang.String">
+		UPDATE t_msg_text set msg_title_url=#{msgTitleUrl} where course_id=#{courseId}
+	</select>
+	
+<!-- 	<select id="getMsgRoleId" resultMap="messageMap">
+		select tmt.msg_role_id from t_msg_text tmt where tmt.course_id=#{courseId}
+	</select> -->
+	
+	<!-- <select id="getMsgRoleIdByPaperId" resultMap="messageMap">
+		select tmt.msg_role_id from t_msg_text tmt where tmt.paper_id=#{paperId}
+	</select> -->
+	
+	<select id="getMsgRoleIdByCourseId" parameterType="java.lang.String" resultType="java.lang.String">
+		select tmt.msg_role_id from t_msg_text tmt where tmt.course_id=#{courseId}
+	</select>
+	
+	<select id="getUserLoginByMsgRoleId" resultType="java.lang.String" parameterType="java.lang.String">
+		select tmm.user_login_id from t_msg_mapping tmm where tmm.user_login_id=#{userLoginId} and tmm.msg_role_id=#{msgRoleId} 
+	</select>
+	
+	<select id="getMsgRoleIdByPaperId" parameterType="java.lang.String" resultType="java.lang.String">
+		select tmt.msg_role_id from t_msg_text tmt where tmt.paper_id=#{paperId}
+	</select>
+	
+	<select id="getMsgRoleBySummaryId" parameterType="java.lang.String" resultType="java.lang.String">
+		select tmt.msg_role_id from t_msg_text tmt where tmt.summary_id=#{summaryId}
+	</select>
+	
+	<delete id="deleteReadCourse" parameterType="java.lang.String">
+		delete from course_readings where course_id=#{courseId}
+	</delete>
+	
+	<select id="getReadByCourseId" parameterType="java.lang.String" resultType="java.lang.Integer">
+		select count(*) from course_readings where course_id=#{courseId}
+	</select>
+	
+	<select id="deleteMsgUrlBySummaryId" parameterType="message">
+		UPDATE t_msg_text set msg_title_url=#{msgTitleUrl} where summary_id=#{summaryId}
+	</select>
+	
+	<delete id="deleteReadSummary" parameterType="java.lang.String">
+		delete from read_summary where summary_id=#{summaryId}
+	</delete>
+	
+	<select id="getReadBySummaryId" parameterType="java.lang.String" resultType="java.lang.Integer">
+		select count(*) from read_summary where summary_id=#{summaryId}
+	</select>
+	
+	<select id="userIsReadCourse" parameterType="java.lang.String" resultType="java.lang.Integer">
+		select count(*) from t_msg_text tmt,t_msg_mapping tmm where tmm.msg_role_id=tmt.msg_role_id 
+		and tmt.course_id=#{courseId} and tmm.user_login_id=#{userLoginId}  and tmm.msg_state="1";
+	</select>
+	
+	<select id="userIsReadSummary" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT COUNT(*) FROM t_msg_text tmt,t_msg_mapping tmm WHERE tmm.`msg_role_id`=tmt.`msg_role_id` 
+		AND tmt.`summary_id`=#{summaryId} AND tmm.`user_login_id`=#{userLoginId} AND tmm.`msg_state`=1
+	</select>
+	
+	<select id="selectAllUsers" resultMap="userLoginMap">
+		select DISTINCT ul.USER_NAME as userName,ul.USER_LOGIN_ID as userLoginId from user_login ul where  ul.`ENABLED`='1'  and ul.flag='0'		
+	</select>
+	
+	<select id="getUserByCondition" parameterType="java.lang.String" resultMap="userLoginMap">
+		select DISTINCT ul.USER_NAME as userName,ul.USER_LOGIN_ID as userLoginId from user_login ul,user_role_mapping urm where ul.ENABLED='1'   and ul.flag='0'
+		and urm.USER_LOGIN_ID=ul.USER_LOGIN_ID and urm.ROLE_ID like '%${roleName}%' 
+	</select>
+	
+	<select id="getUserByconditions" resultMap="userLoginMap">
+		select DISTINCT ul.USER_NAME as userName,ul.USER_LOGIN_ID as userLoginId from user_login ul,user_role_mapping urm where 
+		 ul.PARTY_ID in (select pa.PARTY_ID from party pa where pa.PARENT_PARTY_ID in (select p.PARTY_ID from party p where p.party_id=#{regionId}))
+		and urm.USER_LOGIN_ID=ul.USER_LOGIN_ID	and urm.ROLE_ID like '%${roleName}%' and ul.ENABLED='1'  and ul.flag='0'
+	</select>
+	
+	<select id="getUserByRegion" parameterType="java.lang.String" resultMap="userLoginMap">
+		select DISTINCT ul.USER_NAME as userName,ul.USER_LOGIN_ID as userLoginId from user_login ul where ul.PARTY_ID in 
+		(select pa.PARTY_ID from party pa where pa.PARENT_PARTY_ID in (select p.PARTY_ID from party p where p.party_id=#{regionId})) and ul.ENABLED='1'  and ul.flag='0'
+	</select>
+</mapper>

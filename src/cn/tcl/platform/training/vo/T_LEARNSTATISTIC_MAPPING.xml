@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.training.dao.LearnStatisticsDao">
+	<resultMap  id="learnStatisticsMap" type="learnStatistics">
+	  <result column="party_name" property="partyName" jdbcType="VARCHAR"/>
+	  <result column="course_id" property="courseId" jdbcType="INTEGER"/>
+	  <result column="user_login_id" property="userLogin" jdbcType="VARCHAR"/>
+	  <result column="customer_name" property="customerName" jdbcType="VARCHAR"/>
+	  <result column="user_name" property="userName" jdbcType="VARCHAR"/>
+	  <result column="user_mc_id" property="userWC" jdbcType="VARCHAR"/>
+	  <result column="role_name" property="roleName" jdbcType="VARCHAR"/>
+	  <result column="USER_WORK_NUM" property="userWorkNum" jdbcType="VARCHAR"/>
+	  <result column="read_time" property="visitTime" jdbcType="DATE"/>
+	  <result column="course_title" property="courseTittle" jdbcType="VARCHAR"/>
+	  <result column="read_state" property="readState" jdbcType="VARCHAR"/>
+	  <result column="course_score" property="operationScore" jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	<sql id='listwhere'>
+		<where>
+		<if test="conditions!=null">  ${conditions}</if>
+		<if test="levelOneTypeId!=null"> and tc.levelone_type_id=#{levelOneTypeId}</if>
+		<if test="levelTwoTypeId!=null"> and tc.leveltwo_type_id=#{levelTwoTypeId}</if>
+		<if test="levelThreeTypeId!=null"> and tc.levelthree_type_id=#{levelThreeTypeId}</if>
+		<if test="startdate!=null"> and ci.time &gt;=#{startdate}</if>
+		<if test="enddate!=null"> and ci.time &lt;=#{enddate}</if>
+		<if test="regionId!=null">
+			<choose>
+				<when test="regionId==2">
+					and p.PARENT_PARTY_ID in (select pa.PARTY_ID from party pa where pa.PARENT_PARTY_ID=#{regionId}  
+				and pa.flag=0)
+				</when>
+				<otherwise>
+					and p.PARENT_PARTY_ID=#{regionId}
+				</otherwise>
+			</choose>
+		</if>				
+		<if test="countryId!=null">and ul.PARTY_ID=#{countryId}</if>		
+		</where>
+	</sql>
+	
+	<select id="selectLearnList" resultMap="learnStatisticsMap">		
+			select p.PARTY_NAME,ul.USER_LOGIN_ID,ul.USER_NAME,ul.USER_MC_ID,r.ROLE_NAME,ul.USER_WORK_NUM,tc.course_title,tc.course_id,ci.time,cr.read_state, 
+			tc.levelone_type_id,tc.leveltwo_type_id,tc.levelthree_type_id,tc.corresponding_country_id,tc.corresponding_region_id,tc.corresponding_party_id,IFNULL(ci.course_score,0) as course_score 
+			from course_readings cr LEFT JOIN user_login ul on ul.USER_LOGIN_ID =cr.user_login_id LEFT JOIN user_role_mapping urm on urm.USER_LOGIN_ID=cr.user_login_id 
+			LEFT JOIN role r on r.ROLE_ID = urm.ROLE_ID LEFT JOIN training_course tc on tc.course_id=cr.course_id LEFT JOIN party p on p.PARTY_ID=ul.party_id 
+			LEFT JOIN course_integral ci on ci.course_id = cr.course_id and ci.user_login_id=cr.user_login_id					
+		<include refid="listwhere"/>
+		ORDER BY ci.time desc limit #{start},#{limit};						
+	</select>
+	
+	<!-- 查询俄罗斯国家统计汇总 -->
+	<sql id='ruslistwhere'>
+		<where>
+		<if test="conditions!=null">  ${conditions}</if>
+		<if test="levelOneTypeId!=null"> and tc.levelone_type_id=#{levelOneTypeId}</if>
+		<if test="levelTwoTypeId!=null"> and tc.leveltwo_type_id=#{levelTwoTypeId}</if>
+		<if test="levelThreeTypeId!=null"> and tc.levelthree_type_id=#{levelThreeTypeId}</if>
+		<if test="startdate!=null"> and ci.time &gt;=#{startdate}</if>
+		<if test="enddate!=null"> and ci.time &lt;=#{enddate}</if>
+		<if test="regionId!=null">and p.PARENT_PARTY_ID=#{regionId}</if>		
+		<if test="countryId!=null">and ul.PARTY_ID=#{countryId}</if>		
+		</where>
+	</sql>
+	
+	<select id="selectRussiaLearnList" resultMap="learnStatisticsMap">		
+			select p.PARTY_NAME,ul.USER_LOGIN_ID,ul.USER_NAME,ul.USER_MC_ID,c.CUSTOMER_NAME,r.ROLE_NAME,ul.USER_WORK_NUM,tc.course_title,tc.course_id,ci.time,cr.read_state, 
+			tc.levelone_type_id,tc.leveltwo_type_id,tc.levelthree_type_id,tc.corresponding_country_id,tc.corresponding_region_id,tc.corresponding_party_id,IFNULL(ci.course_score,0) as course_score 
+			from course_readings cr LEFT JOIN user_login ul on ul.USER_LOGIN_ID =cr.user_login_id LEFT JOIN user_role_mapping urm on urm.USER_LOGIN_ID=cr.user_login_id 
+			LEFT JOIN role r on r.ROLE_ID = urm.ROLE_ID LEFT JOIN training_course tc on tc.course_id=cr.course_id LEFT JOIN party p on p.PARTY_ID=ul.party_id 
+			LEFT JOIN course_integral ci on ci.course_id = cr.course_id and ci.user_login_id=cr.user_login_id
+			LEFT JOIN customer_saler_mapping csm on csm.user_login_id=ul.USER_LOGIN_ID
+			LEFT JOIN customer_info c on c.CUSTOMER_ID=csm.customer_id 					
+		<include refid="ruslistwhere"/>
+		ORDER BY ci.time desc limit #{start},#{limit};						
+	</select>
+	
+	<!-- <sql id='listExportwhere'>
+		<where>
+		<if test="conditions!=null">  ${conditions}</if>
+		<if test="levelOneTypeId!=null"> and tc.levelone_type_id=#{levelOneTypeId}</if>
+		<if test="levelTwoTypeId!=null"> and tc.leveltwo_type_id=#{levelTwoTypeId}</if>
+		<if test="levelThreeTypeId!=null"> and tc.levelthree_type_id=#{levelThreeTypeId}</if>
+		<if test="startdate!=null"> and cr.read_time &gt;=#{startdate}</if>
+		<if test="enddate!=null"> and cr.read_time &lt;=#{enddate}</if>
+		<if test="regionId!=null">and tc.corresponding_region_id=#{regionId}</if>		
+		<if test="countryId!=null">and tc.corresponding_party_id=#{countryId}</if>		
+		</where>
+	</sql> -->
+	<sql id='listExportwhere'>
+		<where>
+		<if test="conditions!=null">  ${conditions}</if>
+		<if test="levelOneTypeId!=null"> and v_s.levelone_type_id=#{levelOneTypeId}</if>
+		<if test="levelTwoTypeId!=null"> and v_s.leveltwo_type_id=#{levelTwoTypeId}</if>
+		<if test="levelThreeTypeId!=null"> and v_s.levelthree_type_id=#{levelThreeTypeId}</if>
+		<if test="startdate!=null"> and v_s.time &gt;=DATE_FORMAT(#{startdate},'%y-%m-%d %H:%i:%s')</if>
+		<if test="enddate!=null"> and v_s.time &lt;=DATE_FORMAT(#{enddate},'%y-%m-%d %H:%i:%s')</if>
+		<if test="regionId!=null">
+			<choose>
+				<when test="regionId==2">
+					and v_s.PARENT_PARTY_ID in (select pa.PARTY_ID from party pa where pa.PARENT_PARTY_ID=#{regionId}  
+				and pa.flag=0)
+				</when>
+				<otherwise>
+					and v_s.PARENT_PARTY_ID=#{regionId}
+				</otherwise>
+			</choose>
+		</if>						
+		<if test="countryId!=null">and v_s.party_id=#{countryId}</if>		
+		</where>
+	</sql>
+	<!-- 查询阅读最新的一条记录 -->
+	<select id="countLearn" resultType="java.lang.Integer">
+		select count(*) from 
+		course_readings cr LEFT JOIN user_login ul on ul.USER_LOGIN_ID =cr.user_login_id 
+		LEFT JOIN user_role_mapping urm on urm.USER_LOGIN_ID=cr.user_login_id 
+		LEFT JOIN role r on r.ROLE_ID = urm.ROLE_ID 
+		LEFT JOIN training_course tc on tc.course_id=cr.course_id 
+		LEFT JOIN party p on p.PARTY_ID=ul.party_id 
+		LEFT JOIN course_integral ci on ci.course_id = cr.course_id and ci.user_login_id=cr.user_login_id
+		<include refid="listwhere"/>
+	</select>
+	
+	<!-- <select id="searchExportLearn" resultMap="learnStatisticsMap">
+		select p.PARTY_NAME,ul.USER_LOGIN_ID,ul.USER_NAME,ul.USER_MC_ID,r.ROLE_NAME,ul.USER_WORK_NUM,tc.course_title,tc.course_id,cr.read_time,cr.read_state, 
+			tc.levelone_type_id,tc.leveltwo_type_id,tc.levelthree_type_id,tc.corresponding_country_id,tc.corresponding_region_id,tc.corresponding_party_id,IFNULL(ci.course_score,0) as course_score
+			from course_readings cr LEFT JOIN user_login ul on ul.USER_LOGIN_ID =cr.user_login_id LEFT JOIN user_role_mapping urm on urm.USER_LOGIN_ID=cr.user_login_id 
+			LEFT JOIN role r on r.ROLE_ID = urm.ROLE_ID LEFT JOIN training_course tc on tc.course_id=cr.course_id LEFT JOIN party p on p.PARTY_ID=ul.party_id
+			LEFT JOIN course_integral ci on ci.course_id = cr.course_id and ci.user_login_id=cr.user_login_id					
+		<include refid="listExportwhere"/>
+		ORDER BY cr.read_time desc;
+	</select>	 -->
+	<select id="searchExportLearn" resultMap="learnStatisticsMap">
+		select  v_s.*,v_a.cont,concat(Round(v_a.cont/v_s.isRead*100),'%')percent from (
+		select t.party_name,t.party_id,t.user_login_id,t.user_name,t.user_mc_id,t.role_name,t.USER_WORK_NUM,t.course_title,t.course_id,DATE_FORMAT(t.time,'%y-%m-%d %H:%i:%s') as time,t.read_state, 
+					t.levelone_type_id,t.leveltwo_type_id,t.levelthree_type_id,t.corresponding_country_id,t.PARENT_PARTY_ID,t.corresponding_party_id,t.course_score,
+					t.isRead,IFNULL(t1.onlineTime,0) as onlineTime from (
+		select p.PARTY_NAME,ul.party_id,ul.USER_LOGIN_ID,ul.USER_NAME,ul.USER_MC_ID,r.ROLE_NAME,ul.USER_WORK_NUM,tc.course_title,tc.course_id,ci.time,cr.read_state, 
+					tc.levelone_type_id,tc.leveltwo_type_id,tc.levelthree_type_id,tc.corresponding_country_id,p.PARENT_PARTY_ID,tc.corresponding_party_id,IFNULL(ci.course_score,0) as course_score,
+					<!-- (select count(tmm.user_login_id) from t_msg_text tmt,t_msg_mapping tmm where tmt.msg_role_id=tmm.msg_role_id and cr.course_id=tmt.course_id GROUP BY cr.user_login_id,cr.course_id
+		) as isRead -->
+					a.isRead
+					from course_readings cr LEFT JOIN user_login ul on ul.USER_LOGIN_ID =cr.user_login_id LEFT JOIN user_role_mapping urm on urm.USER_LOGIN_ID=cr.user_login_id 
+					LEFT JOIN role r on r.ROLE_ID = urm.ROLE_ID LEFT JOIN training_course tc on tc.course_id=cr.course_id LEFT JOIN party p on p.PARTY_ID=ul.party_id
+					LEFT JOIN course_integral ci on ci.course_id = cr.course_id and ci.user_login_id=cr.user_login_id
+					LEFT JOIN (select count(tmm.user_login_id) isRead,tmt.course_id from t_msg_text tmt,t_msg_mapping tmm where tmt.msg_role_id=tmm.msg_role_id GROUP BY tmt.course_id)a on a.course_id=cr.course_id
+					)t
+					left join (select DISTINCT crm.user_login_id, cr.course_id,sum(crm.online_time) as onlineTime from course_read_mapping crm,course_readings cr where cr.user_login_id=crm.user_login_id and cr.course_id=crm.course_id GROUP BY crm.user_login_id,crm.course_id  )t1 on t1.user_login_id=t.user_login_id and t.course_id=t1.course_id
+
+		) v_s
+	left JOIN (select count(*) cont,cr.course_id from course_readings cr group by cr.course_id) v_a on v_s.course_id = v_a.course_id					
+	<include refid="listExportwhere"/>
+	ORDER BY v_s.time desc;
+	</select>
+	
+	<!-- 导出俄罗斯学习汇总 -->
+	<select id="searchRusExportLearn" resultMap="learnStatisticsMap">
+		select  v_s.*,v_a.cont,concat(Round(v_a.cont/v_s.isRead*100),'%')percent from (
+		select t.party_name,t.party_id,t.user_login_id,t.user_name,t.user_mc_id,t.customer_name,t.role_name,t.USER_WORK_NUM,t.course_title,t.course_id,DATE_FORMAT(t.time,'%y-%m-%d %H:%i:%s') as time,t.read_state, 
+					t.levelone_type_id,t.leveltwo_type_id,t.levelthree_type_id,t.corresponding_country_id,t.PARENT_PARTY_ID,t.corresponding_party_id,t.course_score,
+					t.isRead,IFNULL(t1.onlineTime,0) as onlineTime from (
+		select p.PARTY_NAME,ul.party_id,ul.USER_LOGIN_ID,ul.USER_NAME,ul.USER_MC_ID,c.CUSTOMER_NAME,r.ROLE_NAME,ul.USER_WORK_NUM,tc.course_title,tc.course_id,ci.time,cr.read_state, 
+					tc.levelone_type_id,tc.leveltwo_type_id,tc.levelthree_type_id,tc.corresponding_country_id,p.PARENT_PARTY_ID,tc.corresponding_party_id,IFNULL(ci.course_score,0) as course_score,
+					a.isRead
+					from course_readings cr LEFT JOIN user_login ul on ul.USER_LOGIN_ID =cr.user_login_id LEFT JOIN user_role_mapping urm on urm.USER_LOGIN_ID=cr.user_login_id 
+					LEFT JOIN role r on r.ROLE_ID = urm.ROLE_ID LEFT JOIN training_course tc on tc.course_id=cr.course_id LEFT JOIN party p on p.PARTY_ID=ul.party_id
+					LEFT JOIN course_integral ci on ci.course_id = cr.course_id and ci.user_login_id=cr.user_login_id
+					LEFT JOIN customer_saler_mapping csm on csm.user_login_id=ul.USER_LOGIN_ID
+					LEFT JOIN customer_info c on c.CUSTOMER_ID=csm.customer_id
+					LEFT JOIN (select count(tmm.user_login_id) isRead,tmt.course_id from t_msg_text tmt,t_msg_mapping tmm where tmt.msg_role_id=tmm.msg_role_id GROUP BY tmt.course_id)a on a.course_id=cr.course_id				
+					)t
+					left join (select DISTINCT crm.user_login_id, cr.course_id,sum(crm.online_time) as onlineTime from course_read_mapping crm,course_readings cr where cr.user_login_id=crm.user_login_id and cr.course_id=crm.course_id GROUP BY crm.user_login_id,crm.course_id  )t1 on t1.user_login_id=t.user_login_id and t.course_id=t1.course_id
+
+		) v_s
+	left JOIN (select count(*) cont,cr.course_id from course_readings cr group by cr.course_id) v_a on v_s.course_id = v_a.course_id					
+	<include refid="listExportwhere"/>
+	ORDER BY v_s.time desc;
+	</select>
+</mapper> 

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.coefficient.dao.CoefficientDao">
+
+	<resultMap id="map" type="Coefficient">
+		<result column="country" property="country" jdbcType="VARCHAR" />
+		<result column="countryName" property="countryName" jdbcType="VARCHAR" />
+		<result column="all_products_coefficient" property="all" jdbcType="VARCHAR" />
+		<result column="core_products_coefficient" property="core" jdbcType="VARCHAR" />
+		<result column="file" property="file" jdbcType="VARCHAR" />
+		<result column="create_by" property="user" jdbcType="VARCHAR" />
+		<result column="ctime" property="ctime" jdbcType="VARCHAR" />
+		<result column="Is_using" property="isUsing" jdbcType="VARCHAR" />
+	</resultMap>
+
+
+
+	<sql id="listWhere">
+		<if test="searchStr != null"> ${searchStr} </if>
+		<where>
+			<if test="conditions != null"> and ${conditions} </if>
+		</where>
+	</sql>
+
+<insert id="saveCoefficient" parameterType="Coefficient">
+  	insert into coefficient_record(country,all_products_coefficient,core_products_coefficient,file,create_by,ctime,is_using) 
+  	values(#{country},#{all},#{core},#{file},#{user},#{ctime},#{isUsing});
+ </insert>
+ 
+ 
+  <update id="updateCoefficient"  parameterType="Coefficient">
+ 	UPDATE Coefficient set all_products_coefficient=#{all},core_products_coefficient=#{core}
+ 	where country=#{country}
+  </update>
+  
+  <update id="updateCoefficientByUsing"  parameterType="Coefficient">
+ 	UPDATE coefficient_record set is_using=""
+ 	where country=#{country}
+  </update>
+  
+
+ <select id="selectCoefficient" resultMap="map" parameterType="Coefficient">
+    SELECT  co.`country`,  pa.`PARTY_NAME` AS countryName,co.`all_products_coefficient`,co.`core_products_coefficient`,co.`create_by`,co.`ctime`
+    ,co.`file`,co.Is_using
+     FROM coefficient_record  co
+	JOIN party pa ON pa.`PARTY_ID`=co.`country`
+	  <include refid="listWhere"/>
+		ORDER BY pa.`PARTY_NAME`,co.`ctime` DESC
+		<if test="start != null"> 
+		limit #{start},#{limit}
+		</if>
+		
+		
+  </select>
+  
+   <select id="selectCoefficientEE"  resultType="int" parameterType="Coefficient">
+    SELECT count(*)
+     FROM coefficient_record  co
+	JOIN party pa ON pa.`PARTY_ID`=co.`country`
+	  <include refid="listWhere"/>
+		
+		
+  </select>
+  
+  
+  
+  
+   <select id="selectCoefficientFinally" resultType="int"  parameterType="Coefficient">
+    SELECT count(*)
+     FROM coefficient  co
+	JOIN party pa ON pa.`PARTY_ID`=co.`country`
+	    	<include refid="listWhere"/>
+  </select>
+  
+  <insert id="saveCoefficientFinally" parameterType="Coefficient">
+  	insert into coefficient(country,all_products_coefficient,core_products_coefficient,ctime) 
+  	values(#{country},#{all},#{core},#{ctime});
+ </insert>
+ 
+  <select id="countCoefficient"    resultType="int" parameterType="Coefficient">
+    SELECT count(*) FROM coefficient_record  co
+	JOIN party pa ON pa.`PARTY_ID`=co.`country`
+    	<include refid="listWhere"/>
+
+  </select>
+  
+  
+
+</mapper>

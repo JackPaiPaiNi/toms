@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.barcode.dao.IBarcodeDao" >
+
+ <resultMap id="BarcodeMap" type="Barcode" >
+ 	 <result column="ID" property="id" jdbcType="VARCHAR" />
+ 	 <result column="BARCODE" property="barcode" jdbcType="VARCHAR" />
+ 	 <result column="HQ_MODEL" property="hqModel" jdbcType="VARCHAR" />
+	 <result column="CTIME" property="ctime" jdbcType="DATE" />
+ </resultMap>
+
+<sql id="listWhere">
+	<where>
+		<if test="keyword != null"> and instr(tb.barcode,'${keyword}') > 0 or instr(tb.hq_model,'${keyword}') > 0</if>
+	</where>
+</sql>
+
+<select id="selectBarcodes" resultMap="BarcodeMap">
+	select tb.id,tb.barcode,tb.hq_model,DATE_FORMAT(tb.ctime,'%Y-%m-%d %H:%i:%s') as ctime from t_barcode tb
+ 	<include refid="listWhere"/>
+	order by tb.ctime desc
+</select>
+
+<select id="countBarcodes" resultType="int">
+	select count(1) from t_barcode tb 
+	<include refid="listWhere"/>
+</select>
+
+<select id="selectBarcodeById" resultMap="BarcodeMap" resultType="Barcode">
+	select tb.id,tb.barcode,tb.hq_model,DATE_FORMAT(tb.ctime,'%Y-%m-%d %H:%i:%s') as ctime from t_barcode tb
+	where 1=1 and tb.id = #{id};
+</select>
+
+<update id="editBarcodeBean" parameterType="Barcode">
+	update t_barcode tb set tb.barcode = #{barcode},tb.hq_model = #{hqModel}
+	where 1=1 and tb.id = #{id};
+</update>
+
+<insert id="addBarcode" parameterType="Barcode">
+	insert into t_barcode(barcode,hq_model,ctime) 
+	values (#{barcode},#{hqModel},#{ctime});
+</insert>
+
+<delete id="deleteBarcode" parameterType="Barcode">
+	delete from t_barcode where id = #{id};
+</delete>
+
+
+
+</mapper>

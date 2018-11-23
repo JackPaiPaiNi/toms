@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans 
+           http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context-2.5.xsd
+           http://www.springframework.org/schema/aop
+           http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+           http://www.springframework.org/schema/tx
+           http://www.springframework.org/schema/tx/spring-tx-2.5.xsd">
+
+	<!-- 加载本文件要读取的配置 -->
+	<!-- <context:property-placeholder location="classpath:config.properties" />
+	<context:property-placeholder location="classpath:trainmodule.properties"/>  -->
+	
+	<!-- 将多个配置文件读取到容器中,交给spring管理 -->
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				  <value>classpath:config.properties</value>
+			<!--	<value>classpath:config_sc.properties</value> -->
+				<value>classpath:trainmodule.properties</value>
+			</list>
+		</property>
+	</bean>
+
+	<!-- 配置数据源 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="${DATABASE.DriverClassName}" />
+		<property name="url" value="${DATABASE.URL}" />
+		<property name="username" value="${DATABASE.UserName}" />
+		<property name="password" value="${DATABASE.Password}" />
+		<!-- Connection Pooling Info -->
+        <property name="maxActive" value="30" />  
+        <property name="maxIdle" value="30" /> 
+        <property name="minIdle" value="10" /> 
+         <property name="initialSize" value="10" />
+        <property name="defaultAutoCommit" value="true" />  
+        <!-- 连接Idle一个小时后超时 -->  
+        <property name="removeAbandoned" value="true"/> 
+        <property name="timeBetweenEvictionRunsMillis" value="6000" />  
+        <property name="minEvictableIdleTimeMillis" value="6000" /> 
+        <property name="testOnBorrow" value="true" />
+        <property name="testOnReturn" value="false"/> 
+	</bean>
+	
+	<!-- Spring开启注解配置 -->
+	<context:annotation-config />
+	
+	<!-- Spring扫描service层 -->
+	<context:component-scan base-package="cn.tcl" />
+	
+	<!-- 开启事务注解驱动  @Transactional -->  
+    <tx:annotation-driven />
+    
+    <!-- Spring事务管理器 -->
+    <bean id="transactionManager"
+        class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+	
+	<!-- 创建SqlSessionFactory -->
+	<bean id="sqlSessionFactory" class="cn.tcl.mybatisext.MySqlSessionFactoryBean">
+  		<property name="dataSource" ref="dataSource" />
+  		<property name="mapperLocations" value="classpath:cn/tcl/**/vo/*.xml" />
+  		<property name="typeAliasesPackage" value="cn.tcl.**.vo" />
+	</bean>
+	
+	<!-- 自动扫描映射器 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+		<property name="basePackage" value="cn.tcl.**.dao" />
+	</bean>
+	
+	<import resource="classpath:applicationContext-ws.xml"/>
+</beans>

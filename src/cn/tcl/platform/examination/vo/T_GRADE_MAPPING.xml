@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.examination.dao.IGradeDao" >
+  	
+  	<resultMap type="Grade" id="GradeMap">
+  		<result column="USER_LOGIN_NAME" property="userName" jdbcType="VARCHAR"/>
+  		<result column="PARTY_NAME" property="partyName" jdbcType="VARCHAR"/>
+  		<result column="USER_OFFICE" property="officeName" jdbcType="VARCHAR"/>
+  		<result column="USER_REGION" property="regionName" jdbcType="VARCHAR"/>
+  		<result column="TOTAL_SCORE" property="totalScore" jdbcType="INTEGER"/>
+  		<result column="GRADE" property="grade" jdbcType="INTEGER"/>
+  		<result column="SUB_TIME" property="subTime" jdbcType="VARCHAR"/>
+  		<result column="E_PAPER_HEAD" property="paperHead" jdbcType="VARCHAR"/>
+  	</resultMap>
+ 	
+    <select id = "exportQueryTempGreadData" parameterType="java.util.Map" resultMap="GradeMap">
+		 SELECT tg.`user_login_name`,
+		 p.`PARTY_NAME`,
+		 tg.`total_score`,
+		 (SELECT p.`PARTY_NAME` FROM party p WHERE p.`PARTY_ID` = tg.`user_region` ) user_region,
+		 (SELECT p.`PARTY_NAME` FROM party p WHERE p.`PARTY_ID` = tg.`user_office` ) user_office,
+		 tg.`grade`,
+		 tg.`sub_time`,
+		 oep.`e_paper_head`
+		 FROM `temp_grade` tg LEFT JOIN `ot_exam_paper` oep ON tg.`e_paper_id` = oep.id
+		 LEFT JOIN party p ON tg.`user_country` = p.`PARTY_ID` AND p.`PARTY_ID` = p.`COUNTRY_ID`
+		 WHERE 1=1 ${condition}
+		 ORDER BY tg.`sub_time` DESC 
+ 	</select>
+ 	
+ 	 <select id = "queryTempGreadData" parameterType="java.util.Map" resultMap="GradeMap">
+		 SELECT tg.`user_login_name`,
+		 p.`PARTY_NAME`,
+		 tg.`total_score`,
+		 (SELECT p.`PARTY_NAME` FROM party p WHERE p.`PARTY_ID` = tg.`user_region` ) user_region,
+		 (SELECT p.`PARTY_NAME` FROM party p WHERE p.`PARTY_ID` = tg.`user_office` ) user_office,
+		 tg.`grade`,
+		 tg.`sub_time`,
+		 oep.`e_paper_head`
+		 FROM `temp_grade` tg LEFT JOIN `ot_exam_paper` oep ON tg.`e_paper_id` = oep.id
+		 LEFT JOIN party p ON tg.`user_country` = p.`PARTY_ID` AND p.`PARTY_ID` = p.`COUNTRY_ID`
+		 WHERE 1=1 ${condition}
+		 ORDER BY tg.`sub_time` DESC LIMIT #{start},#{limit}
+ 	</select>
+ 	
+ 	 <select id = "queryTempGreadCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+		 SELECT count(tg.`user_login_name`)
+		 FROM `temp_grade` tg LEFT JOIN `ot_exam_paper` oep ON tg.`e_paper_id` = oep.id
+		 LEFT JOIN party p ON tg.`user_country` = p.`PARTY_ID` AND p.`PARTY_ID` = p.`COUNTRY_ID`
+		 WHERE 1=1 ${condition}
+ 	</select>
+
+</mapper>

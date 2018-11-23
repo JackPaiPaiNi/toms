@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.examination.dao.IPaperDao" >
+  	<resultMap type="paper" id="paperMap">
+  		<result column="id" property="id" jdbcType="INTEGER"/>
+  	</resultMap>
+  
+   <sql id = "PaperWhere">
+   	    <if test="countryId != '' and countryId != null">AND pa.`COUNTRY_ID` = #{countryId}</if> 
+   	    <if test="keyword != '' and keyword != null">AND oep.`e_paper_head` like CONCAT('%', #{keyword},'%')</if> 
+		 <if test="isHq == 'false'">and oep.country_id = #{countryId}</if>
+		 <if test="userLoginId !=null and userLoginid !=''">
+  	    	and ul.party_id in ( select DISTINCT b.PERMISSION_VALUE
+		from user_role_mapping a,role_data_permission b,party p
+		where a.ROLE_ID = b.ROLE_ID
+		and b.PERMISSION_TYPE = 'party'
+		and b.permission_value=p.party_id
+		and p.STATUS=1
+		and a.USER_LOGIN_ID = #{userLoginId}) 
+  	    </if>
+   </sql>
+    
+   <sql id ="examWhere">
+   	 	<if test="conditions != '' and conditions != null"> ${conditions} </if>
+   </sql>
+   
+   <select id="selectPaperData" parameterType="java.util.Map" resultType="Paper">
+       SELECT oep.`id` id,
+       oep.`e_paper_head` headline,
+       oep.`test_time` testTime,
+       oep.`start_test` sTime,
+       oep.`end_test` eTime,
+       oep.mui_num muiUum,
+       oep.sin_num sinNum,
+       oep.jud_num judNum,
+       ul.`USER_NAME` userName,
+       pa.`PARTY_NAME` partyName,
+       oep.`create_time` createTime,
+       oep.`categories` categoriesId,
+       oep.`medium` mediumsId,
+       oep.`sma_class` smaClassId,
+       oep.country_id countryId,
+       oem.qr_code AS QRCode,
+       oem.`code_url` codeUrl,
+       tmt.msg_role_id AS msgRoleId,
+       (SELECT ct.`type_ename` FROM course_type ct WHERE ct.`type_id`= oep.`categories`) categories,
+       (SELECT ct.`type_ename` FROM course_type ct WHERE ct.`type_id`= oep.`medium`) mediums,
+       (SELECT ct.`type_ename` FROM course_type ct WHERE ct.`type_id`= oep.`sma_class`) smaClass
+	   FROM `ot_exam_paper` oep,ot_exam_mapping oem,t_msg_text tmt,user_login ul,party pa WHERE 1=1 AND 
+	   oep.`status` = 0 AND oep.id=oem.p_id AND tmt.paper_id=oep.id  
+	   AND ul.`USER_LOGIN_ID` = oep.`user_login_id` AND pa.`PARTY_ID` = ul.`PARTY_ID`
+	   <include refid="PaperWhere"/>
+	   ORDER BY oep.`c_time` DESC limit #{start},#{limit}
+    </select>
+    
+    <select id="selectPaperDataCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+       <!-- SELECT count(*) FROM `ot_exam_paper` oep WHERE 1=1 -->
+       SELECT count(*) FROM `ot_exam_paper` oep,ot_exam_mapping oem,t_msg_text tmt,user_login ul,party pa WHERE 1=1 AND 
+	   oep.`status` = 0 AND oep.id=oem.p_id AND tmt.paper_id=oep.id  
+	   AND ul.`USER_LOGIN_ID` = oep.`user_login_id` AND pa.`PARTY_ID` = ul.`PARTY_ID`
+       <include refid="PaperWhere"/>
+    </select>
+    
+    <insert id="insertPaperData" parameterType="Paper">
+    	INSERT INTO ot_exam_paper (
+		e_paper_head,user_login_id,test_time,start_test,end_test,STATUS,categories,MEDIUM,sma_class,mui_num,sin_num,jud_num,country_id,create_time
+		)VALUES
+		(#{headline},#{userId},#{testTime},#{sTime},#{eTime},"0",#{categoriesId},#{mediumsId},#{smaClassId},#{muiUum},#{sinNum},#{judNum},#{countryId},#{createTime})
+    	<selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+				SELECT LAST_INSERT_ID() as id
+		</selectKey>
+    </insert>
+    
+    <update id="updatePaperData" parameterType="Paper">
+    	UPDATE ot_exam_paper SET 
+    	     e_paper_head = #{headline},
+			 user_login_id = #{userId},
+			 test_time = #{testTime},
+			 start_test = #{sTime},
+			 end_test = #{eTime},
+			 categories = #{categoriesId},
+			 sma_class = #{smaClassId},
+			 MEDIUM = #{mediumsId},
+			 mui_num = #{muiUum},
+			 sin_num = #{sinNum},
+			 jud_num = #{judNum},
+			 country_id = #{countryId}
+			 WHERE id = #{id}
+    </update>
+    
+    <update id="updatePaperEndDate" parameterType="Paper">
+    	UPDATE ot_exam_paper SET end_test = #{eTime} WHERE id = #{id}
+    </update>
+    
+    <delete id="deletePaperData" parameterType="java.lang.Integer">
+    	DELETE FROM ot_exam_paper WHERE id = #{id}
+    </delete>
+    
+    <delete id="deletePaperTopicData" parameterType="java.lang.String">
+    	DELETE FROM `ot_top_ep_mapping` WHERE e_paper_id =  #{id}
+    </delete>
+    
+    <select id="selectTopicLIMIT" resultType="Paper">
+    	SELECT oqb.`id` topicId FROM `ot_ques_bank` oqb WHERE oqb.`type` = #{type} 
+    	 <include refid="examWhere"/> and oqb.country_id = #{countryId} LIMIT #{sLimit},1
+    </select>
+    
+    <select id="selectTopicTypeCount"  resultType="java.lang.Integer">
+    	 SELECT COUNT(*) FROM `ot_ques_bank` oqb WHERE oqb.`type` = #{type} 
+    	 <include refid="examWhere"/> and oqb.country_id = #{countryId}
+    </select>
+    
+    <select id = "selectPaperId" resultType="java.lang.Integer">
+ 		SELECT LAST_INSERT_ID() AS id
+ 	</select>
+ 	
+    <select id = "selectTopicByPaperId" parameterType="java.lang.String" resultType="Examination">
+ 		SELECT oqb.`ex_questions` exQuestions ,
+ 				oqb.`id`,
+ 			   oqb.`type` cType ,
+ 			   oqb.`al_answers_a` alAnswersA,
+		       oqb.`al_answers_b` alAnswersB,
+		       oqb.`al_answers_c` alAnswersC,
+		       oqb.`al_answers_d` alAnswersD,
+		       oqb.`al_answers_e` alAnswersE,
+		       oqb.`al_answers_f` alAnswersF,
+		       oqb.`al_answers_g` alAnswersG
+ 			   FROM `ot_exam_paper` oep ,
+ 		ot_top_ep_mapping otem,ot_ques_bank oqb WHERE oep.`id` = otem.`e_paper_id` AND 
+ 		otem.`e_questions_id` = oqb.`id` AND oep.id = #{id}
+ 		ORDER BY oqb.`type`,oqb.`c_time` DESC
+ 	</select>
+ 	
+ 	<insert id="insertPaperTopicData" parameterType="java.util.List" >
+		INSERT INTO `ot_top_ep_mapping` (e_questions_id,e_paper_id) VALUES
+		<foreach collection="list" item="item" separator=",">
+			(#{item.topicId},#{item.id})
+		</foreach>
+	</insert>
+	
+	<insert id="insertQRcode" parameterType="Paper">
+		insert into ot_exam_mapping (p_id,qr_code,code_url) values (#{id},#{QRCode},#{codeUrl});
+	</insert>
+	
+	<delete id="deleteQRcode" parameterType="java.lang.Integer">
+		delete from ot_exam_mapping where p_id=#{p_id}
+	</delete>
+
+	
+	<select id="isSpecifiedTime" parameterType="java.util.Map" resultType="java.lang.Integer">
+		<![CDATA[
+		SELECT COUNT(*) FROM `ot_exam_paper` oep WHERE oep.`id` = #{p_id} AND oep.`start_test` <= #{currentTime}  
+							      AND oep.`status` = 0
+							      ]]>
+	</select>
+	
+	<select id="isSpecifiedEndTime" parameterType="java.util.Map" resultType="java.lang.Integer">
+		<![CDATA[
+		SELECT COUNT(*) FROM `ot_exam_paper` oep WHERE oep.`id` = #{p_id} AND oep.`end_test` > #{currentTime}  
+							      AND oep.`status` = 0
+							      ]]>
+	</select>
+	
+	<select id="updateEndTime" parameterType="java.util.Map">
+		UPDATE ot_exam_paper SET end_test = #{eTime},user_login_id = #{userId} WHERE id = #{id}
+	</select>
+
+	<select id="deletePaperMsg" parameterType="java.lang.Integer">
+		delete tmm.*,tmt.*  from t_msg_text tmt LEFT JOIN t_msg_mapping  tmm on tmt.msg_role_id=tmm.msg_role_id 
+		LEFT JOIN training_course tc on tc.course_id=tmt.course_id	where tmt.paper_id=#{id}
+	</select>
+	
+	<select id="selectExaminationSituation" parameterType="java.lang.String" resultType="Analysis">
+			SELECT 
+			v_t_u.countryName,
+			v_t_u.userId,
+			v_t_u.userName,
+			v_t_u.wechat,
+			v_t_u.roleName,
+			v_t_u.workNum,
+			v_t_u.startTest,
+			v_t_u.endTest,
+			v_t_u.testTime,
+			v_t_u.title,
+			v_t_u.score,
+			IFNULL(v_msg.nops,0) nops,
+			IFNULL(v_msg.anos,0) anos,
+			v_t_u.subTimes
+		 FROM (
+		SELECT  pa.`PARTY_NAME` countryName,
+			ul.`USER_LOGIN_ID` userId,
+			ul.`USER_NAME` userName,
+			ul.USER_MC_ID wechat,
+			r.`ROLE_NAME` roleName,
+			ul.USER_WORK_NUM workNum,
+			oep.`start_test` startTest,
+			oep.`end_test` endTest,
+			oep.`test_time` testTime,
+			oep.`e_paper_head` title,
+			og.`grade` score,
+			og.`e_paper_id`,
+			og.`sub_time` subTimes
+		FROM `ot_grade` og,user_login ul,party pa,user_role_mapping urm,role r,ot_exam_paper oep
+		WHERE og.`user_login_id` = ul.`USER_LOGIN_ID`
+		AND ul.`PARTY_ID` = pa.`PARTY_ID`
+		AND ul.`USER_LOGIN_ID` = urm.`USER_LOGIN_ID`
+		${conditions}
+		AND urm.`ROLE_ID` = r.`ROLE_ID` 
+		AND og.`e_paper_id` = oep.`id`) v_t_u LEFT JOIN 
+		(
+		SELECT v_msg_1.paper_id,v_msg_1.cut nops,IFNULL(v_msg_2.cnt,0) anos FROM 
+		(SELECT COUNT(*) cut,tmt.`paper_id` FROM `t_msg_mapping` tmm,`t_msg_text` tmt
+		WHERE tmm.`msg_role_id` = tmt.`msg_role_id` 
+		AND tmt.`paper_id` IS NOT NULL
+		GROUP BY tmt.`paper_id`) v_msg_1 LEFT JOIN
+		  
+		(
+		SELECT COUNT(v_og.e_paper_id) cnt,e_paper_id paper_id  FROM (SELECT og.`e_paper_id`,og.`user_login_id` FROM 
+		`ot_grade` og  GROUP BY og.`e_paper_id`,og.`user_login_id`)v_og GROUP BY v_og.e_paper_id
+		) v_msg_2 ON v_msg_1.paper_id = v_msg_2.paper_id) v_msg
+		 ON v_t_u.e_paper_id = v_msg.paper_id
+		 ORDER BY v_t_u.subTimes desc,v_t_u.title desc limit #{start},#{limit}
+	</select>
+	
+	
+	<select id="selectExaminationExport" parameterType="java.lang.String" resultType="Analysis">
+			SELECT 
+			v_t_u.countryName,
+			v_t_u.userId,
+			v_t_u.userName,
+			v_t_u.wechat,
+			v_t_u.roleName,
+			v_t_u.workNum,
+			v_t_u.startTest,
+			v_t_u.endTest,
+			v_t_u.testTime,
+			v_t_u.title,
+			v_t_u.score,
+			IFNULL(v_msg.nops,0) nops,
+			IFNULL(v_msg.anos,0) anos,
+			v_t_u.subTimes
+		 FROM (
+		SELECT  pa.`PARTY_NAME` countryName,
+			ul.`USER_LOGIN_ID` userId,
+			ul.`USER_NAME` userName,
+			ul.USER_MC_ID wechat,
+			r.`ROLE_NAME` roleName,
+			ul.USER_WORK_NUM workNum,
+			oep.`start_test` startTest,
+			oep.`end_test` endTest,
+			oep.`test_time` testTime,
+			oep.`e_paper_head` title,
+			og.`grade` score,
+			og.`e_paper_id`,
+			og.`sub_time` subTimes
+		FROM `ot_grade` og,user_login ul,party pa,user_role_mapping urm,role r,ot_exam_paper oep
+		WHERE og.`user_login_id` = ul.`USER_LOGIN_ID`
+		AND ul.`PARTY_ID` = pa.`PARTY_ID`
+		AND ul.`USER_LOGIN_ID` = urm.`USER_LOGIN_ID`
+		${conditions}
+		AND urm.`ROLE_ID` = r.`ROLE_ID` 
+		AND og.`e_paper_id` = oep.`id`) v_t_u LEFT JOIN 
+		(
+		SELECT v_msg_1.paper_id,v_msg_1.cut nops,IFNULL(v_msg_2.cnt,0) anos FROM 
+		(SELECT COUNT(*) cut,tmt.`paper_id` FROM `t_msg_mapping` tmm,`t_msg_text` tmt
+		WHERE tmm.`msg_role_id` = tmt.`msg_role_id` 
+		AND tmt.`paper_id` IS NOT NULL
+		GROUP BY tmt.`paper_id`) v_msg_1 LEFT JOIN
+		  
+		(
+		SELECT COUNT(v_og.e_paper_id) cnt,e_paper_id paper_id  FROM (SELECT og.`e_paper_id`,og.`user_login_id` FROM 
+		`ot_grade` og  GROUP BY og.`e_paper_id`,og.`user_login_id`)v_og GROUP BY v_og.e_paper_id
+		) v_msg_2 ON v_msg_1.paper_id = v_msg_2.paper_id) v_msg
+		 ON v_t_u.e_paper_id = v_msg.paper_id
+		 ORDER BY v_t_u.subTimes desc ,v_t_u.title
+	</select>
+	
+	<select id="selectExaminationSituationCount" parameterType="java.lang.String" resultType="java.lang.Integer">
+			SELECT 
+			count(v_t_u.countryName)
+		 FROM (
+		SELECT  pa.`PARTY_NAME` countryName,
+			ul.`USER_LOGIN_ID` userId,
+			ul.`USER_NAME` userName,
+			ul.USER_MC_ID wechat,
+			r.`ROLE_NAME` roleName,
+			ul.USER_WORK_NUM workNum,
+			oep.`start_test` startTest,
+			oep.`end_test` endTest,
+			oep.`test_time` testTime,
+			oep.`e_paper_head` title,
+			og.`grade` score,
+			og.`e_paper_id`,
+			og.`sub_time` subTimes
+		FROM `ot_grade` og,user_login ul,party pa,user_role_mapping urm,role r,ot_exam_paper oep
+		WHERE og.`user_login_id` = ul.`USER_LOGIN_ID`
+		AND ul.`PARTY_ID` = pa.`PARTY_ID`
+		AND ul.`USER_LOGIN_ID` = urm.`USER_LOGIN_ID`
+		${conditions}
+		AND urm.`ROLE_ID` = r.`ROLE_ID` 
+		AND og.`e_paper_id` = oep.`id`) v_t_u LEFT JOIN 
+		(
+		SELECT v_msg_1.paper_id,v_msg_1.cut nops,IFNULL(v_msg_2.cnt,0) anos FROM 
+		(SELECT COUNT(*) cut,tmt.`paper_id` FROM `t_msg_mapping` tmm,`t_msg_text` tmt
+		WHERE tmm.`msg_role_id` = tmt.`msg_role_id` 
+		AND tmt.`paper_id` IS NOT NULL
+		GROUP BY tmt.`paper_id`) v_msg_1 LEFT JOIN
+		  
+		(SELECT COUNT(*) cnt,tmt.`paper_id` FROM `t_msg_mapping` tmm,`t_msg_text` tmt
+		WHERE tmm.`msg_role_id` = tmt.`msg_role_id` 
+		AND tmt.`paper_id` IS NOT NULL 
+		AND tmm.`msg_state` = 1
+		GROUP BY tmt.`paper_id`) v_msg_2 ON v_msg_1.paper_id = v_msg_2.paper_id) v_msg
+		 ON v_t_u.e_paper_id = v_msg.paper_id
+	</select>
+	
+	<select id="selectExamByTypeAndCountry" parameterType="java.lang.String" resultType="Examination">
+		  SELECT 
+		  oqb.`id`,
+		  oqb.`ex_questions` exQuestions,
+		  oqb.`type` cType
+		  FROM
+		  `ot_ques_bank` oqb 
+		  WHERE oqb.`country_id` = #{countryId}
+		  ${conditions}
+		  ORDER BY oqb.`type`,oqb.`c_time` DESC
+	</select>
+	
+	
+	<select id="selectUserIsExam" parameterType="java.lang.String" resultType="java.lang.Integer">
+		  SELECT COUNT(*) FROM ot_grade og WHERE og.`user_login_id` = #{userId} AND og.`e_paper_id` = #{paperId} LIMIT 1
+	</select>
+	
+	<!-- 俄罗斯考试记录 -->
+	<select id="selectRusExaminationSituation" parameterType="java.lang.String" resultType="Analysis">
+			SELECT 
+			v_t_u.countryName,
+			v_t_u.userId,
+			v_t_u.userName,
+			v_t_u.wechat,
+			v_t_u.customerName,
+			v_t_u.roleName,
+			v_t_u.workNum,
+			v_t_u.startTest,
+			v_t_u.endTest,
+			v_t_u.testTime,
+			v_t_u.title,
+			v_t_u.score,
+			IFNULL(v_msg.nops,0) nops,
+			IFNULL(v_msg.anos,0) anos,
+			v_t_u.subTimes
+		 FROM (
+		SELECT  pa.`PARTY_NAME` countryName,
+			ul.`USER_LOGIN_ID` userId,
+			ul.`USER_NAME` userName,
+			ul.USER_MC_ID wechat,
+			ci.CUSTOMER_NAME customerName,
+			r.`ROLE_NAME` roleName,
+			ul.USER_WORK_NUM workNum,
+			oep.`start_test` startTest,
+			oep.`end_test` endTest,
+			oep.`test_time` testTime,
+			oep.`e_paper_head` title,
+			og.`grade` score,
+			og.`e_paper_id`,
+			og.`sub_time` subTimes
+		FROM `ot_grade` og JOIN user_login ul on og.`user_login_id` = ul.`USER_LOGIN_ID` 
+		LEFT JOIN party pa on ul.`PARTY_ID` = pa.`PARTY_ID` 
+		LEFT JOIN user_role_mapping urm on ul.`USER_LOGIN_ID` = urm.`USER_LOGIN_ID` 
+		LEFT JOIN role r on urm.`ROLE_ID` = r.`ROLE_ID` 
+		LEFT JOIN ot_exam_paper oep on  og.`e_paper_id` = oep.`id`
+		 
+		LEFT JOIN customer_saler_mapping csm on ul.USER_LOGIN_ID=csm.user_login_id
+		LEFT JOIN   customer_info ci on csm.customer_id=ci.CUSTOMER_ID
+		where 1=1 ${conditions}
+		) v_t_u LEFT JOIN 
+		(
+		SELECT v_msg_1.paper_id,v_msg_1.cut nops,IFNULL(v_msg_2.cnt,0) anos FROM 
+		(SELECT COUNT(*) cut,tmt.`paper_id` FROM `t_msg_mapping` tmm,`t_msg_text` tmt
+		WHERE tmm.`msg_role_id` = tmt.`msg_role_id` 
+		AND tmt.`paper_id` IS NOT NULL
+		GROUP BY tmt.`paper_id`) v_msg_1 LEFT JOIN
+		  
+		(
+		SELECT COUNT(v_og.e_paper_id) cnt,e_paper_id paper_id  FROM (SELECT og.`e_paper_id`,og.`user_login_id` FROM 
+		`ot_grade` og  GROUP BY og.`e_paper_id`,og.`user_login_id`)v_og GROUP BY v_og.e_paper_id
+		) v_msg_2 ON v_msg_1.paper_id = v_msg_2.paper_id) v_msg
+		 ON v_t_u.e_paper_id = v_msg.paper_id
+		 ORDER BY v_t_u.subTimes desc,v_t_u.title desc limit #{start},#{limit}
+	</select>
+	
+	
+	<select id="selectRusExaminationExport" parameterType="java.lang.String" resultType="Analysis">
+			SELECT 
+			v_t_u.countryName,
+			v_t_u.userId,
+			v_t_u.userName,
+			v_t_u.wechat,
+			v_t_u.customerName,
+			v_t_u.roleName,
+			v_t_u.workNum,
+			v_t_u.startTest,
+			v_t_u.endTest,
+			v_t_u.testTime,
+			v_t_u.title,
+			v_t_u.score,
+			IFNULL(v_msg.nops,0) nops,
+			IFNULL(v_msg.anos,0) anos,
+			v_t_u.subTimes
+		 FROM (
+		SELECT  pa.`PARTY_NAME` countryName,
+			ul.`USER_LOGIN_ID` userId,
+			ul.`USER_NAME` userName,
+			ul.USER_MC_ID wechat,
+			ci.customer_name customerName,
+			r.`ROLE_NAME` roleName,
+			ul.USER_WORK_NUM workNum,
+			oep.`start_test` startTest,
+			oep.`end_test` endTest,
+			oep.`test_time` testTime,
+			oep.`e_paper_head` title,
+			og.`grade` score,
+			og.`e_paper_id`,
+			og.`sub_time` subTimes
+		FROM `ot_grade` og JOIN user_login ul on og.`user_login_id` = ul.`USER_LOGIN_ID` 
+		LEFT JOIN party pa on ul.`PARTY_ID` = pa.`PARTY_ID` 
+		LEFT JOIN user_role_mapping urm on ul.`USER_LOGIN_ID` = urm.`USER_LOGIN_ID` 
+		LEFT JOIN role r on urm.`ROLE_ID` = r.`ROLE_ID` 
+		LEFT JOIN ot_exam_paper oep on  og.`e_paper_id` = oep.`id`
+		
+		LEFT JOIN customer_saler_mapping csm on ul.USER_LOGIN_ID=csm.user_login_id
+		LEFT JOIN   customer_info ci on csm.customer_id=ci.CUSTOMER_ID
+		where 1=1 ${conditions}
+		)
+		 v_t_u LEFT JOIN 
+		(
+		SELECT v_msg_1.paper_id,v_msg_1.cut nops,IFNULL(v_msg_2.cnt,0) anos FROM 
+		(SELECT COUNT(*) cut,tmt.`paper_id` FROM `t_msg_mapping` tmm,`t_msg_text` tmt
+		WHERE tmm.`msg_role_id` = tmt.`msg_role_id` 
+		AND tmt.`paper_id` IS NOT NULL
+		GROUP BY tmt.`paper_id`) v_msg_1 LEFT JOIN
+		  
+		(
+		SELECT COUNT(v_og.e_paper_id) cnt,e_paper_id paper_id  FROM (SELECT og.`e_paper_id`,og.`user_login_id` FROM 
+		`ot_grade` og  GROUP BY og.`e_paper_id`,og.`user_login_id`)v_og GROUP BY v_og.e_paper_id
+		) v_msg_2 ON v_msg_1.paper_id = v_msg_2.paper_id) v_msg
+		 ON v_t_u.e_paper_id = v_msg.paper_id
+		 ORDER BY v_t_u.subTimes desc ,v_t_u.title
+	</select>
+	
+	<select id="selectRusExaminationExportCount" parameterType="java.lang.String" resultType="java.lang.Integer">
+	
+		SELECT 
+			count(v_t_u.countryName)
+			
+		 FROM (
+		SELECT  pa.`PARTY_NAME` countryName,
+			ul.`USER_LOGIN_ID` userId,
+			ul.`USER_NAME` userName,
+			ul.USER_MC_ID wechat,
+			ci.customer_name customerName,
+			r.`ROLE_NAME` roleName,
+			ul.USER_WORK_NUM workNum,
+			oep.`start_test` startTest,
+			oep.`end_test` endTest,
+			oep.`test_time` testTime,
+			oep.`e_paper_head` title,
+			og.`grade` score,
+			og.`e_paper_id`,
+			og.`sub_time` subTimes
+		FROM `ot_grade` og JOIN user_login ul on og.`user_login_id` = ul.`USER_LOGIN_ID` 
+		LEFT JOIN party pa on ul.`PARTY_ID` = pa.`PARTY_ID` 
+		LEFT JOIN user_role_mapping urm on ul.`USER_LOGIN_ID` = urm.`USER_LOGIN_ID` 
+		LEFT JOIN role r on urm.`ROLE_ID` = r.`ROLE_ID` 
+		LEFT JOIN ot_exam_paper oep on  og.`e_paper_id` = oep.`id`
+		
+		LEFT JOIN customer_saler_mapping csm on ul.USER_LOGIN_ID=csm.user_login_id
+		LEFT JOIN   customer_info ci on csm.customer_id=ci.CUSTOMER_ID
+		where 1=1 ${conditions}
+		)
+		 v_t_u LEFT JOIN 
+		(
+		SELECT v_msg_1.paper_id,v_msg_1.cut nops,IFNULL(v_msg_2.cnt,0) anos FROM 
+		(SELECT COUNT(*) cut,tmt.`paper_id` FROM `t_msg_mapping` tmm,`t_msg_text` tmt
+		WHERE tmm.`msg_role_id` = tmt.`msg_role_id` 
+		AND tmt.`paper_id` IS NOT NULL
+		GROUP BY tmt.`paper_id`) v_msg_1 LEFT JOIN
+		  
+		(
+		SELECT COUNT(v_og.e_paper_id) cnt,e_paper_id paper_id  FROM (SELECT og.`e_paper_id`,og.`user_login_id` FROM 
+		`ot_grade` og  GROUP BY og.`e_paper_id`,og.`user_login_id`)v_og GROUP BY v_og.e_paper_id
+		) v_msg_2 ON v_msg_1.paper_id = v_msg_2.paper_id) v_msg
+		 ON v_t_u.e_paper_id = v_msg.paper_id
+		 ORDER BY v_t_u.subTimes desc ,v_t_u.title
+    
+	</select>
+</mapper>

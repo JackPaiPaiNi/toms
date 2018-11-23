@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Basic DataList - jQuery EasyUI Demo</title>
+	<link rel="stylesheet" href="http://localhost:8080/toms/bootstrap/css/bootstrap.min.css"/>
+		<link rel="stylesheet" href="http://localhost:8080/toms/font-awesome/css/font-awesome.min.css"/>
+		<link rel="stylesheet" href="http://localhost:8080/toms/js/easyui1.4/themes/metro-orange/easyui.css" type="text/css" />
+	
+	<link rel="stylesheet" href="http://localhost:8080/toms/js/easyui1.4/themes/icon.css" type="text/css" />
+		<link rel="stylesheet" href="http://localhost:8080/toms/css/common.css" type="text/css" />
+		<script src="http://localhost:8080/toms/js/easyui1.4/jquery.min.js" ></script>
+		<script src="http://localhost:8080/toms/js/platform/locale/tomsLocale-zh.js" ></script>
+
+	<!-- common.jquery必须在jquery之后，因为它依赖于jquery -->
+		<script src="http://localhost:8080/toms/js/common.jquery.js"></script>
+		
+		<!-- bootstrap必须在easyui前面，否则easyui的form会不正常 -->
+		<script src="http://localhost:8080/toms/bootstrap/js/bootstrap.min.js"></script>
+		
+		<script src="http://localhost:8080/toms/js/easyui1.4/jquery.easyui.min.js" ></script>
+		
+		<!-- common.easyui必须在easyui之后，因为它依赖于easyui -->
+		<script src="http://localhost:8080/toms/js/common.easyui.js"></script>
+		
+		<script src="http://localhost:8080/toms/js/easyui1.4/locale/easyui-lang-zh.js" ></script>
+	<script>
+	$(function(){
+		$("#dl_bussinessers").datalist({
+		    url: "http://localhost:8080/toms/platform/loadBusinessers.action",
+		    checkbox: true,
+		    valueField:"user_login_id",
+		    textField:"user_name",
+		    groupField:"user_name",
+		    height:200,
+		    lines: true
+		});
+	});
+	</script>
+</head>
+<body>
+<div id="dl_bussinessers"></div>
+		<div class="easyui-layout" style="height:200px;width:800px;">
+	            		<div region="west" style="width:385px;">
+							<div class="easyui-panel" title="业务员">
+								
+							</div>
+						</div>
+	            		<div region="center">
+							<div class="easyui-panel" title="销售员">
+								<ul class="easyui-datalist" title="Basic DataList" data-options="checkbox:true" lines="true" style="width:400px;height:250px">
+										<li value="AL">Alabama</li>
+										<li value="AK">Alaska</li>
+										<li value="AZ">Arizona</li>
+										
+									</ul>
+							</div>
+						</div>
+	            	</div>
+		</body>
+
+</html>

@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<import>
+	<mapping bean="cn.tcl.platform.modelmap.vo.ModelMap">
+		<property column="*Branch Model" propertyName="branchModel" required="true" javaType="java.lang.String"></property>
+		<property column="*Channel Model" propertyName="channelModel" required="true" javaType="java.lang.String"></property>
+		<property column="*Country" propertyName="partyId" required="true" javaType="java.lang.String"></property>
+		<property column="*Customer" propertyName="customerName" required="true" javaType="java.lang.String"></property>
+	</mapping>
+	<volidate dateFormat="yyyy-MM-dd" volidateClass="cn.tcl.platform.modelmap.imports.ValidationImportModelMap" volidateMethod="validationChannelModelImport"></volidate>
+	<service serviceBean="modelmapService" serviceMethod="importChannelModelMap"></service>
+</import>

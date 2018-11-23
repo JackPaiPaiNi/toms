@@ -1,0 +1,394 @@
+@CHARSET "UTF-8";
+*{
+	margin:0;padding:0;
+}
+body{
+	width: 100vw;
+	height: 100vh;
+	background-color: #fff;
+	overflow: hidden;
+	position: relative;
+}
+/*头部*/
+.head{
+	width: 100%;
+	height: 80px;
+	background: url(../../images/login/qietu_01.png) no-repeat 100% 100%;
+}
+.head .head-middle{
+ 	max-width: 1200px;
+ 	height: 100%;
+	background: url(../../images/login/qietu_02_03.png) no-repeat 0px 4px;
+	background-size: 106px 64px;
+	overflow: hidden;
+}
+.head .head-middle>p{
+	text-indent: 150px;
+}
+.TCL-Chinese{
+	font-size: 22px;
+	margin-top: 24px;
+}
+.TCL-English{
+	font-size: 17px;
+}
+/*中间*/
+.body{
+	width: 100%;
+	height: -webkit-calc(100% - 120px);
+	height: -moz-calc(100% - 120px);
+	height: calc(100% - 120px);
+	background: url(../../images/login/qietu_02.png) no-repeat center center;
+	background-size: 100vw 100%;
+	position: absolute;
+	top: 80px;
+	left: 0;
+	overflow-y: auto;
+	overflow-x: hidden;	
+}
+.body .blank{
+	width: 100%;
+	height: -webkit-calc(50% - 254px);
+	height: -moz-calc(50% - 254px);
+	height: calc(50% - 254px);
+}
+.body .body-middle{
+	max-width: 1200px;
+	height: 470px;
+	position: relative;	
+}
+/*登录框*/
+.body .body-middle .loginBox{
+	width: 462px;
+	height: 270px;
+	background: url(../../images/login/denglukuang_04.png) no-repeat center center;
+	background-size: 100% 100%;
+	position: absolute;
+	left: 90px;
+	top: 33px;
+	z-index: 1000;
+}
+.body .body-middle .loginBox p{
+	text-indent: 48px;
+	color: #2f609b;		
+}
+.body .body-middle .loginBox span{
+	color: #2f609b;
+}
+.body .body-middle .loginBox .loginBox-Chinese{
+	margin-top: 57px;
+	font-size: 24px;
+	margin-bottom: 4px;
+}
+.body .body-middle .loginBox .loginBox-English{
+	margin-top: 57px;
+	font-size: 24px;
+	margin-bottom: 4px;
+	margin-bottom: 30px;
+}
+.body .body-middle .loginBox input{
+	border: 1px solid #8ebae4;
+	height: 22px;
+	width: 200px;
+}
+.body .body-middle .loginBox .id{
+	font-size: 18px;
+	margin-bottom: 10px;
+}
+.body .body-middle .loginBox .id>span{
+	display: inline-block;
+	text-align: right;
+	width: 82px;
+	text-indent: 0;
+}
+.body .body-middle .loginBox .password{
+	font-size: 18px;	
+}
+.body .body-middle .loginBox .password>span{
+	display: inline-block;
+	text-align: right;
+	width: 82px;
+	text-indent: 0;
+	/*letter-spacing: 6px;*/
+}
+.body .body-middle .loginBox .password>button{
+	width: 80px;
+	height: 28px;
+	background: url(../../images/login/denglv_04.png) no-repeat center center;
+	background-size: 100% 100%;
+	border: 0;
+}
+.login-status{
+	color: red;
+    font-size: 18px;
+    position: relative;
+    top: 5px;
+    margin-left:5px;
+}
+/*展示图片*/
+/*图片1*/
+.body .body-middle .picture1{
+	width: 192px;
+	height: 192px;
+	background: url(../../images/login/tu1_04.png) no-repeat center center;
+	background-size: 100% 100%;
+	position: absolute;
+	left: 519px;
+	top: 186px;
+	z-index: 999;
+	opacity: 0.9;
+}
+.body .body-middle .picture1>img{
+	width: 163px;
+	height: 163px;
+	margin-top: 15.4px;
+	margin-left: 15.4px;
+}
+/*图片2*/
+.body .body-middle .picture2{
+	width: 176px;
+	height: 176px;
+	background: url(../../images/login/tu1_04.png) no-repeat center center;
+	background-size: 100% 100%;
+	position: absolute;
+	left: 642px;
+	top: 78.3px;
+	z-index: 998;
+	opacity: 0.7;
+}
+.body .body-middle .picture2>img{
+	width: 146px;
+	height: 146px;
+	margin-top: 15.4px;
+	margin-left: 15.4px;
+}
+/*图片3*/
+.body .body-middle .picture3{
+	width: 146px;
+	height: 146px;
+	background: url(../../images/login/tu1_04.png) no-repeat center center;
+	background-size: 100% 100%;
+	position: absolute;
+	left: 751px;
+	top: 163px;
+	z-index: 997;
+	opacity: 0.5;
+}
+.body .body-middle .picture3>img{
+	width: 115px;
+	height: 115px;
+	margin-top: 15.4px;
+	margin-left: 15.4px;
+}
+/*图片4*/
+.body .body-middle .picture4{
+	width: 115px;
+	height: 115px;
+	background: url(../../images/login/tu1_04.png) no-repeat center center;
+	background-size: 100% 100%;	
+	position: absolute;
+	left: 847px;
+	top: 71px;
+	z-index: 996;
+	opacity: 0.4;
+}
+.body .body-middle .picture4>img{
+	width: 84px;
+	height: 84px;
+	margin-top: 15.4px;
+	margin-left: 15.4px;	
+}
+/*图片溅隐*/
+.body .body-middle .picture5{
+	width: 92px;
+	height: 92px;
+	background: url(../../images/login/yuanfang_05.png) no-repeat center center;
+	background-size: 100% 100%;
+	position: absolute;
+	left: 949px;
+	top: 40px;
+	z-index: 995;
+	opacity: 0.2;
+}
+.body .body-middle .picture6{
+	width: 62px;
+	height: 62px;
+	background: url(../../images/login/yuanfang_03.png) no-repeat center center;
+	background-size: 100% 100%;
+	position: absolute;
+	left: 915px;
+	top: 25px;
+	z-index: 994;
+	opacity: 0.1;
+}
+.body .body-middle .picture7{
+	width: 46px;
+	height: 46px;
+	background: url(../../images/login/yuanfang_09.png) no-repeat center center;
+	background-size: 100% 100%;
+	position: absolute;
+	left: 1011px;
+	top: 2px;
+	z-index: 993;
+	opacity: 0.08;
+}
+.body .body-middle .picture8{
+	width: 31px;
+	height: 31px;
+	background: url(../../images/login/yuanfang_07.png) no-repeat center center;
+	background-size: 100% 100%;
+	position: absolute;
+	left: 1025px;
+	top: -6px;
+	z-index: 992;
+	opacity: 0.2;
+}
+/*图表*/
+.chart1{
+	width: 129px;
+	height: 75px;
+	position: absolute;
+	top: 147px;
+	left: 575px;
+	opacity: 0.2;
+}
+.chart3{
+	width: 120px;
+	height: 55px;
+	position: absolute;
+	top: 185px;
+	left: 861px;
+	z-index: 900;
+	opacity: 0.08;
+}
+/*错误提示*/
+.Errormessage{
+	position: absolute;
+	top: 154px;
+    left: 216px;
+    z-index: 1100;
+    color: red;
+}
+/*暗文字*/
+.body .body-middle .HighEfficiency{
+	font-size: 20px;
+    position: absolute;
+    left: 581px;
+    top: 46px;
+    font-weight: 600;
+    opacity: 0.07;
+}
+.body .body-middle .Comprehensive{
+	font-size: 19px;
+    position: absolute;
+    left: 910px;
+    top: 200px;
+    opacity: 0.05;
+    font-weight: 600;
+}
+.body .body-middle .Easytouse{
+	font-size: 23px;
+    position: absolute;
+    left: 719px;
+    top: 319px;
+    opacity: 0.05;
+    font-weight: 600;
+}
+/*下面3个*/
+.bottomCenter {
+	width: 100%;
+	height: 100px;
+	text-align: center;
+	position: relative;
+	left: 0;
+	top: 380px;
+	z-index: 900;
+}
+.bottomCenter .bottomCenter-middle{
+	width: 1190px;
+	height: 100px;
+	margin: 0 auto;
+	padding: 15px 0 15px 0;
+	overflow: hidden;
+}
+.bottomCenter .bottomCenter-middle>div{
+	display: inline-block;
+	width: 30%;
+	height: 70px;
+	float: left;
+}
+.bottomCenter-middle-fi{
+	margin-left: 5%;
+}
+.bottomCenter .bottomCenter-middle>div>img{
+	width: 70px;
+	height: 70px;
+}
+.moudle-text {
+	display: inline-block;
+	-moz-width: 242px;
+	-webkit-width: 262px;
+	text-align: left;
+	vertical-align: top;
+	margin-top: 13px;
+	margin-left: 18px;
+}
+.moudle-text .moudle-text1{
+	font-size: 19px;
+	line-height: 44px;
+	opacity: 0.8;
+}
+.moudle-text .moudle-text2{
+	font-size: 15px;
+	line-height: 18px;
+	opacity: 0.8;
+}
+/*底部*/
+.bottom{
+	width: 100%;
+	height: 40px;
+	background: url(../../images/login/qietu_03.png) no-repeat center center;
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	z-index: 2000;	
+}
+.ct{
+	margin-top: 8px;
+	color: #6a6a6a;
+	font-size: 13px;
+}
+
+/*登录等待动画*/
+.fa-spin {
+    -webkit-animation: fa-spin 2s infinite linear;
+    animation: fa-spin 2s infinite linear;
+}
+@-webkit-keyframes fa-spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
+@keyframes fa-spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
+.login-status{
+	float:right;
+	color: red;
+    font-size: 18px;
+    position: relative;
+    margin-top:-2px;
+    margin-right:18px;
+}

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.ws.dao.SaleDao">
+  <resultMap id="SaleMap" type="Sale" >
+    <result column="id" property="saleId" jdbcType="VARCHAR" />
+    <result column="user_id" property="userId" jdbcType="VARCHAR" />
+    <result column="user_name" property="userName" jdbcType="VARCHAR" />
+    <result column="model" property="model" jdbcType="INTEGER" />
+    <result column="quantity" property="quantity" jdbcType="INTEGER" />
+    <result column="price" property="price" jdbcType="FLOAT" />
+    <result column="amount" property="amount" jdbcType="VARCHAR"  javaType="double"/>
+    <result column="remark" property="remark" jdbcType="VARCHAR" />
+    <result column="datadate" property="datadate" jdbcType="VARCHAR" />
+    <result column="country" property="country" jdbcType="VARCHAR" />
+    <result column="ctime" property="ctime" jdbcType="DATE" />
+    <result column="shop_id" property="shopId" jdbcType="INTEGER" />
+    <result column="SHOP_NAME" property="shopName" jdbcType="VARCHAR" />
+    
+    <result column="customer_id" property="customerId" jdbcType="VARCHAR" />
+    <result column="customer_name" property="customerName" jdbcType="VARCHAR" />
+    <result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+    <result column="PARTY_NAME" property="partyName" jdbcType="VARCHAR" />
+    <result column="hq_model" property="hqModel" jdbcType="VARCHAR" />
+  </resultMap>
+  
+  <sql id="baseselectsale">
+  	select ts.id,
+  		   ts.user_id,
+  		   ts.model,
+  		   ts.quantity,
+  		   ts.amount,
+  		   ts.datadate,
+  		   ts.shop_id 
+  	from t_sale ts
+  </sql>
+  
+ <!-- 查询销售数据列表 -->
+  <select id="selectSaleList" resultMap="SaleMap" parameterType="Sale">
+  	<include refid="baseselectsale"/>
+  	<where>
+  		1=1
+  		<if test="null!=saleId and 0 != saleId">
+  		and ts.id=#{saleId}
+  		</if>
+  		<if test="null != model and '' != model">
+  		and ts.model=#{model}
+  		</if>
+  		<if test="null != datadate">
+  		and ts.datadate=#{datadate}
+  		</if>
+  		<if test="null != shopId and 0 != shopId">
+  		and ts.shop_id=#{shopId}
+  		</if>
+  		 order by ts.datadate  desc 
+  	</where>
+  </select>
+  
+  <!-- 批量插入销售数据 -->
+  <insert id="InsertSaleDataBatch" parameterType="java.util.List">
+  	insert into t_sale(user_id,model,price,quantity,amount,datadate,shop_id,country,ctime,remark)
+  	values
+  	<foreach collection="list" item="item" index="index" separator=",">
+  		(#{item.userId},#{item.model},#{item.price},#{item.quantity},#{item.amount},#{item.datadate},#{item.shopId},#{item.country},#{item.ctime},#{item.remark})
+  	</foreach>
+  </insert>
+  
+  <!-- 批量更新销售数据 -->
+  <update id="UpdateSaleDataBatch" parameterType="java.util.List">
+  	update t_sale 
+  	<trim prefix="set" suffixOverrides=",">
+  		<trim prefix="user_id = case" suffix="end,">
+  			<foreach collection="list" item="item" index="index">
+  				<if test="null != item.userId and 0 != item.userId">
+  				when id=#{item.saleId} then #{item.userId}
+  				</if>
+  			</foreach>
+  		</trim>
+  		<trim prefix="model = case" suffix="end,">
+  			<foreach collection="list" item="item" index="index">
+  				<if test="null != item.model and '' != item.model">
+  				when id=#{item.saleId} then #{item.model}
+  				</if>
+  			</foreach>
+  		</trim>
+  		<trim prefix="quantity = case" suffix="end,">
+  			<foreach collection="list" item="item" index="index">
+  				<if test="null != item.quantity and 0 != item.quantity">
+  				when id=#{item.saleId} then #{item.quantity}
+  				</if>
+  			</foreach>
+  		</trim>
+  		<trim prefix="price = case" suffix="end,">
+  			<foreach collection="list" item="item" index="index">
+  				<if test="null != item.price and 0 != item.price">
+  				when id=#{item.saleId} then #{item.price}
+  				</if>
+  			</foreach>
+  		</trim>
+  		<trim prefix="amount = case" suffix="end,">
+  			<foreach collection="list" item="item" index="index">
+  				<if test="null != item.amount and 0 != item.amount">
+  				when id=#{item.saleId} then #{item.amount}
+  				</if>
+  			</foreach>
+  		</trim>
+  		<trim prefix="datadate = case" suffix="end,">
+  			<foreach collection="list" item="item" index="index">
+  				<if test="null != item.datadate">
+  				when id=#{item.saleId} then #{item.datadate}
+  				</if>
+  			</foreach>
+  		</trim>
+  		<trim prefix="shop_id = case" suffix="end,">
+  			<foreach collection="list" item="item" index="index">
+  				<if test="null != item.shopId and 0 != item.shopId">
+  				when id=#{item.saleId} then #{item.shopId}
+  				</if>
+  			</foreach>
+  		</trim>
+		<trim prefix="remark = case" suffix="end,">
+  			<foreach collection="list" item="item" index="index">
+  				<if test="null != item.remark and '' != item.remark">
+  				when id=#{item.saleId} then #{item.remark}
+  				</if>
+  			</foreach>
+  		</trim>
+  	</trim>
+  	where
+  	<foreach collection="list" separator="or" item="item" index="index">
+  		id=#{item.saleId}
+  	</foreach>
+  </update>
+</mapper>

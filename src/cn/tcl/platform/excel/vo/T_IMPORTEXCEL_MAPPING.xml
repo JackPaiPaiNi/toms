@@ -1,0 +1,561 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.excel.dao.ImportExcelDao">
+
+	<resultMap id="ExcelMap" type="Excel">
+		<result column="REG" property="reg" jdbcType="VARCHAR" />
+		<result column="shop_id" property="shopId" jdbcType="VARCHAR" />
+		<result column="REG" property="reg" jdbcType="VARCHAR" />
+		<result column="TYPE" property="type" jdbcType="VARCHAR" />
+		<result column="NO_OF_SHOP" property="noOfShop" jdbcType="INTEGER" />
+		<result column="DEALER" property="dealer" jdbcType="VARCHAR" />
+		<result column="BRANCH" property="branch" jdbcType="VARCHAR" />
+		<result column="TV_FPS" property="tvFps" jdbcType="INTEGER" />
+		<result column="AC_FPS" property="acFps" jdbcType="INTEGER" />
+		<result column="PROM_NAME" property="promName" jdbcType="VARCHAR" />
+		<result column="DATE" property="dateOfHired" jdbcType="CHAR" />
+		<result column="SHOP_NAME" property="shopName" jdbcType="VARCHAR" />
+		<result column="ACFO" property="acfo" jdbcType="VARCHAR" />
+		<result column="AREA" property="area" jdbcType="VARCHAR" />
+		<result column="SALESMAN" property="salesMan" jdbcType="VARCHAR" />
+		<result column="AGENCY" property="agency" jdbcType="VARCHAR" />
+		<result column="SHOP_CLASS" property="shopClass" jdbcType="VARCHAR" />
+		<result column="SALERTYPE" property="salerType" jdbcType="INTEGER" />
+		<result column="USERID" property="userId" jdbcType="INTEGER" />
+	</resultMap>
+
+	<resultMap id="modelMap" type="Excel">
+		<result column="shop_id" property="shopId" jdbcType="VARCHAR" />
+		<result column="model" property="model" jdbcType="VARCHAR" />
+		<result column="quantity" property="quantity" jdbcType="INTEGER" />
+		<result column="amount" property="amount" jdbcType="INTEGER" />
+		<result column="country_id" property="countryId" jdbcType="VARCHAR" />
+	</resultMap>
+
+
+	<resultMap id="SumMap" type="Excel">
+		<result column="targetSum" property="targetSum" jdbcType="VARCHAR" />
+		<result column="saleSum" property="saleSum" jdbcType="VARCHAR" />
+		<result column="saleQty" property="saleQty" jdbcType="INTEGER" />
+	</resultMap>
+
+
+	<resultMap id="saleDateMap" type="Excel">
+		<result column="shopId" property="shopId" jdbcType="VARCHAR" />
+		<result column="quantity" property="quantity" jdbcType="INTEGER" />
+		<result column="model" property="model" jdbcType="VARCHAR" />
+	</resultMap>
+
+
+
+	<sql id="listWhere">
+		<if test="searchStr != null"> ${searchStr} </if>
+		<where>
+			<if test="conditions != null"> and ${conditions} </if>
+		</where>
+	</sql>
+	<select id="selectDatas" parameterType="java.lang.String"
+		resultMap="ExcelMap">
+		SELECT pa.party_name AS REG,
+		si.`SHOP_ID` AS SHOP_ID ,si.`SHOP_NAME` AS
+		SHOP_NAME ,ci.`CUSTOMER_NAME` AS DEALER ,
+		si.`CREATE_DATE` AS DATE,
+		(select p.party_name from party p where
+		p.party_id=pa.`PARENT_PARTY_ID`) AREA
+
+		FROM shop_info si
+		JOIN
+		customer_info ci ON si.CUSTOMER_ID=
+		ci.CUSTOMER_ID
+		JOIN party pa ON
+		pa.party_id = ci.party_id
+		<include refid="listWhere" />
+		ORDER BY si.`SHOP_ID` ASC
+	</select>
+
+
+
+
+	<select id="getPartyIdByName" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		SELECT p.`PARTY_ID` FROM party p
+		WHERE p.party_Name=#{partyName}
+	</select>
+
+	<!-- <insert id="saveSales" parameterType="ImportExcel">
+		insert into
+		t_sale(user_id,model,price,quantity,amount,h_price,h_quantity,h_amount,remark,datadate,shop_id,country,source,ctime)
+		values(#{userId},#{model},#{salePrice},#{saleQty},#{amt},#{h_price},#{h_qty},#{h_amt},#{remark},#{dataDate},#{shopId},#{countryId},#{source},#{ctime});
+	</insert>
+ -->
+
+ <insert id ="saveSales" parameterType="java.util.List" >
+              <selectKey resultType ="java.lang.Integer" keyProperty= "id"
+                   order= "AFTER">
+                  SELECT LAST_INSERT_ID()
+              </selectKey >
+            insert into
+		t_sale(user_id,model,price,quantity,amount,h_price,h_quantity,h_amount,remark,datadate,shop_id,customer_id,country,source,ctime)
+             values
+             <foreach collection ="list" item="reddemCode" index= "index" separator =",">
+               (#{reddemCode.userId},#{reddemCode.model},#{reddemCode.salePrice},
+               #{reddemCode.saleQty},#{reddemCode.amt},#{reddemCode.h_price},
+               #{reddemCode.h_qty},#{reddemCode.h_amt},#{reddemCode.remark},
+               #{reddemCode.dataDate},#{reddemCode.shopId},#{reddemCode.customerId},#{reddemCode.countryId},
+               #{reddemCode.source},#{reddemCode.ctime})
+            </foreach >
+     </insert >
+
+
+
+
+
+	<!-- <insert id="saveDisPlays" parameterType="ImportExcel">
+		INSERT INTO
+		t_sample(user_id,model,quantity,remark,datadate,shop_id,party_id,class_id,ctime)
+		VALUES(#{userId},#{model},#{disPlayQty},#{remark},#{dataDate},#{shopId},#{branchId},#{classId},#{ctime});
+	</insert> -->
+	
+	
+	<insert id ="saveDisPlays" parameterType="java.util.List" >
+              <selectKey resultType ="java.lang.Integer" keyProperty= "id"
+                   order= "AFTER">
+                  SELECT LAST_INSERT_ID()
+              </selectKey >
+           INSERT INTO
+			t_sample(user_id,model,quantity,remark,datadate,shop_id,party_id,class_id,ctime)
+             values
+             <foreach collection ="list" item="reddemCode" index= "index" separator =",">
+               (#{reddemCode.userId},#{reddemCode.model},#{reddemCode.disPlayQty},
+               	#{reddemCode.remark},#{reddemCode.dataDate},#{reddemCode.shopId},
+               	#{reddemCode.branchId},#{reddemCode.classId},#{reddemCode.ctime})
+            </foreach >
+     </insert >
+	
+	
+	
+		
+	<insert id ="saveDisPlaysByRe" parameterType="java.util.List" >
+              <selectKey resultType ="java.lang.Integer" keyProperty= "id"
+                   order= "AFTER">
+                  SELECT LAST_INSERT_ID()
+              </selectKey >
+           INSERT INTO
+			sample_record(user_id,model,quantity,remark,datadate,shop_id,customer_id,party_id,country_id,class_id,ctime)
+             values
+             <foreach collection ="list" item="reddemCode" index= "index" separator =",">
+               (#{reddemCode.userId},#{reddemCode.model},#{reddemCode.disPlayQty},
+               	#{reddemCode.remark},#{reddemCode.dataDate},#{reddemCode.shopId},#{reddemCode.customerId},
+               	#{reddemCode.branchId},	#{reddemCode.countryId},#{reddemCode.classId},#{reddemCode.ctime})
+            </foreach >
+     </insert >
+     
+     
+
+	<!-- <update id="updateStocks" parameterType="ImportExcel">
+		UPDATE `t_inventory` SET quantity=#{stockQty},datadate=#{dataDate}
+
+		WHERE model=#{model} AND shop_id=#{shopId}
+	</update> -->
+	
+
+    <update id="updateStocks"  parameterType="java.util.List">
+	 
+	      <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+				UPDATE `t_inventory`
+				<set>
+				 quantity=#{item.stockQty},
+				datadate=#{item.dataDate}
+				</set>
+				where model=#{item.model} AND shop_id=#{item.shopId}
+		 </foreach>
+		 
+    </update>
+    
+    
+    
+    <update id="updateStocksByShop"  parameterType="java.util.List">
+	 
+	      <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+				UPDATE `t_inventory`
+				<set>
+				 quantity=quantity-#{item.saleQty}
+				</set>
+				where model=#{item.model} AND shop_id=#{item.shopId} 
+				AND DATE_FORMAT(datadate,'%y%M')=DATE_FORMAT(#{item.dataDate},'%y%M')
+		 </foreach>
+		 
+    </update>
+    
+    
+        
+    <update id="updateStocksByCountry"  parameterType="java.util.List">
+	 
+	     <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+				UPDATE `t_inventory`
+				<set>
+				 quantity=quantity-#{item.saleQty}
+				</set>
+				where model=#{item.model} AND country_id=#{item.countryId} 
+				AND DATE_FORMAT(datadate,'%y%M')=DATE_FORMAT(#{item.dataDate},'%y%M')
+				AND (shop_id=0  or shop_id is NULL)
+		 </foreach>
+		 
+    </update>
+    
+    
+        <update id="updateStocksByCustomer"  parameterType="java.util.List">
+	 
+	     <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+				UPDATE `t_inventory`
+				<set>
+				 quantity=quantity-#{item.saleQty}
+				</set>
+				where model=#{item.model} AND customer_id=#{item.customerId} 
+				AND DATE_FORMAT(datadate,'%y%M')=DATE_FORMAT(#{item.dataDate},'%y%M')
+		 </foreach>
+		 
+    </update>
+    
+	
+	
+<!-- 
+	<update id="updateDisPlay" parameterType="ImportExcel">
+		UPDATE t_sample SET quantity=#{disPlayQty}, datadate=#{dataDate}
+		WHERE model=#{model} AND shop_id=#{shopId} and class_id=2
+	</update> -->
+	
+
+ <!--  <update id="updateDisPlay"  parameterType="java.util.List">
+	 
+	      <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+				UPDATE t_sample
+				<set>
+				quantity=#{item.disPlayQty}, 
+				datadate=#{item.dataDate}
+				</set>
+				WHERE	 model=#{item.model} AND shop_id=#{item.shopId} and class_id=2
+		 </foreach>
+		 
+    </update> -->
+    
+    <update id="updateDisPlay" parameterType="java.util.List">  
+        <foreach close="" collection="list" index="index" item="item" open="" separator=";">  
+            update t_sample set quantity=#{item.disPlayQty}, 
+				datadate=#{item.dataDate}
+           WHERE	 model=#{item.model}  AND shop_id=#{item.shopId} and class_id=1
+        </foreach>  
+    </update> 
+    
+
+
+    <update id="updateDisPlayRE" parameterType="java.util.List">  
+        <foreach close="" collection="list" index="index" item="item" open="" separator=";">  
+            update sample_record set quantity=#{item.disPlayQty}, 
+				datadate=#{item.dataDate},
+				user_id=#{item.userId}
+           WHERE	id=#{item.id}
+        </foreach>  
+    </update> 
+    
+    
+    
+    <update id="updateStockRE" parameterType="java.util.List">  
+        <foreach close="" collection="list" index="index" item="item" open="" separator=";">  
+            update  t_inventory set quantity=#{item.stockQty}, 
+				datadate=#{item.dataDate},
+				user_id=#{item.userId}
+           WHERE	id=#{item.id}
+        </foreach>  
+    </update> 
+    
+    
+
+	<select id="selectStockCount" parameterType="ModelMap"
+		resultType="int">
+		SELECT COUNT(*) FROM `t_inventory` t
+		WHERE t.shop_id=#{shopId}
+		AND t.model=#{model}
+		and class_id=1
+	</select>
+
+	<!-- <insert id="saveStocks" parameterType="ImportExcel">
+		INSERT INTO
+		`t_inventory`(user_id,model,quantity,remark,datadate,shop_id,party_id,class_id,ctime)
+		VALUES(#{userId},#{model},#{stockQty},#{remark},#{dataDate},#{shopId},#{branchId},#{classId},#{ctime})
+
+	</insert> -->
+
+
+<insert id ="saveStocks" parameterType="java.util.List" >
+              <selectKey resultType ="java.lang.Integer" keyProperty= "id"
+                   order= "AFTER">
+                  SELECT LAST_INSERT_ID()
+              </selectKey >
+       INSERT INTO
+		`t_inventory`(user_id,model,quantity,remark,datadate,shop_id,customer_id,party_id,country_id,class_id,ctime)
+             values
+             <foreach collection ="list" item="reddemCode" index= "index" separator =",">
+               (#{reddemCode.userId},#{reddemCode.model},#{reddemCode.stockQty},#{reddemCode.remark},
+               	#{reddemCode.dataDate},#{reddemCode.shopId},#{reddemCode.customerId},#{reddemCode.branchId}
+               	,	#{reddemCode.countryId},#{reddemCode.classId},#{reddemCode.ctime})
+            </foreach >
+     </insert >
+	
+	
+	<select id="selectDisPlayCount" parameterType="ModelMap"
+		resultType="int">
+		SELECT COUNT(*) FROM `t_sample` t
+		WHERE t.shop_id=#{shopId}
+		AND t.model=#{model}
+		and class_id=1
+	</select>
+
+
+
+	<select id="selectDisPlayCountCUS" parameterType="ModelMap"
+		resultType="int">
+		SELECT COUNT(*) FROM `t_sample` t
+		WHERE t.customer_id=#{customer_id}
+		AND t.model=#{model}
+		and class_id=1
+	</select>
+	
+	
+
+<delete id="deleteCore" parameterType="java.lang.String"
+		>
+		DELETE   FROM  `core_product`  WHERE `country_id`=#{countryId}
+	</delete>
+
+<insert id="insertCore" parameterType="java.lang.String">
+		INSERT INTO `core_product` (country_id,product_line)
+		VALUES(#{countryId},#{line});
+	</insert>
+<select id="selectCore" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT  product_line  FROM core_product WHERE country_id=#{countryId}
+</select>
+
+<select id="selectAllCore" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT cfg.`PVALUE` FROM   cfg_parameter cfg WHERE cfg.`PDOMAIN`='TCL_PRODUCT' AND CFG.`PTYPE`='line'
+</select>
+
+<select id="selectCountry" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		SELECT  country_id FROM party p WHERE p.`PARTY_ID`=p.`COUNTRY_ID`
+
+		AND  p.`PARTY_NAME`=#{country}
+</select>
+
+
+<select id="selectExchange" parameterType="java.lang.String"
+		resultType="java.lang.Float">
+<!-- SELECT  exchange  FROM  t_exchange 
+WHERE  datadate BETWEEN  #{beginDate}  AND #{endDate}
+AND country_id=#{country} 
+ -->
+
+SELECT tx.`exchange`  FROM  t_exchange tx
+
+WHERE tx.`datadate` IN(SELECT  MAX(te.datadate)  AS maxDate FROM  t_exchange  te
+
+WHERE  <![CDATA[ te.datadate<=#{date}]]>        
+AND te.country_id=#{country} )
+
+AND tx.country_id=#{country} 
+
+
+</select>
+
+
+
+	<select id="selectPrice" parameterType="java.lang.String"
+		resultType="java.lang.Float">
+			SELECT  price  FROM t_modelmap  WHERE branch_model=#{model}
+			
+			AND  party_id=#{country}
+		
+	</select>
+	
+	
+	<select id="selectPriceByChannel" parameterType="java.lang.String"
+		resultType="java.lang.Float">
+			SELECT  price  FROM t_modelmap  WHERE channel_model=#{model}
+			
+			AND  party_id=#{country}
+		
+	</select>
+	
+		<select id="selectModel" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+				
+	SELECT tm.branch_model,tm.`price` FROM t_modelmap tm
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+JOIN party pa ON pa.`COUNTRY_ID`=tm.`party_id`
+		    <include refid="listWhere"/>
+		     AND pt.head_type_id =#{spec}
+		    AND pa.`PARTY_ID`=pa.`COUNTRY_ID` 
+		    
+		ORDER BY tm.branch_model
+	</select>
+
+
+	<select id="selectDisplayCountByRE" parameterType="java.lang.String"
+		resultType="java.lang.String">
+	SELECT id FROM sample_record WHERE shop_id=#{shopId} 
+	AND model=#{model} AND DATE_FORMAT(datadate,'%y%M')=DATE_FORMAT(#{datadate},'%y%M')
+	</select>
+	
+	
+		<select id="deleteDisplayCountByRE" parameterType="java.lang.String"
+		 >
+	delete FROM sample_record WHERE shop_id=#{shopId} 
+	AND model=#{model} AND DATE_FORMAT(datadate,'%y%M')=DATE_FORMAT(#{datadate},'%y%M')
+	</select>
+	
+	
+	
+		<select id="deleteDisplayCountByRECountry" parameterType="java.lang.String"
+		 >
+	delete FROM sample_record WHERE country_id=#{countryId} 
+	AND model=#{model} AND DATE_FORMAT(datadate,'%y%M')=DATE_FORMAT(#{datadate},'%y%M')
+	</select>
+	
+	
+	
+	
+			<select id="deleteDisplayCountByRECUS" parameterType="java.lang.String"
+		 >
+	delete FROM sample_record WHERE customer_id=#{customer_id} 
+	AND model=#{model} AND DATE_FORMAT(datadate,'%y%M')=DATE_FORMAT(#{datadate},'%y%M')
+	</select>
+	
+	
+	
+	<!-- <select id="selectStockCountByRE" parameterType="java.lang.String"
+		resultType="java.lang.String">
+	SELECT id FROM t_inventory WHERE shop_id=#{shopId} 
+	AND model=#{model} AND DATE_FORMAT(datadate,'%y%M')=DATE_FORMAT(#{datadate},'%y%M')
+	</select> -->
+	
+	<select id="deleteStockCountByRE" parameterType="java.lang.String"
+		 >
+	delete FROM t_inventory WHERE shop_id=#{shopId} 
+	AND model=#{model} AND DATE_FORMAT(datadate,'%y%M')=DATE_FORMAT(#{datadate},'%y%M')
+	</select>
+	
+	
+		<select id="deleteStockCountByRECountry" parameterType="java.lang.String"
+		 >
+	delete FROM t_inventory WHERE country_id=#{countryId} 
+	AND model=#{model} AND DATE_FORMAT(datadate,'%y%M')=DATE_FORMAT(#{datadate},'%y%M')
+	</select>
+	
+	
+	
+	<select id="deleteStockCountByRECUS" parameterType="java.lang.String"
+		 >
+	delete FROM t_inventory WHERE customer_id=#{customer_id} 
+	AND model=#{model} AND DATE_FORMAT(datadate,'%y%M')=DATE_FORMAT(#{datadate},'%y%M')
+	</select>
+	
+	
+	
+		<select id="saleRe" parameterType="java.lang.String"
+		 >
+		CALL sale_proce (#{country,mode=IN,jdbcType=VARCHAR},#{beginDate,mode=IN,jdbcType=VARCHAR},#{endDate,mode=IN,jdbcType=VARCHAR})
+
+	</select>
+
+	
+	<select id="insertTVSaleVive" parameterType="java.lang.String"
+		 >
+		CALL insertTVViveData (#{country,mode=IN,jdbcType=VARCHAR},#{beginDate,mode=IN,jdbcType=VARCHAR},#{endDate,mode=IN,jdbcType=VARCHAR})
+
+	</select>
+	
+	
+	
+	<select id="insertACSaleVive" parameterType="java.lang.String"
+		 >
+		CALL insertACViveData (#{country,mode=IN,jdbcType=VARCHAR},#{beginDate,mode=IN,jdbcType=VARCHAR},#{endDate,mode=IN,jdbcType=VARCHAR})
+
+	</select>
+	
+	
+	<select id="selectCustomerByName" parameterType="java.lang.String"
+		resultType="java.lang.String">
+	SELECT customer_id FROM customer_info c WHERE c.customer_name=#{customerName}  AND c.country_id=#{countryId}
+	</select>
+	
+	
+	
+	
+    <select id="selectCustomer"  resultType="java.util.HashMap">
+    SELECT (SELECT party_name FROM party WHERE pa.`COUNTRY_ID`=party_id) AS COUNTRY_NAME, 
+	ci.`customer_NAME`,pa.party_name,ci.`CUSTOMER_CODE` AS CUSTOMER_ID  FROM customer_info ci 
+	JOIN party pa ON pa.`PARTY_ID`=ci.`PARTY_ID`
+    <include refid="listWhere"/>
+    	ORDER BY ci.`customer_NAME`
+  </select> 
+  
+  
+   <select id="selectCountryList"  resultType="java.util.HashMap">
+   
+SELECT  pa.`PARTY_NAME`  COUNTRY_NAME FROM party  pa 
+
+
+    <include refid="listWhere"/>
+    	and pa.`COUNTRY_ID`=pa.`PARTY_ID`
+  </select> 
+  
+  
+  
+  	<select id="selectModelByCustomer" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+				
+				
+				SELECT tmc.channel_model,tm.`price` FROM t_modelmap_channel tmc
+JOIN t_modelmap tm ON tm.`branch_model`=tmc.`branch_model` AND tmc.`party_id`=tm.`party_id`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` 	 AND pt.head_type_id =#{spec}
+
+JOIN party pa ON pa.`COUNTRY_ID`=tmc.`party_id`
+		    <include refid="listWhere"/>
+		    AND pa.`PARTY_ID`=pa.`COUNTRY_ID` 
+		    
+		ORDER BY tmc.`channel_model`
+				
+				
+		
+	</select>
+	
+	
+  
+  
+  	<select id="selectSoType" parameterType="java.lang.String"
+		resultType="java.lang.String">
+				
+				SELECT  type FROM so_type  WHERE country_id=#{countryId}
+
+	</select>
+	
+	
+	
+		
+	<select id = "selectCustomerModel" parameterType="java.lang.String"
+		resultMap="ExcelMap">
+	SELECT branch_model as model FROM t_modelmap_channel WHERE channel_model=#{channelModel} AND party_id=#{countryId}
+	AND customer_id=#{customerId}
+
+	</select>
+	
+  <select id="getShopByNames" resultMap="ExcelMap">
+  	select si.shop_id
+  	from shop_info si where 1=1
+	and (si.shop_name = #{shopName}  or si.location=#{shopName})
+  </select>
+  
+	
+</mapper>

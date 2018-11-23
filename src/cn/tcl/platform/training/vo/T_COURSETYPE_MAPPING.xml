@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.training.dao.CourseTypeDao">
+	<resultMap type="CourseType" id="typeMap">
+		<result column="type_id" property="typeId" jdbcType="INTEGER"/>
+		<result column="type_name" property="typeName" jdbcType="VARCHAR"/>
+		<result column="type_code" property="typeCode" jdbcType="VARCHAR"/>
+		<result column="status" property="status" jdbcType="CHAR"/>
+		<result column="create_date" property="createDate" jdbcType="DATE"/>
+		<result column="create_by" property="createBy" jdbcType="VARCHAR"/>
+		<result column="last_modify_date" property="lastModifyDate" jdbcType="DATE"/>
+		<result column="last_modify_user" property="lastModifyUser" jdbcType="VARCHAR"/>
+		<result column="type_level" property="typeLevel" jdbcType="CHAR"/>
+		<result column="parent_type_id" property="parentTypeId" jdbcType="INTEGER"/>
+	</resultMap>
+	<!-- 基础查询语句 -->
+	<sql id="baseSelectType">
+		select ct.type_id,
+			   ct.type_name,
+			   ct.type_code,
+			   ct.status,
+			   ct.create_date,
+			   ct.create_by,
+			   ct.last_modify_date,
+			   ct.last_modify_user,
+			   ct.type_level,
+			   ct.parent_type_id 
+		from course_type ct
+	</sql>
+	<!-- 查询一级课程列表 -->
+	<select id="GetLevelOneList"    resultMap="typeMap">
+		<include refid="baseSelectType"/>
+		where ct.type_level='1' and
+			  ct.status='1'
+	    order by ct.type_code
+	</select>
+	
+	<!-- 根据类别id查询子课程类别列表 -->
+	<select id="GetSubTypeListById" resultMap="typeMap">
+		<include refid="baseSelectType"/>
+		where ct.parent_type_id=#{typeId} and
+			  ct.status='1'
+	    order by ct.type_code
+	</select>
+	
+</mapper>

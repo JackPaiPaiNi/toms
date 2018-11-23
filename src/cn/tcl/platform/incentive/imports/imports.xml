@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<import>
+	<mapping bean="cn.tcl.platform.incentive.vo.Incentive">
+		<property column="*CountryName" propertyName="partyId" required="true" javaType="java.lang.String"></property>
+		<property column="*Branch Model" propertyName="branchModel" required="true" javaType="java.lang.String"></property>
+		<!-- <property column="*Size" propertyName="size" required="true" javaType="java.lang.String"></property> -->
+		<property column="*Retail price" propertyName="retailPrice" required="true" javaType="java.lang.String"></property>
+		<property column="*Incentive" propertyName="incentive" required="true" javaType="java.lang.String"></property>
+		<!-- <property column="*Quantity" propertyName="quantity" required="false" javaType="java.lang.String"></property> -->
+		<property column="*Date" propertyName="date" required="true" javaType="java.lang.String"></property>
+		<property column="Remark" propertyName="remark" required="false" javaType="java.lang.String"></property>
+	
+	</mapping>
+	<volidate dateFormat="yyyy-MM-dd" volidateClass="cn.tcl.platform.incentive.imports.ValidationImportIncentive" volidateMethod="validationImport"></volidate>
+	<service serviceBean="percentageService" serviceMethod="importIncentive"></service>
+</import>

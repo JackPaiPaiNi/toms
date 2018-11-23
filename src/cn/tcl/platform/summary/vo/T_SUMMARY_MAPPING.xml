@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="cn.tcl.platform.summary.dao.SummaryDao">
+	<resultMap type="summary" id="summaryMap">
+		<result column="summary_id" property="summaryId" jdbcType="INTEGER"/>
+		<result column="type_id" property="typeId" jdbcType="INTEGER"/>
+		<result column="region_id" property="regionId" jdbcType="INTEGER"/>
+		<result column="country_id" property="countryId" jdbcType="VARCHAR"/>
+		<result column="summary_title" property="summaryTitle" jdbcType="VARCHAR"/>
+		<result column="summary" property="summary" jdbcType="VARCHAR"/>
+		<result column="cover_url" property="coverUrl" jdbcType="VARCHAR"/>
+		<result column="summary_content" property="summaryContent" jdbcType="VARCHAR"/>
+		<result column="state" property="state" jdbcType="INTEGER"/>
+		<result column="summary_type" property="summaryType" jdbcType="INTEGER"/>
+		<result column="create_date" property="createDate" jdbcType="DATE"/>
+		<result column="create_by" property="createBy" jdbcType="VARCHAR"/>
+		<result column="creater_role_id" property="createrRoleId" jdbcType="VARCHAR"/>
+		<result column="creater_party_id" property="createrPartyId" jdbcType="VARCHAR"/>
+		<result column="type_name" property="typeName" jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	
+	<insert id="insetrSummary" parameterType="summary">
+		insert into 
+		t_summary(type_id,region_id,country_id,summary_title,summary,cover_url,summary_content,state,summary_type,create_date,create_by,creater_role_id,creater_party_id)
+		values(#{typeId},#{regionId},#{countryId},#{summaryTitle},#{summary},#{coverUrl},#{summaryContent},#{state},#{summaryType},#{createDate},#{createBy},#{createrRoleId},#{createrPartyId}); 
+		<selectKey keyProperty="summaryId" order="AFTER" resultType="java.lang.Integer">
+				SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<sql id="listwhere">
+		<where>
+			<if test="searchStr!=null"> and ${searchStr} and ts.summary_id=tmt.summary_id</if>
+			<if test="partyId!=null and partyId!=''"> and ts.creater_party_id=#{partyId}</if>
+			<if test="typeId!=null"> and ts.type_id=#{typeId}</if>
+			<if test="MessagetypeId!=null"> and ts.summary_type=#{MessagetypeId}</if>
+			<if test="conditions!=null">and	${conditions} </if>
+		</where>
+	</sql>
+	
+	<select id="selectSummaryList" resultMap="summaryMap">
+		select  ts.summary_id as summaryId,
+				p.PARTY_NAME as partyName,
+				ts.summary_title,
+				ts.summary,
+				ts.summary_type,
+				ts.cover_url,
+				ts.state,
+				ts.create_date,
+				ts.region_id,
+				ts.country_id,
+				ts.summary_content,
+				ct.type_name as typeName,
+				ts.cover_url,
+				ct.type_id,
+				ts.create_by,
+				tmt.msg_role_id as msgRoleId
+				from t_summary ts,party p,course_type ct,t_msg_text tmt 
+		<include refid="listwhere"/>
+		and	p.PARTY_ID=ts.creater_party_id and ts.type_id=ct.type_id
+		order by ts.create_date desc limit #{start},#{limit};
+	</select>
+	
+	<select id="countSummary" resultType="java.lang.Integer">
+		select count(*) from t_summary ts,t_msg_text tmt
+		<include refid="listwhere"/>
+	</select>
+	
+	<select id="getSummaryById" resultMap="summaryMap" parameterType="java.lang.String">
+		select * from t_summary where summary_id=#{summaryId}
+	</select>
+	
+	<update id="updateSummary" parameterType="summary">
+			UPDATE t_summary 
+		<trim prefix="set"  suffixOverrides="," >
+			<if test="typeId!=null">
+				type_id=#{typeId},
+			</if>
+			<if test="regionId!=null">
+				region_id=#{regionId},
+			</if>
+			<if test="countryId!=null">
+				country_id=#{countryId},
+			</if>
+			<if test="summaryTitle!=null">
+				summary_title=#{summaryTitle},
+			</if>
+			<if test="summary!=null">
+				summary=#{summary},
+			</if>
+			<if test="coverUrl!=null">
+				cover_url=#{coverUrl},
+			</if>
+			<if test="summaryContent!=null">
+				summary_content=#{summaryContent},
+			</if>
+			<if test="state!=null">
+				state=#{state},
+			</if>
+			<if test="summaryType!=null">
+				summary_type=#{summaryType},
+			</if>
+		</trim>
+		where summary_id=#{summaryId};
+	</update>
+	
+	<delete id="deleteSummary" parameterType="summary">
+		delete from t_summary where summary_id=#{summaryId}
+	</delete>
+</mapper>

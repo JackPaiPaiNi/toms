@@ -1,0 +1,241 @@
+@charset 'UTF-8';
+*{
+	padding: 0;
+	margin: 0;
+}
+tr.selected  { background:#f5f6fd;}
+.fl{float: left;}
+.fr{float: right;}
+.inb{display: inline-block;}
+a{text-decoration: none;}
+table{
+	border-collapse: collapse;
+	border:1px solid #d0d0d0;
+	width: 96%;
+	color: #404040;
+	line-height: 28px;
+	margin: 0 auto;	
+	text-align: center;
+	font-size: 14px;
+}
+tr{
+	border:1px dashed #d0d0d0;
+	width: 96%;
+}
+body{
+	background-color: #f8f8f8;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+html,body,.parent{
+	height: 100%;
+	overflow: hidden;
+}
+.parent{
+	position: relative;
+}
+@media only screen 
+and (min-width: 768px){
+	.parent .header .head-left{
+		width: 66%;
+	}	
+}
+@media only screen 
+and (max-width: 768px){
+	.parent .header .head-left{
+		width: 100%;
+	}
+}
+
+/*右部内容*/
+.main{
+	border-top: 1px solid #b5a38f;
+	border-left: 1px solid #b5a38f;
+	position: absolute;
+	left: 0px;
+	right: 0;
+	top: 0px;
+	bottom: 1px;
+	background-color: #fafafa;
+	overflow: auto;
+	padding-bottom: 30px;
+}
+.create{
+	background-color: #f0e3bf;
+	height: 28px;
+	line-height: 28px;
+	text-indent: 10px;
+	font-size: 14px;
+	border-bottom: 1px solid #d4a375;
+	position: fixed;
+	left: 301px;
+	right: 0;
+	z-index: 999;
+}
+/*结果*/
+.Send-application{
+	width: 96%;
+	margin: 0 auto;
+	margin-top: 40px;
+	border: 1px solid #d0d0d0;
+	padding-bottom: 10px;
+}
+.Send-application-p{
+	background-color: #eaecf4;
+	font-size: 16px;
+	line-height: 28px;
+	text-indent: 10px;
+	margin-bottom: 8px;
+}
+.Send-application>span{
+	margin-left: 10px;
+	font-size: 14px;
+	vertical-align: top;
+}
+.Send-application>select{
+	width: 200px;
+	vertical-align: top;
+}
+.Send-application>i{
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	background: url(../../images/training/xinghao.png) no-repeat right center;
+	background-size: 5px 5px;
+}
+.Send-application .hint{
+	font-size: 12px;
+	color: #EE5565;
+	margin-left: 0;
+	line-height: 20px;
+}
+.Message-sender{
+	width: 96%;
+	margin: 0 auto;
+	margin-top: 10px;
+	border: 1px solid #d0d0d0;
+	padding-bottom: 10px;
+}
+.Message-sender-p{
+	background-color: #eaecf4;
+	font-size: 16px;
+	line-height: 28px;
+	text-indent: 10px;
+	margin-bottom: 8px;
+}
+.Message-sender>div{
+	width: 96%;
+	margin: 0 auto;
+	background-color: #fff;
+	height: 50px;
+	border: 1px solid #e0e0e0;
+	font-size: 14px;
+	padding: 0px 6px;
+	margin-bottom: 10px;
+}
+.Message-sender>fieldset{
+	border: 0;
+	display: inline-block;
+}
+.Message-sender>fieldset>input{
+	margin: 0;
+    vertical-align: middle;
+}
+.Message-sender>input[type='button']{
+	color: #337ab7;
+	font-size: 14px;
+	cursor: pointer;
+}
+#Select_message{
+	margin-left: -webkit-calc(50% - 100px);
+	margin-left: -moz-calc(50% - 100px);	
+	margin-left: calc(50% - 100px);		
+}
+.TopArticle{
+	text-indent: 10px;
+}
+/*消息选择界面*/
+.Message-selection{
+	width: 100vw;
+	height: 100vh;
+	background-color: rgba(0,0,0,0.6);
+	position: fixed;
+	z-index: 9999;	
+	left: 0;
+	top: 0;
+}
+.Message-selection>div{
+	width: 80vw;
+	height: 80vh;
+	margin-top: 10vh;
+	margin-left: 10vw;
+	background-color: #fff;
+	border: 1px solid #d0d0d0;
+}
+.Message-selection>div>p{
+	background-color: #f0e3c0;
+	font-size: 16px;
+	text-indent: 10px;
+	line-height: 28px;
+	margin-bottom: 10px;
+}
+.Message-selection>div>p>i{
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	background: url(../../images/training/close.png) no-repeat center center;
+	background-size: 12px 12px;
+	float: right;
+	margin-right: 20px;
+	margin-top: 4px;
+	cursor: pointer;
+}
+.dfghj>select{
+	width: 200px;	
+}
+.dfghj>input{
+	width: 200px;	
+}
+.Message-selection span{
+	margin-left: 15px;
+	font-size: 14px;
+}
+.Message-selection input[type='button']{
+	width: auto;
+	height: 20px;
+	background: url(../../images/training/sch_03.png) no-repeat 2px center;
+	background-size: 15px 15px;
+	border: 0;
+	text-align: left;
+	text-indent: 15px;
+	margin-left: 10px;
+	cursor: pointer;
+	border: 1px solid #eaecf4;
+}
+.cssraindemo2{
+	margin-top: 10px;
+}
+.cssraindemo2>thead{
+	background-color: #eaecf4;
+}
+.cssraindemo2>tbody{
+	font-size: 12px;
+}
+.cssraindemo2>thead>tr>th:nth-child(1){
+	width: 50px;
+}
+.cssraindemo2>tbody>tr>td:nth-child(1){
+	width: 50px;
+}
+.cssraindemo2>tbody>tr>td:nth-child(1)>input{
+	width: auto;
+	margin: 0;
+}
+#Messselection{
+	display: none;
+}
+#cssraindemo_ty{
+	display: none;
+}
+
+
+

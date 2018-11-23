@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<import>
+	<mapping bean="cn.tcl.platform.customer.vo.Customer">
+		<property column="*客户名称" propertyName="customerName" required="true" javaType="java.lang.String"></property>
+		<property column="*所属机构" propertyName="partyId" required="true" javaType="java.lang.String"></property>
+		<property column="*客户代码" propertyName="customerCode" required="true" javaType="java.lang.String"></property>
+		<property column="*渠道类型" propertyName="channelType" required="true" javaType="java.lang.String"></property>
+		<property column="*TCL品牌入驻日期" propertyName="enterDate" required="true" javaType="java.util.Date"></property>
+		<property column="*国家" propertyName="countryId" required="true" javaType="java.lang.String"></property>
+		<property column="*省" propertyName="provinceId" required="true" javaType="java.lang.String"></property>
+		<property column="市" propertyName="cityId" required="false" javaType="java.lang.String"></property>
+		<property column="县" propertyName="countyId" required="false" javaType="java.lang.String"></property>
+		<property column="镇" propertyName="townId" required="false" javaType="java.lang.String"></property>
+		<property column="*详细地址" propertyName="detailAddress" required="true" javaType="java.lang.String"></property>
+		<property column="*联系人姓名" propertyName="contactName" required="true" javaType="java.lang.String"></property>
+		<property column="*联系人电话" propertyName="phone" required="true" javaType="java.lang.String"></property>
+		<property column="*客户邮箱" propertyName="email" required="true" javaType="java.lang.String"></property>
+		<property column="*客户网站" propertyName="website" required="true" javaType="java.lang.String"></property>
+	</mapping>
+	<volidate dateFormat="yyyy-MM-dd" volidateClass="cn.tcl.platform.customer.imports.ValidationImportCustomer" volidateMethod="validationImport"></volidate>
+	<service serviceBean="customerService" serviceMethod="importCustomer"></service>
+</import>

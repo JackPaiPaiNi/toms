@@ -1,0 +1,2166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+        "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+	<package name="security.page" extends="struts-default">
+		<action name="loginPage" class="cn.tcl.platform.login.actions.LoginAction" method="loginPage">
+		    <result name="success">/denglu.jsp</result>
+	  <!-- <result name="success">/login.jsp</result>-->
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loginOut" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="loginOut">
+			<result name="success" type="redirect">loginPage.action</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		
+		<!-- <action name="cookieLogin" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="cookieLogin">
+			<result name="success">index.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action> -->
+	</package>
+	
+	<package name="security.jsonType" namespace="/main" extends="json-default">
+		<action name="login" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="login">
+       		<result type="json"></result>
+        </action>
+        
+        <action name="setLanguage" class="cn.tcl.common.BaseAction" method="setLanguage">
+       		<result type="json"></result>
+        </action>
+        
+        <action name="loadParameter" class="cn.tcl.platform.cfgparam.action.CfgParameterAction" method="loadParameter">
+       		<result type="json"></result>
+        </action>
+        
+	</package>
+	
+	<package name="tmtreport.platform.page" extends="struts-default">
+		<interceptors>
+   			<interceptor name="authority" class="cn.tcl.platform.user.security.AuthorityInterceptor" />
+   			<interceptor-stack name="mydefault">
+   				<interceptor-ref name="defaultStack"></interceptor-ref>
+   				<interceptor-ref name="authority"></interceptor-ref>
+   			</interceptor-stack>
+   		</interceptors>
+   		<default-interceptor-ref name="mydefault" />
+   		<global-results>
+    		<result name="loginPage" type="redirect">loginPage.action</result>
+    	</global-results>
+    	
+    	<action name="loadShopPhotosPage" class="cn.tcl.platform.shop.actions.UiShopAction" method="loadShopPhotosPage">
+			<result name="success">/page/platform/shop/selectPhoto.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<!-- 测试使用 -->
+		<action name="loadStaTablePage" class="cn.tcl.platform.statable.action.StaTableAction" method="loadStaTablePage">
+			<result name="success">/page/platform/soTable/ach.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<!-- 产品资源优化 -->
+		
+		<action name="loadEquipmentPage" class="cn.tcl.platform.sample.action.SampleAction" method="loadEquipmentPage">
+			<result name="success">/page/platform/sample/equipment.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<!--  -->
+		
+		
+		 	<action name="loadPCTargetPage" class="cn.tcl.platform.performance.action.PerformanceAction" method="loadPCTargetPage">
+			<result name="success">/page/platform/performance/PC_Target.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action> 
+		 	<action name="loadINPOPage" class="cn.tcl.platform.performance.action.PerformanceAction" method="loadINPOPage">
+			<result name="success">/page/platform/performance/Incentive_Policy.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action> 
+		
+    	<action name="tomsIndexPage" class="cn.tcl.platform.login.actions.LoginAction" method="tomsIndexPage">
+			<result name="success">/index.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadUserLoginPage" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="loadUserLoginPage">
+			<result name="success">/page/platform/user/userList.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadPartyTreePage" class="cn.tcl.platform.party.actions.PartyAction" method="loadPartyTreePage">
+			<result name="success">/page/platform/party/partyTree.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadPermissionTreePage" class="cn.tcl.platform.permission.actions.PermissionAction" method="loadPermissionTreePage">
+			<result name="success">/page/platform/permission/permissionTree.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadRoleListPage" class="cn.tcl.platform.role.actions.RoleAction" method="loadRoleListPage">
+			<result name="success">/page/platform/role/roleList.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+	<action name="loadCurrencyConversionPage" class="cn.tcl.platform.exchange.action.ExchangeAction" method="loadCurrencyConversionPage">
+			<result name="success">/page/platform/currencyExchange/list.jsp</result>
+			<result name="input">/page/platform/currencyExchange/currencyList.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadCustomerPage" class="cn.tcl.platform.customer.actions.UiCustomerAction" method="loadCustomerPage">
+			<result name="success">/page/platform/customer/list.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadShopPage" class="cn.tcl.platform.shop.actions.UiShopAction" method="loadShopPage">
+			<result name="success">/page/platform/shop/list.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadProductPage" class="cn.tcl.platform.product.actions.UiProductAction" method="loadProductPage">
+			<result name="success">/page/platform/product/list.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadSalePage" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadSalePage">
+			<result name="success">/page/platform/sale/list.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+			<action name="loadCountrySalePage" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadCountrySalePage">
+			<result name="success">/page/platform/sale/countryList.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+			<action name="loadCustomerSalePage" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadCustomerSalePage">
+			<result name="success">/page/platform/sale/customerList.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+			<action name="loadSaleByMobilePage" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadSaleByMobilePage">
+			<result name="success">/page/platform/sale/list_mobile.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		
+			<action name="loadCoefficientPage" class="cn.tcl.platform.coefficient.actions.CoefficientlAction" method="loadCoefficientPage">
+			<result name="success">/page/platform/sale/coefficient.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadDealerSelloutPage" class="cn.tcl.platform.excel.actions.StatementTableAction" method="loadDealerSelloutPage">
+			<result name="success">/page/platform/soTable/dealer_sellout.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+
+		
+		
+		<!-- 电视销售目标 -->
+		<action name="loadSaleTargetPage" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadSaleTargetPage">
+			<result name="success">/page/platform/sale/newtargets.jsp</result>
+			<result name="input">/page/platform/sale/target.jsp</result>
+			<result name="BDSC">/page/platform/target/TVBDSCTarget.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		<!-- 冰箱销售目标 -->
+		<action name="loadACTargetPage" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadACTargetPage">
+			<result name="success">/page/platform/sale/ac_targets.jsp</result>
+			<result name="input">/page/platform/sale/ac_target.jsp</result>
+				<result name="BDSC">/page/platform/target/ACBDSCTarget.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>			
+		
+		<action name="loadSPhotosPage" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadSPhotosPage">
+			<result name="success">/page/platform/sale/photos.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadSSampleDevicesPage" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadSSampleDevicesPage">
+			<result name="success">/page/platform/sale/samples.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadInventoryListPage" class="cn.tcl.platform.inventory.actions.UiInventoryAction" method="loadInventoryListPage">
+			<result name="success">/page/platform/inventory/inventory.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<!-- 产品条码对应表 add 20150512 hqt -->
+		<action name="loadBarcodePage" class="cn.tcl.platform.barcode.action.BarcodeAction" method="loadBarcodePage">
+			<result name="success">/page/platform/barcode/codePage.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<!-- 总部产品型号与分公司产品型号关系 add 20150516 hqt -->
+		<action name="loadModelMapPage" class="cn.tcl.platform.modelmap.action.ModelMapAction" method="loadModelMapPage">
+			<result name="success">/page/platform/modelmap/modelMap.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<!-- 渠道产品型号与分公司产品型号关系 add 20150516 hqt -->
+		<action name="loadModelChannelMapPage" class="cn.tcl.platform.modelmap.action.ModelMapAction" method="loadModelChannelMapPage">
+			<result name="success">/page/platform/modelmap/channelModelMap.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<!-- 信息提醒 -->
+		<action name="loadInfoPage" class="cn.tcl.platform.info.action.InfoAction" method="loadInfoPage">
+			<result name="success">/page/platform/info/info.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<!-- 信息创建 -->
+		<action name="loadCreateInfoPage" class="cn.tcl.platform.info.action.InfoAction" method="loadCreateInfoPage">
+			<result name="success">/page/platform/info/createInfo.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<!-- 考题管理 -->
+		<action name="loadExaminationsPage" class="cn.tcl.platform.examination.actions.ExaminationAction" method="loadExaminationPage">
+			<result name="success">/page/platform/examination/topic.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<!-- 考试统计 -->
+		<action name="loadExaminationStatisticsPage" class="cn.tcl.platform.examination.actions.PaperAction" method="loadExaminationStatisticsPage">
+			<result name="success">/page/platform/examination/examination_statistics.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<!--试卷管理 -->
+		<action name="loadPaperPage" class="cn.tcl.platform.examination.actions.PaperAction" method="loadPaperPage">
+			<result name="success">/page/platform/examination/paper.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<!--考试情况汇总 -->
+		<action name="loadSummaryOfExaminationPage" class="cn.tcl.platform.examination.actions.PaperAction" method="loadSummaryOfExaminationPage">
+			<result name="success">/page/platform/examination/test_statistics.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<!--考试(扫码)情况汇总 -->
+		<action name="loadEemporaryExamPage" class="cn.tcl.platform.examination.actions.GradeAction" method="loadEemporaryExamPage">
+			<result name="success">/page/platform/examination/test_statistics_temporary.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		 
+		 <action name="loadStatementPage" class="cn.tcl.platform.statement.action.StatementAction" method="loadStatementPage">
+			<result name="success">/page/platform/statement/statement_list.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<!-- AC -->
+		
+		<action name="loadACStatementPage" class="cn.tcl.platform.statement.action.StatementAction" method="loadACStatementPage">
+			<result name="success">/page/platform/statement/acstatement_list.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadACProductPage" class="cn.tcl.platform.product.actions.UiProductAction" method="loadACProductPage">
+			<result name="success">/page/platform/product/ac_product_list.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		
+		<!--  -->
+		
+	
+		 <action name="loadSampleTargetPage" class="cn.tcl.platform.sample.action.SampleTargetAction" method="loadSampleTargetPage">
+			<result name="success">/page/platform/sample/sampleTarget.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadSampleTargetAchPage" class="cn.tcl.platform.sample.action.SampleTargetAction" method="loadSampleTargetAchPage">
+			<result name="success">/page/platform/sample/sampleTargetAch.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		
+			<action name="loadSellInByHqPage" class="cn.tcl.platform.sellIn.actions.UiSellInAction" method="loadSellInByHqPage">
+			<result name="success">/page/platform/sellIn/sellInByHq.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		
+		
+			<action name="loadGrandTTLPage" class="cn.tcl.platform.excel.actions.SoTableAction" method="loadGrandTTLPage">
+			<result name="success">/page/platform/soTable/ach.jsp</result>
+			<result name="successhq">/page/platform/soTable/HqAch.jsp</result>
+			<result name="BDSC">/page/platform/BdscTable/HqAch.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		
+		<action name="loadSoHuanBiPage" class="cn.tcl.platform.excel.actions.SoTableAction" method="loadSoHuanBiPage">
+			<result name="success">/page/platform/soTable/chain.jsp</result>
+			<result name="successhq">/page/platform/soTable/HqChain.jsp</result>
+			<result name="BDSC">/page/platform/BdscTable/HqChain.jsp</result>
+			
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		
+		<action name="loadSoGrowthPage" class="cn.tcl.platform.excel.actions.SoTableAction" method="loadSoGrowthPage">
+			<result name="success">/page/platform/soTable/growth.jsp</result>
+			<result name="successhq">/page/platform/soTable/hQYearOnYear.jsp</result>
+			<result name="BDSC">/page/platform/BdscTable/hQYearOnYear.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+			<action name="loadReturnPage" class="cn.tcl.platform.sellIn.actions.UiSellInAction" method="loadReturnPage">
+			<result name="success">/page/platform/sellIn/returnList.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		
+			<action name="loadSellInPage" class="cn.tcl.platform.sellIn.actions.UiSellInAction" method="loadSellInPage">
+			<result name="success">/page/platform/sellIn/list.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		
+	<action name="loadIncentivePage" class="cn.tcl.platform.incentive.action.IncentiveAction" method="loadIncentivePage">
+			<result name="success">/page/platform/incentive/incentive.jsp</result>
+			<result name="error">/page/error.jsp</result>
+	</action>	
+			
+		
+	</package>
+	
+	<package name="tmtreport.platform.jsonType" namespace="/platform" extends="json-default">
+		<interceptors>
+   			<interceptor name="authority" class="cn.tcl.platform.user.security.AuthorityInterceptor" />
+   			<interceptor-stack name="mydefault">
+   				<interceptor-ref name="defaultStack"></interceptor-ref>
+   				<interceptor-ref name="authority"></interceptor-ref>
+   			</interceptor-stack>	
+   		</interceptors>
+   		<default-interceptor-ref name="mydefault" />
+   		<global-results>
+    		<result name="loginPage" type="redirect">loginPage.action</result>
+    	</global-results>
+   		
+   		<!-- AC尺寸 -->
+   		 <action name="selectACAllSize" class="cn.tcl.platform.product.actions.UiProductAction" method="selectACAllSize">
+       		<result type="json"></result>
+        </action>
+        
+   		<!-- AC分类 -->
+   		 <action name="selectACAllClassification" class="cn.tcl.platform.product.actions.UiProductAction" method="selectACAllClassification">
+       		<result type="json"></result>
+        </action>
+        
+   		<!-- AC系列 -->
+   		 <action name="selectACCatena" class="cn.tcl.platform.product.actions.UiProductAction" method="selectACCatena">
+       		<result type="json"></result>
+        </action>
+        
+        
+   		<action name="loadShopPhotosListData" class="cn.tcl.platform.shop.actions.UiShopAction" method="loadShopPhotosListData">
+       		<result type="json"></result>
+        </action>
+   		<action name="insertUserLogin" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="insertUserLogin">
+       		<result type="json"></result>
+        </action>
+        <action name="loadUserLoginGridData" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="loadUserLoginGridData">
+       		<result type="json"></result>
+        </action>
+        <action name="loadUpdateUserLoginData" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="loadUpdateUserLoginData">
+       		<result type="json"></result>
+        </action>
+        <action name="editUserLogin" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="editUserLogin">
+       		<result type="json"></result>
+        </action>
+        <action name="updateUserPassword" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="updateUserPassword">
+       		<result type="json"></result>
+        </action>
+         <action name="deleteUserLogin" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="deleteUserLogin">
+       		<result type="json"></result>
+        </action>
+        <action name="enableOrDisableUser" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="enableOrDisableUser">
+       		<result type="json"></result>
+        </action>
+        <action name="importUser" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="importUser">
+       		<result type="json"></result>
+        </action>
+        <action name="loadSalersData" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="loadSalersData">
+       		<result type="json"></result>
+        </action>
+        
+         <action name="loadShopSalesDataByConditons" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="loadShopSalesDataByConditons">
+       		<result type="json"></result>
+        </action>
+        <!-- 门店目标导入 -->
+        
+       <!--  <action name="importStore" class="cn.tcl.platform.sale.actions.UiSaleAction" method="importStore">
+        	<result type="json"></result>
+        </action> -->
+         <action name="importStore" class="cn.tcl.platform.sale.actions.UiSaleAction" method="importStore">
+        	<result type="json"></result>
+        </action>
+     
+        <action name="loadStoreData" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadStoreData">
+        	<result type="json"></result>
+        </action>
+        
+         <action name="loadChannelData" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadChannelData">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="loadOfficeData" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadOfficeData">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="loadRegionData" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadRegionData">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="loadBranchData" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadBranchData">
+        	<result type="json"></result>
+        </action>
+        
+         <action name="loadPromoterData" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadPromoterData">
+        	<result type="json"></result>
+        </action>
+        
+         <action name="loadSupervisorData" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadSupervisorData">
+        	<result type="json"></result>
+        </action>
+        
+         <action name="loadSalesmanData" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadSalesmanData">
+        	<result type="json"></result>
+        </action>
+        
+          <action name="loadManagerData" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadManagerData">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="getChannelTarget" class="cn.tcl.platform.sale.actions.UiSaleAction" method="getChannelTarget">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="getBranchTarget" class="cn.tcl.platform.sale.actions.UiSaleAction" method="getBranchTarget">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="getSupervisorTarget" class="cn.tcl.platform.sale.actions.UiSaleAction" method="getSupervisorTarget">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="getSalemanTarget" class="cn.tcl.platform.sale.actions.UiSaleAction" method="getSalemanTarget">
+	        <result type="json"></result>
+        </action>
+        
+        <action name="getBusinessTarget" class="cn.tcl.platform.sale.actions.UiSaleAction" method="getBusinessTarget">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="getBranchTargetList" class="cn.tcl.platform.sale.actions.UiSaleAction" method="getBranchTargetList">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="getACChannelTarget" class="cn.tcl.platform.sale.actions.UiSaleAction" method="getACChannelTarget">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="getACBranchTarget" class="cn.tcl.platform.sale.actions.UiSaleAction" method="getACBranchTarget">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="getACSupervisorTarget" class="cn.tcl.platform.sale.actions.UiSaleAction" method="getACSupervisorTarget">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="getACSalemanTarget" class="cn.tcl.platform.sale.actions.UiSaleAction" method="getACSalemanTarget">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="getACBussinessTarget" class="cn.tcl.platform.sale.actions.UiSaleAction" method="getACBussinessTarget">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="getACBranchTagetList" class="cn.tcl.platform.sale.actions.UiSaleAction" method="getACBranchTagetList">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="getOBCTVBranchTarget" class="cn.tcl.platform.sale.actions.UiSaleAction" method="getOBCTVBranchTarget">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="getOBCACBranchTarget" class="cn.tcl.platform.sale.actions.UiSaleAction" method="getOBCACBranchTarget">
+        	<result type="json"></result>
+        </action>
+        <!-- AC导入 -->
+         <action name="importACtarget" class="cn.tcl.platform.sale.actions.UiSaleAction" method="importACtarget">
+        	<result type="json"></result>
+        </action>
+        
+        <!-- AC销售数据 -->
+        <action name="selectACStoreTargets" class="cn.tcl.platform.sale.actions.UiSaleAction" method="selectACStoreTargets">
+        	<result type="json"></result>
+        </action>
+        
+         <action name="selectACChannelTargets" class="cn.tcl.platform.sale.actions.UiSaleAction" method="selectACChannelTargets">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="selectACOfficeTargets" class="cn.tcl.platform.sale.actions.UiSaleAction" method="selectACOfficeTargets">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="selectACRegionTargets" class="cn.tcl.platform.sale.actions.UiSaleAction" method="selectACRegionTargets">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="selectACBranchTargets" class="cn.tcl.platform.sale.actions.UiSaleAction" method="selectACBranchTargets">
+        	<result type="json"></result>
+        </action>        
+        
+         <action name="selectACSupervisorTargets" class="cn.tcl.platform.sale.actions.UiSaleAction" method="selectACSupervisorTargets">
+        	<result type="json"></result>
+        </action>
+        
+         <action name="selectACSalesmanTargets" class="cn.tcl.platform.sale.actions.UiSaleAction" method="selectACSalesmanTargets">
+        	<result type="json"></result>
+        </action>
+        
+          <action name="selectACBusinessTargets" class="cn.tcl.platform.sale.actions.UiSaleAction" method="selectACBusinessTargets">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="SalersData" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="SalersData">
+       		<result type="json"></result>
+        </action>
+        
+        <action name="loadPartyTreeNodeData" class="cn.tcl.platform.party.actions.PartyAction" method="loadPartyTreeNodeData">
+       		<result type="json"></result>
+        </action>
+        <action name="loadPartyTreeData" class="cn.tcl.platform.party.actions.PartyAction" method="loadPartyTreeData">
+       		<result type="json"></result>
+        </action>
+        <action name="loadUpdatePartyData" class="cn.tcl.platform.party.actions.PartyAction" method="loadUpdatePartyData">
+       		<result type="json"></result>
+        </action>
+        <action name="deleteParty" class="cn.tcl.platform.party.actions.PartyAction" method="deleteParty">
+       		<result type="json"></result>
+        </action>
+        <action name="insertParty" class="cn.tcl.platform.party.actions.PartyAction" method="insertParty">
+       		<result type="json"></result>
+        </action>
+        <action name="updateParty" class="cn.tcl.platform.party.actions.PartyAction" method="updateParty">
+       		<result type="json"></result>
+        </action>
+       
+        <action name="selectRoleParty" class="cn.tcl.platform.party.actions.PartyAction" method="selectRoleParty">
+       		<result type="json"></result>
+        </action>
+        <action name="selectUserParty" class="cn.tcl.platform.party.actions.PartyAction" method="selectUserParty">
+       		<result type="json"></result>
+        </action>
+        <action name="selectUserPartyCountry" class="cn.tcl.platform.party.actions.PartyAction" method="selectUserPartyCountry">
+       		<result type="json"></result>
+        </action>
+        
+        <action name="getCustomerByCountry" class="cn.tcl.platform.customer.actions.UiCustomerAction" method="getCustomerByCountry">
+       		<result type="json"></result>
+        </action>
+        
+        <action name="loadPermissionTreeNodeData" class="cn.tcl.platform.permission.actions.PermissionAction" method="loadPermissionTreeNodeData">
+       		<result type="json"></result>
+        </action>
+        <action name="loadUpdatePermissionData" class="cn.tcl.platform.permission.actions.PermissionAction" method="loadUpdatePermissionData">
+       		<result type="json"></result>
+        </action>
+        <action name="deletePermission" class="cn.tcl.platform.permission.actions.PermissionAction" method="deletePermission">
+       		<result type="json"></result>
+        </action>
+        <action name="insertPermission" class="cn.tcl.platform.permission.actions.PermissionAction" method="insertPermission">
+       		<result type="json"></result>
+        </action>
+        <action name="updatePermission" class="cn.tcl.platform.permission.actions.PermissionAction" method="updatePermission">
+       		<result type="json"></result>
+        </action>
+        <action name="selectRolePermission" class="cn.tcl.platform.permission.actions.PermissionAction" method="selectRolePermission">
+       		<result type="json"></result>
+        </action>
+         <action name="deleteRole" class="cn.tcl.platform.role.actions.RoleAction" method="deleteRole">
+       		<result type="json"></result>
+        </action>
+        <action name="loadRoleDataForGrid" class="cn.tcl.platform.role.actions.RoleAction" method="loadRoleDataForGrid">
+       		<result type="json"></result>
+        </action>
+        <action name="loadUpdateRoleData" class="cn.tcl.platform.role.actions.RoleAction" method="loadUpdateRoleData">
+       		<result type="json"></result>
+        </action>
+        <action name="insertRole" class="cn.tcl.platform.role.actions.RoleAction" method="insertRole">
+       		<result type="json"></result>
+        </action>
+        <action name="updateRole" class="cn.tcl.platform.role.actions.RoleAction" method="updateRole">
+       		<result type="json"></result>
+        </action>
+        <action name="loadRoleUserData" class="cn.tcl.platform.role.actions.RoleAction" method="loadRoleUserData">
+       		<result type="json"></result>
+        </action>
+        <action name="insertRolePermission" class="cn.tcl.platform.role.actions.RoleAction" method="insertRolePermission">
+       		<result type="json"></result>
+        </action>
+        <action name="insertRoleParty" class="cn.tcl.platform.role.actions.RoleAction" method="insertRoleParty">
+       		<result type="json"></result>
+        </action>
+        <action name="isRoleNameSame" class="cn.tcl.platform.role.actions.RoleAction" method="isRoleNameSame">
+       		<result type="json"></result>
+        </action>
+        <action name="selectRoleForSelect" class="cn.tcl.platform.role.actions.RoleAction" method="selectRoleForSelect">
+       		<result type="json"></result>
+        </action>
+		
+		 <action name="selectRoleByPartyId" class="cn.tcl.platform.role.actions.RoleAction" method="selectRoleByPartyId">
+       		<result type="json"></result>
+        </action>
+        
+         <action name="loadPartyListData" class="cn.tcl.platform.shop.actions.UiShopAction" method="loadPartyListData">
+       		<result type="json"></result>
+        </action>
+        <action name="loadCustomerListData" class="cn.tcl.platform.customer.actions.UiCustomerAction" method="loadCustomerListData">
+       		<result type="json"></result>
+        </action>
+        <action name="editCustomer" class="cn.tcl.platform.customer.actions.UiCustomerAction" method="editCustomer">
+       		<result type="json"></result>
+        </action>
+        <action name="addCustomer" class="cn.tcl.platform.customer.actions.UiCustomerAction" method="addCustomer">
+       		<result type="json"></result>
+        </action>
+        <action name="deleteCustomer" class="cn.tcl.platform.customer.actions.UiCustomerAction" method="deleteCustomer">
+       		<result type="json"></result>
+        </action>
+        <action name="importCustomer" class="cn.tcl.platform.customer.actions.UiCustomerAction" method="importCustomer">
+       		<result type="json"></result>
+        </action>
+        <action name="loadCustomerSalesData" class="cn.tcl.platform.customer.actions.UiCustomerAction" method="loadCustomerSalesData">
+        	<result type="json"></result>
+        </action>
+        <action name="loadCustomerSalesDataByConditons" class="cn.tcl.platform.customer.actions.UiCustomerAction" method="loadCustomerSalesDataByConditons">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="getCustomerUserRelations" class="cn.tcl.platform.customer.actions.UiCustomerAction" method="getCustomerUserRelations">
+        	<result type="json"></result>
+        </action>
+        
+               
+        <action name="loadProductListData" class="cn.tcl.platform.product.actions.UiProductAction" method="loadProductListData">
+       		<result type="json"></result>
+        </action>
+        
+        <action name="addProduct" class="cn.tcl.platform.product.actions.UiProductAction" method="addProduct">
+       		<result type="json"></result>
+        </action>
+        <action name="editProduct" class="cn.tcl.platform.product.actions.UiProductAction" method="editProduct">
+       		<result type="json"></result>
+        </action>
+        <action name="importProduct" class="cn.tcl.platform.product.actions.UiProductAction" method="importProduct">
+       		<result type="json"></result>
+        </action>
+        <action name="deleteProduct" class="cn.tcl.platform.product.actions.UiProductAction" method="deleteProduct">
+       		<result type="json"></result>
+        </action>
+        <action name="getHQProductParm" class="cn.tcl.platform.product.actions.UiProductAction" method="getHQProductParm">
+       		<result type="json"></result>
+        </action>
+        
+        <action name="loadShopListData" class="cn.tcl.platform.shop.actions.UiShopAction" method="loadShopListData">
+       		<result type="json"></result>
+        </action>
+        <action name="addShop" class="cn.tcl.platform.shop.actions.UiShopAction" method="addShop">
+       		<result type="json"></result>
+        </action>
+        <action name="editShop" class="cn.tcl.platform.shop.actions.UiShopAction" method="editShop">
+       		<result type="json"></result>
+        </action>
+        <action name="deleteShop" class="cn.tcl.platform.shop.actions.UiShopAction" method="deleteShop">
+       		<result type="json"></result>
+        </action>
+        <action name="importShop" class="cn.tcl.platform.shop.actions.UiShopAction" method="importShop">
+       		<result type="json"></result>
+        </action>
+          <action name="importShopPersonnel" class="cn.tcl.platform.shop.actions.UiShopAction" method="importShopPersonnel">
+       		<result type="json"></result>
+        </action>
+            <action name="updateShopName" class="cn.tcl.platform.shop.actions.UiShopAction" method="updateShopName">
+       		<result type="json"></result>
+        </action>
+        
+        
+        
+        <action name="getShopUserRelations" class="cn.tcl.platform.shop.actions.UiShopAction" method="getShopUserRelations">
+       		<result type="json"></result>
+        </action>
+         <action name="onloadCountry" class="cn.tcl.platform.district.actions.UIDistrictAction" method="onloadCountry">
+       		<result type="json"></result>
+        </action>
+        
+         <action name="onloadEMSCCountry" class="cn.tcl.platform.district.actions.UIDistrictAction" method="onloadEMSCCountry">
+       		<result type="json"></result>
+        </action>
+        
+         <action name="selectCustomerByCountryId" class="cn.tcl.platform.district.actions.UIDistrictAction" method="selectCustomerByCountryId">
+       		<result type="json"></result>
+        </action>
+        
+        <action name="getCountryList" class="cn.tcl.platform.district.actions.UIDistrictAction" method="getCountryList">
+       		<result type="json"></result>
+        </action>
+    
+         <action name="selectProvince" class="cn.tcl.platform.district.actions.UIDistrictAction" method="selectProvince">
+       		<result type="json"></result>
+        </action>
+        <action name="getProvinceList" class="cn.tcl.platform.district.actions.UIDistrictAction" method="getProvinceList">
+       		<result type="json"></result>
+        </action>
+        <action name="getCityList" class="cn.tcl.platform.district.actions.UIDistrictAction" method="getCityList">
+       		<result type="json"></result>
+        </action>
+        <action name="getCountyList" class="cn.tcl.platform.district.actions.UIDistrictAction" method="getCountyList">
+       		<result type="json"></result>
+        </action>
+        <action name="getTownList" class="cn.tcl.platform.district.actions.UIDistrictAction" method="getTownList">
+       		<result type="json"></result>
+        </action>
+        
+        <action name="loadCityList"  class="cn.tcl.platform.district.actions.UIDistrictAction" method="loadCityList">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="loadSaleListData" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadSaleListData">
+       		<result type="json"></result>
+        </action>
+        
+          <action name="loadCountrySaleListData" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadCountrySaleListData">
+       		<result type="json"></result>
+        </action>
+        
+          <action name="loadCustomerSaleListData" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadCustomerSaleListData">
+       		<result type="json"></result>
+        </action>
+        <action name="loadSaleListDataByMobile" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadSaleListDataByMobile">
+       		<result type="json"></result>
+        </action>
+        
+        
+        
+        <action name="addSale" class="cn.tcl.platform.sale.actions.UiSaleAction" method="addSale">
+       		<result type="json"></result>
+        </action>
+        
+        <action name="loadSaleTargetListData" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadSaleTargetListData">
+       		<result type="json"></result>
+        </action>
+        <action name="loadTerminalPhotoListData" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadTerminalPhotoListData">
+       		<result type="json"></result>
+        </action>
+        <action name="loadSampleDeviceListData" class="cn.tcl.platform.sale.actions.UiSaleAction" method="loadSampleDeviceListData">
+       		<result type="json"></result>
+        </action>
+        <action name="loadInventoryListData" class="cn.tcl.platform.inventory.actions.UiInventoryAction" method="loadInventoryListData">
+        	<result type="json"></result>
+        </action>
+        <action name="importInventory" class="cn.tcl.platform.inventory.actions.UiInventoryAction" method="importInventory">
+        	<result type="json"></result>
+        </action>
+        
+        
+         <action name="importSales" class="cn.tcl.platform.sale.actions.UiSaleAction" method="importSales">
+       		<result type="json"></result>
+        </action>
+        
+        <!-- 产品条码对应表  add 20160513 hqt-->
+        <action name="loadBarcodeListData" class="cn.tcl.platform.barcode.action.BarcodeAction" method="loadBarcodeListData">
+        	<result type="json"></result>
+        </action>
+        <action name="editBarcode" class="cn.tcl.platform.barcode.action.BarcodeAction" method="editBarcode">
+       		<result type="json"></result>
+        </action>
+        <action name="addBarcode" class="cn.tcl.platform.barcode.action.BarcodeAction" method="addBarcode">
+       		<result type="json"></result>
+        </action>
+        <action name="deleteBarcode" class="cn.tcl.platform.barcode.action.BarcodeAction" method="deleteBarcode">
+       		<result type="json"></result>
+        </action>
+        
+        <!-- 总部产品型号与分公司产品型号关系 add 20150516 hqt-->
+        <action name="loadModelMapListData" class="cn.tcl.platform.modelmap.action.ModelMapAction" method="loadModelMapListData">
+        	<result type="json"></result>
+        </action>
+        <action name="editModelMap" class="cn.tcl.platform.modelmap.action.ModelMapAction" method="editModelMap">
+       		<result type="json"></result>
+        </action>
+        <action name="selectSaleMappingBybranchModel" class="cn.tcl.platform.modelmap.action.ModelMapAction" method="selectSaleMappingBybranchModel">
+       		<result type="json"></result>
+        </action>
+        <action name="addModelMap" class="cn.tcl.platform.modelmap.action.ModelMapAction" method="addModelMap">
+       		<result type="json"></result>
+        </action>
+        <action name="deleteModelMap" class="cn.tcl.platform.modelmap.action.ModelMapAction" method="deleteModelMap">
+       		<result type="json"></result>
+        </action>
+        <action name="importModelMap" class="cn.tcl.platform.modelmap.action.ModelMapAction" method="importModelMap">
+       		<result type="json"></result>
+        </action>
+        
+        <!-- 渠道型号与总部型号关系 -->
+        <action name="loadChannelModelMapListData" class="cn.tcl.platform.modelmap.action.ModelMapAction" method="loadChannelModelMapListData">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="deleteChannelModel" class="cn.tcl.platform.modelmap.action.ModelMapAction" method="deleteChannelModel">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="selectChennalModelByPartyId" class="cn.tcl.platform.modelmap.action.ModelMapAction" method="selectChennalModelByPartyId">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="editChannelModelMap" class="cn.tcl.platform.modelmap.action.ModelMapAction" method="editChannelModelMap">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="udpateChannelModelById" class="cn.tcl.platform.modelmap.action.ModelMapAction" method="udpateChannelModelById">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="insertChannelModel" class="cn.tcl.platform.modelmap.action.ModelMapAction" method="insertChannelModel">
+        	<result type="json"></result>
+        </action>
+        
+        <action name="importChannelModelMap" class="cn.tcl.platform.modelmap.action.ModelMapAction" method="importChannelModelMap">
+       		<result type="json"></result>
+        </action>
+       
+        <!-- 销售目标新增、编辑、删除 -->
+        <action name="addSaleTarget" class="cn.tcl.platform.sale.actions.UiSaleAction" method="addSaleTarget">
+       		<result type="json"></result>
+        </action>
+        <action name="editSaleTarget" class="cn.tcl.platform.sale.actions.UiSaleAction" method="editSaleTarget">
+       		<result type="json"></result>
+        </action>
+        <action name="deleteSaleTarget" class="cn.tcl.platform.sale.actions.UiSaleAction" method="deleteSaleTarget">
+       		<result type="json"></result>
+        </action>
+        
+        <!-- 编辑销售数据和删除 -->
+         <action name="editSale" class="cn.tcl.platform.sale.actions.UiSaleAction" method="editSale">
+       		<result type="json"></result>
+        </action>
+         <action name="deleteSale" class="cn.tcl.platform.sale.actions.UiSaleAction" method="deleteSale">
+       		<result type="json"></result>
+        </action>
+        
+        <!-- 获取用户 -->
+        <action name="getUserList" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="getUserList">
+       		<result type="json"></result>
+        </action>
+        <!-- 获取门店 -->
+        <action name="getShopList" class="cn.tcl.platform.shop.actions.UiShopAction" method="getShopList">
+       		<result type="json"></result>
+        </action>
+        <!-- 销售目标新增、编辑  库存导入-->
+        
+        <action name="exportSaleExcel" class="cn.tcl.platform.sale.actions.UiSaleAction" method="exportSaleExcel">
+       		<result type="json"></result>
+        </action>
+        
+         <action name="exportCountrySaleExcel" class="cn.tcl.platform.sale.actions.UiSaleAction" method="exportCountrySaleExcel">
+       		<result type="json"></result>
+        </action>
+        
+         <action name="exportCustomerSaleExcel" class="cn.tcl.platform.sale.actions.UiSaleAction" method="exportCustomerSaleExcel">
+       		<result type="json"></result>
+        </action>
+        
+        <action name="exportSamplesExcel" class="cn.tcl.platform.sale.actions.UiSaleAction" method="exportSamplesExcel">
+       		<result type="json"></result>
+        </action>
+        
+        <!-- 首页 图表action -->
+        <action name="getShopGeoCoord" class="cn.tcl.platform.shop.actions.UiShopAction" method="getShopGeoCoord">
+       		<result type="json"></result>
+        </action>
+        
+        <action name="getCategorySale" class="cn.tcl.platform.sale.actions.UiSaleAction" method="getCategorySale">
+       		<result type="json"></result>
+        </action>
+        
+        <action name="getSalePieDate" class="cn.tcl.platform.sale.actions.UiSaleAction" method="getSalePieDate">
+       		<result type="json"></result>
+        </action>
+        
+        <action name="getSizePiceData" class="cn.tcl.platform.sale.actions.UiSaleAction" method="getSizePiceData">
+       		<result type="json"></result>
+        </action>
+        
+        <!-- 产品后期维护 -->
+         <action name="selectCategoryByFatherId" class="cn.tcl.platform.product.actions.UiProductAction" method="selectCategoryByFatherId">
+       		<result type="json"></result>
+        </action>
+        
+        <action name="selectCategoryByFatherIdTWo" class="cn.tcl.platform.product.actions.UiProductAction" method="selectCategoryByFatherIdTWo">
+       		<result type="json"></result>
+        </action>
+		
+		<!-- 微信修改 -->
+        <action name="selectUserLoginId" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="selectUserLoginId">
+       		<result type="json"></result>
+        </action>
+		
+		<!-- 产品资源优化 -->
+		<action name="selectSample" class="cn.tcl.platform.sample.action.SampleAction" method="selectSample">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectShopId" class="cn.tcl.platform.sample.action.SampleAction" method="selectShopId">
+			<result type="json"></result>
+		</action>
+		
+		<action name="xportSamplesExcel" class="cn.tcl.platform.sample.action.SampleAction" method="exportSamplesExcel">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectLine" class="cn.tcl.platform.product.actions.UiProductAction" method="selectLine">
+			<result type="json"></result>
+		</action>
+		<!--  -->
+	<!-- Pc报表 -->
+		<!--   <action name="exportSaleExcelAction" class="cn.tcl.platform.excel.actions.ExportSaleExcelAction" method="excel">
+       		<result type="json"></result>
+        </action> -->
+               
+          
+          <!-- 门店等级 -->
+          <action name="storeLevelQuery" class="cn.tcl.platform.statement.action.StatementAction" method="storeLevelQuery">
+       		<result type="json"></result>
+          </action>
+        
+        
+        
+        <action name="importExcelAction" class="cn.tcl.platform.excel.actions.ImportExcelAction" method="importExcels">
+       		<result type="json"></result>
+        </action>
+		
+		<action name="selectUserSale" class="cn.tcl.platform.statement.action.StatementAction" method="selectUserSale">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectItemSaleInfo" class="cn.tcl.platform.statement.action.StatementAction" method="selectItemSaleInfo">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectSizeByFunction" class="cn.tcl.platform.statement.action.StatementAction" method="selectSizeByFunction">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectUserSaleNumber" class="cn.tcl.platform.statement.action.StatementAction" method="selectUserSaleNumber">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectCountry" class="cn.tcl.platform.statement.action.StatementAction" method="selectCountry">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectAllCountry" class="cn.tcl.platform.statement.action.StatementAction" method="selectAllCountry">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectPartyIdByUserManagerAnd" class="cn.tcl.platform.statement.action.StatementAction" method="selectPartyIdByUserManagerAnd">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectPartySupeAndSalessAnd" class="cn.tcl.platform.statement.action.StatementAction" method="selectPartySupeAndSalessAnd">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectBusinessCenter" class="cn.tcl.platform.statement.action.StatementAction" method="selectBusinessCenter">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectSalerType" class="cn.tcl.platform.statement.action.StatementAction" method="selectSalerType">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectSaleRank" class="cn.tcl.platform.statement.action.StatementAction" method="selectSaleRank">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectRegion" class="cn.tcl.platform.statement.action.StatementAction" method="selectRegion">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectPartyManage" class="cn.tcl.platform.statement.action.StatementAction" method="selectPartyManage">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectFunction" class="cn.tcl.platform.statement.action.StatementAction" method="selectFunction">
+			<result type="json"></result>
+		</action>
+		
+		<action name="sizeSaleNumber" class="cn.tcl.platform.statement.action.StatementAction" method="sizeSaleNumber">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectYearInfo" class="cn.tcl.platform.statement.action.StatementAction" method="selectYearInfo">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectAttr" class="cn.tcl.platform.statement.action.StatementAction" method="selectAttr">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectSeries" class="cn.tcl.platform.statement.action.StatementAction" method="selectSeries">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectSizeBySeries" class="cn.tcl.platform.statement.action.StatementAction" method="selectSizeBySeries">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectModelBy" class="cn.tcl.platform.statement.action.StatementAction" method="selectModelBy">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selecPartySalerTar" class="cn.tcl.platform.statement.action.StatementAction" method="selecPartySalerTar">
+			<result type="json"></result>
+		</action>
+		
+		<action name="exportDaily" class="cn.tcl.platform.excel.actions.ExportExcelAction" method="exportDaily">
+			<result type="json"></result>
+		</action>
+		
+		<action name="exportDailyCustomer" class="cn.tcl.platform.excelCustomer.actions.ExportExcelByCustomerAction" method="exportDaily">
+			<result type="json"></result>
+		</action>
+		
+		
+		<action name="exportWeekly" class="cn.tcl.platform.excel.actions.ExportExcelAction" method="exportWeekly">
+			<result type="json"></result>
+		</action>
+		
+			<action name="exportWeeklyCustomer" class="cn.tcl.platform.excelCustomer.actions.ExportExcelByCustomerAction" method="exportWeekly">
+			<result type="json"></result>
+		</action>
+		
+		<action name="exportMonthly" class="cn.tcl.platform.excel.actions.ExportExcelAction" method="exportMonthly">
+			<result type="json"></result>
+		</action>
+		
+		<action name="exportMonthlyByBDSC" class="cn.tcl.platform.BDExcel.action.ExportBDExcelAction" method="exportMonthlyByBDSC">
+			<result type="json"></result>
+		</action>
+		<action name="exportQYCByBDSC" class="cn.tcl.platform.BDExcel.action.ExportBDExcelAction" method="exportQYCByBDSC">
+			<result type="json"></result>
+		</action>
+			<action name="importBDSCTarget" class="cn.tcl.platform.BDExcel.action.ExportBDExcelAction" method="importBDSCTarget">
+			<result type="json"></result>
+		</action>
+		
+			<action name="importPCTarget" class="cn.tcl.platform.performance.action.PerformanceAction" method="importPCTarget">
+			<result type="json"></result>
+		</action>
+		
+		<action name="loadPCTargetData" class="cn.tcl.platform.performance.action.PerformanceAction" method="loadPCTargetData">
+			<result type="json"></result>
+		</action>
+			<action name="selectBDSCTarget" class="cn.tcl.platform.BDExcel.action.ExportBDExcelAction" method="selectBDSCTarget">
+			<result type="json"></result>
+		</action>
+		
+		<action name="exportMonthlyCustomer" class="cn.tcl.platform.excelCustomer.actions.ExportExcelByCustomerAction" method="exportMonthly">
+			<result type="json"></result>
+		</action>
+		
+		
+		<action name="exportQuarterly" class="cn.tcl.platform.excel.actions.ExportExcelAction" method="exportQuarterly">
+			<result type="json"></result>
+		</action>
+		
+		<action name="exportQuarterlyCustomer" class="cn.tcl.platform.excelCustomer.actions.ExportExcelByCustomerAction" method="exportQuarterly">
+			<result type="json"></result>
+		</action>
+		
+		
+		<action name="exportAnnual" class="cn.tcl.platform.excel.actions.ExportExcelAction" method="exportAnnual">
+			<result type="json"></result>
+		</action>
+		<action name="exportCustom" class="cn.tcl.platform.excel.actions.ExportExcelAction" method="exportCustom">
+			<result type="json"></result>
+		</action>
+		
+		
+		<action name="exportAnnualCustomer" class="cn.tcl.platform.excelCustomer.actions.ExportExcelByCustomerAction" method="exportAnnual">
+			<result type="json"></result>
+		</action>
+		<action name="exportCustomCustomer" class="cn.tcl.platform.excelCustomer.actions.ExportExcelByCustomerAction" method="exportCustom">
+			<result type="json"></result>
+		</action>
+		
+		
+		
+		<action name="exportDailyByAc" class="cn.tcl.platform.excel.actions.ExportExcelActionByAc" method="exportDaily">
+			<result type="json"></result>
+		</action>
+		
+		<action name="exportWeeklyByAc" class="cn.tcl.platform.excel.actions.ExportExcelActionByAc" method="exportWeekly">
+			<result type="json"></result>
+		</action>
+		<action name="exportMonthlyByAc" class="cn.tcl.platform.excel.actions.ExportExcelActionByAc" method="exportMonthly">
+			<result type="json"></result>
+		</action>
+		
+		<action name="exportQuarterlyByAc" class="cn.tcl.platform.excel.actions.ExportExcelActionByAc" method="exportQuarterly">
+			<result type="json"></result>
+		</action>
+		<action name="exportAnnualByAc" class="cn.tcl.platform.excel.actions.ExportExcelActionByAc" method="exportAnnual">
+			<result type="json"></result>
+		</action>
+		<action name="exportCustomByAc" class="cn.tcl.platform.excel.actions.ExportExcelActionByAc" method="exportCustom">
+			<result type="json"></result>
+		</action>
+		
+		
+		<action name="exportDailyByAcCustomer" class="cn.tcl.platform.excelCustomer.actions.ExportExcelActionByAc" method="exportDaily">
+			<result type="json"></result>
+		</action>
+		
+		<action name="exportWeeklyByAcCustomer" class="cn.tcl.platform.excelCustomer.actions.ExportExcelActionByAc" method="exportWeekly">
+			<result type="json"></result>
+		</action>
+		<action name="exportMonthlyByAcCustomer" class="cn.tcl.platform.excelCustomer.actions.ExportExcelActionByAc" method="exportMonthly">
+			<result type="json"></result>
+		</action>
+		
+		<action name="exportQuarterlyByAcCustomer" class="cn.tcl.platform.excelCustomer.actions.ExportExcelActionByAc" method="exportQuarterly">
+			<result type="json"></result>
+		</action>
+		<action name="exportAnnualByAcCustomer" class="cn.tcl.platform.excelCustomer.actions.ExportExcelActionByAc" method="exportAnnual">
+			<result type="json"></result>
+		</action>
+		<action name="exportCustomByAcCustomer" class="cn.tcl.platform.excelCustomer.actions.ExportExcelActionByAc" method="exportCustom">
+			<result type="json"></result>
+		</action>
+		
+		
+		
+		
+		<action name="selectCore" class="cn.tcl.platform.excel.actions.ImportExcelAction" method="selectCore">
+			<result type="json"></result>
+		</action>
+		
+		<action name="setCoreProduct" class="cn.tcl.platform.excel.actions.ImportExcelAction" method="setCoreProduct">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectAllCore" class="cn.tcl.platform.excel.actions.ImportExcelAction" method="selectAllCore">
+			<result type="json"></result>
+		</action>
+
+
+ 	<action name="importPHExcelAction" class="cn.tcl.platform.excel.actions.ImportExcelAction" method="importPHExcels">
+       		<result type="json"></result>
+        </action>
+        
+        
+        
+ 	<action name="importPHExcelBytestAction" class="cn.tcl.platform.importSo.actions.ImportExcelAction" method="importPHExcels">
+       		<result type="json"></result>
+        </action>
+        
+        
+        	<action name="importSoVerify" class="cn.tcl.platform.excel.actions.ImportExcelAction" method="importSoVerify">
+       		<result type="json"></result>
+        </action>
+        
+        	<action name="importByInput" class="cn.tcl.platform.excel.actions.ImportExcelAction" method="importByInput">
+       		<result type="json"></result>
+        </action>
+        
+        
+        
+        <action name="importChannel" class="cn.tcl.platform.target.actions.ImportTargetAction" method="importChannel">
+       		<result type="json"></result>
+        </action>
+        
+        
+        <action name="importOffice" class="cn.tcl.platform.target.actions.ImportTargetAction" method="importOffice">
+       		<result type="json"></result>
+        </action>
+        
+        
+        <action name="importReg" class="cn.tcl.platform.target.actions.ImportTargetAction" method="importReg">
+       		<result type="json"></result>
+        </action>
+        
+        
+         <action name="importBranch" class="cn.tcl.platform.target.actions.ImportTargetAction" method="importBranch">
+       		<result type="json"></result>
+        </action>
+          
+           <action name="importRole" class="cn.tcl.platform.target.actions.ImportTargetAction" method="importRole">
+       		<result type="json"></result>
+        </action>
+          
+        <action name="selectCustomer" class="cn.tcl.platform.target.actions.TargetAction" method="selectCustomer">
+			<result type="json"></result>
+		</action>
+		
+		 <action name="selectShop" class="cn.tcl.platform.target.actions.TargetAction" method="selectShop">
+			<result type="json"></result>
+		</action>
+          
+         <action name="selectSale" class="cn.tcl.platform.target.actions.TargetAction" method="selectSale">
+			<result type="json"></result>
+		</action> 
+		
+		<action name="selectManager" class="cn.tcl.platform.target.actions.TargetAction" method="selectManager">
+			<result type="json"></result>
+		</action> 
+		
+		<action name="selectProduct" class="cn.tcl.platform.target.actions.TargetAction" method="selectProduct">
+			<result type="json"></result>
+		</action> 
+		
+		<action name="chooseRegion" class="cn.tcl.platform.target.actions.TargetAction" method="chooseRegion">
+			<result type="json"></result>
+		</action> 
+		
+		<action name="chooseOffice" class="cn.tcl.platform.target.actions.TargetAction" method="chooseOffice">
+			<result type="json"></result>
+		</action>
+		
+		<action name="loadExchangeList" class="cn.tcl.platform.exchange.action.ExchangeAction" method="loadExchangeList">
+			<result type="json"></result>
+		</action>
+		
+		<action name="saveExchange" class="cn.tcl.platform.exchange.action.ExchangeAction" method="saveExchange">
+			<result type="json"></result>
+		</action>
+		
+		<action name="editExchange" class="cn.tcl.platform.exchange.action.ExchangeAction" method="editExchange">
+			<result type="json"></result>
+		</action>
+		
+		<action name="delectExchange" class="cn.tcl.platform.exchange.action.ExchangeAction" method="delectExchange">
+			<result type="json"></result>
+		</action>
+		
+		
+			
+		<action name="importModelPrice" class="cn.tcl.platform.modelmap.action.ModelMapAction" method="importModelPrice">
+			<result type="json"></result>
+		</action>
+		
+		
+		<action name="exportModelExcel" class="cn.tcl.platform.modelmap.action.ModelMapAction" method="exportModelExcel">
+			<result type="json"></result>
+		</action>
+		
+		
+		<action name="ExportShopName" class="cn.tcl.platform.shop.actions.UiShopAction" method="ExportShopName">
+			<result type="json"></result>
+		</action>
+		
+		
+		<action name="ExportDealerName" class="cn.tcl.platform.customer.actions.UiCustomerAction" method="ExportDealerName">
+			<result type="json"></result>
+		</action>
+		
+		
+		 <action name="loadPartyListByUser" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="loadPartyListByUser">
+       		<result type="json"></result>
+        </action>
+		
+		
+		 <action name="loadCustomerByParty" class="cn.tcl.platform.shop.actions.UiShopAction" method="loadCustomerByParty">
+       		<result type="json"></result>
+        </action>
+        
+        <!-- 优化 -->
+		
+		<!-- 获取区域选择的partyId -->
+		<action name="selectSubdomainByArea" class="cn.tcl.platform.statement.action.StatementAction" method="selectSubdomainByArea">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 获取功能区域销售数据 -->
+		<action name="queryFunctionSaleInfo" class="cn.tcl.platform.statement.action.StatementAction" method="queryFunctionSaleInfo">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 所有功能 -->
+		<action name="queryAllFunction" class="cn.tcl.platform.statement.action.StatementAction" method="queryAllFunction">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 所有尺寸 -->
+		<action name="queryAllSize" class="cn.tcl.platform.statement.action.StatementAction" method="queryAllSize">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 获取功能个人功能销售数据 -->
+		<action name="queryUsesrFunctionSaleInfo" class="cn.tcl.platform.statement.action.StatementAction" method="queryUsesrFunctionSaleInfo">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 获取功能个人尺寸销售数据 -->
+		<action name="queryUserSizeSaleInfo" class="cn.tcl.platform.statement.action.StatementAction" method="queryUserSizeSaleInfo">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 尺寸销售数据 -->
+		<action name="querySizeSaleInfo" class="cn.tcl.platform.statement.action.StatementAction" method="querySizeSaleInfo">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 根据业务经理获取区域-->
+		<action name="selectCountryByUserId" class="cn.tcl.platform.statement.action.StatementAction" method="selectCountryByUserId">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 指定区域督导业务员-->
+		<action name="selectPartySupeAndSale" class="cn.tcl.platform.statement.action.StatementAction" method="selectPartySupeAndSale">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 根据业务经理获取区域-->
+		<action name="selectPartyIdByUserManager" class="cn.tcl.platform.statement.action.StatementAction" method="selectPartyIdByUserManager">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 角色销售年份对比-->
+		<action name="queryManagerOfSalesYear" class="cn.tcl.platform.statement.action.StatementAction" method="queryManagerOfSalesYear">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 角色销售年份对比-->
+		<action name="queryRoleOfSalesYear" class="cn.tcl.platform.statement.action.StatementAction" method="queryRoleOfSalesYear">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 业务经理-->
+		<action name="businessManagerByPartyId" class="cn.tcl.platform.statement.action.StatementAction" method="businessManagerByPartyId">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 区域重点产品销售数量-->
+		<action name="regionalSalesOfKeyProductsInfo" class="cn.tcl.platform.statement.action.StatementAction" method="regionalSalesOfKeyProductsInfo">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 区域重点产品销售数量-->
+		<action name="personalSalesOfKeyProductsInfo" class="cn.tcl.platform.statement.action.StatementAction" method="personalSalesOfKeyProductsInfo">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 个人单品销售数量-->
+		<action name="personalItemSalesInfo" class="cn.tcl.platform.statement.action.StatementAction" method="personalItemSalesInfo">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 区域单品销售数量-->
+		<action name="regionalSalesItemInfo" class="cn.tcl.platform.statement.action.StatementAction" method="regionalSalesItemInfo">
+			<result type="json"></result>
+		</action>
+		
+		<!-- /*用户销售数据*/-->
+		<action name="personalSalesData" class="cn.tcl.platform.statement.action.StatementAction" method="personalSalesData">
+			<result type="json"></result>
+		</action>
+		
+		<!-- /*用户销售数据*/-->
+		<action name="personalManagerSalesData" class="cn.tcl.platform.statement.action.StatementAction" method="personalManagerSalesData">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 指定区域督导或业务员-->
+		<action name="selectPartySupeAndSaless" class="cn.tcl.platform.statement.action.StatementAction" method="selectPartySupeAndSaless">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 查询区域-->
+		<action name="selectAreaByPartyId" class="cn.tcl.platform.statement.action.StatementAction" method="selectAreaByPartyId">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 区域销售数据-->
+		<action name="eachRegionalSalesQuantity" class="cn.tcl.platform.statement.action.StatementAction" method="eachRegionalSalesQuantity">
+			<result type="json"></result>
+		</action>
+        
+		<!-- 商店销售数据-->
+		<action name="eachStoresSalesQuantity" class="cn.tcl.platform.statement.action.StatementAction" method="eachStoresSalesQuantity">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 商店销售数据-->
+		<action name="eachChannelsSalesQuantity" class="cn.tcl.platform.statement.action.StatementAction" method="eachChannelsSalesQuantity">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 区域下渠道-->
+		<action name="selectCustomerByPartyList" class="cn.tcl.platform.statement.action.StatementAction" method="selectCustomerByPartyList">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 区域下门店-->
+		<action name="selectShopByPartyList" class="cn.tcl.platform.statement.action.StatementAction" method="selectShopByPartyList">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 个别区域销售数量-->
+		<action name="eachSingleAreaSalesQuantity" class="cn.tcl.platform.statement.action.StatementAction" method="eachSingleAreaSalesQuantity">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 角色销售数量(督导、业务员)-->
+		<action name="eachRoleSalesQuantity" class="cn.tcl.platform.statement.action.StatementAction" method="eachRoleSalesQuantity">
+			<result type="json"></result>
+		</action>
+		
+		  <action name="loadPartyList" class="cn.tcl.platform.customer.actions.UiCustomerAction" method="loadPartyList">
+        	<result type="json"></result>
+        </action>
+        <action name="exportTemplate" class="cn.tcl.platform.excel.actions.ImportExcelAction" method="exportTemplate">
+			<result type="json"></result>
+		</action>
+        
+        
+           <action name="selectSampleTarget" class="cn.tcl.platform.sample.action.SampleTargetAction" method="selectSampleTarget">
+			<result type="json"></result>
+		</action>
+        
+        
+           <action name="importSampleTarget" class="cn.tcl.platform.sample.action.SampleTargetAction" method="importSampleTarget">
+			<result type="json"></result>
+		</action>
+		<action name="exportSampleTTemplate" class="cn.tcl.platform.sample.action.SampleTargetAction" method="exportSampleTTemplate">
+			<result type="json"></result>
+		</action>
+		
+		<action name="loadShopByParty" class="cn.tcl.platform.sample.action.SampleTargetAction" method="loadShopByParty">
+			<result type="json"></result>
+		</action>
+		
+		<action name="loadModelByParty" class="cn.tcl.platform.sample.action.SampleTargetAction" method="loadModelByParty">
+			<result type="json"></result>
+		</action>
+		
+			<action name="editSampleTargetById" class="cn.tcl.platform.sample.action.SampleTargetAction" method="editSampleTargetById">
+			<result type="json"></result>
+		</action>
+		
+		<action name="deleteSampleTarget" class="cn.tcl.platform.sample.action.SampleTargetAction" method="deleteSampleTarget">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectSampleAch" class="cn.tcl.platform.sample.action.SampleTargetAction" method="selectSampleAch">
+			<result type="json"></result>
+		</action>
+		
+		<action name="exportTargetAch" class="cn.tcl.platform.sample.action.SampleTargetAction" method="exportTargetAch">
+			<result type="json"></result>
+		</action>
+		
+		<action name="exportSampleTarget" class="cn.tcl.platform.sample.action.SampleTargetAction" method="exportSampleTarget">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectSampleTargetSumListByLine" class="cn.tcl.platform.sample.action.SampleTargetAction" method="selectSampleTargetSumListByLine">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectSampleAchSumListByLine" class="cn.tcl.platform.sample.action.SampleTargetAction" method="selectSampleAchSumListByLine">
+			<result type="json"></result>
+		</action>
+		
+		
+		<action name="selectLevelBycountry" class="cn.tcl.platform.shop.actions.UiShopAction" method="selectLevelBycountry">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectShopLevel" class="cn.tcl.platform.shop.actions.UiShopAction" method="selectShopLevel">
+			<result type="json"></result>
+		</action>
+		
+			<action name="upCoefficient" class="cn.tcl.platform.coefficient.actions.CoefficientlAction" method="upCoefficient">
+			<result type="json"></result>
+		</action>
+		
+			<action name="addCoefficient" class="cn.tcl.platform.coefficient.actions.CoefficientlAction" method="addCoefficient">
+			<result type="json"></result>
+		</action>
+		
+			<action name="selectCoefficient" class="cn.tcl.platform.coefficient.actions.CoefficientlAction" method="selectCoefficient">
+			<result type="json"></result>
+		</action>
+		
+		
+			<action name="passwordExpired" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="passwordExpired">
+			<result type="json"></result>
+		</action>
+		
+			 <action name="exportSellInTemplate" class="cn.tcl.platform.sellIn.actions.UiSellInAction" method="exportSellInTemplate">
+       		<result type="json"></result>
+       	 </action>
+       		
+       	<action name="importSellIn" class="cn.tcl.platform.sellIn.actions.UiSellInAction" method="importSellIn">
+       		<result type="json"></result>
+        </action>
+        
+        
+        
+		  	<action name="importReturn" class="cn.tcl.platform.sellIn.actions.UiSellInAction" method="importReturn">
+       		<result type="json"></result>
+        </action>
+        
+			<action name="selectSellInByHq" class="cn.tcl.platform.sellIn.actions.UiSellInAction" method="selectSellInByHq">
+       		<result type="json"></result>
+        </action>
+        <action name="loadModelByHQ" class="cn.tcl.platform.sellIn.actions.UiSellInAction" method="loadModelByHQ">
+       		<result type="json"></result>
+        </action>
+       
+        <action name="selectSellInByTable" class="cn.tcl.platform.sellIn.actions.UiSellInAction" method="selectSellInByTable">
+       		<result type="json"></result>
+        </action>
+        
+        
+         <action name="selectReturn" class="cn.tcl.platform.sellIn.actions.UiSellInAction" method="selectReturn">
+       		<result type="json"></result>
+        </action>
+        
+        
+         <action name="selectGrandTTL" class="cn.tcl.platform.excel.actions.SoTableAction" method="selectGrandTTL">
+       		<result type="json"></result>
+        </action>
+        
+        
+           <action name="selectGrandTTLBDSC" class="cn.tcl.platform.BDExcel.action.SoTableAction" method="selectGrandTTL">
+       		<result type="json"></result>
+        </action>
+        
+            <action name="importMIS" class="cn.tcl.platform.excel.actions.Test" method="importMIS">
+       		<result type="json"></result>
+        </action>
+              <action name="selectType" class="cn.tcl.platform.excel.actions.ImportExcelAction" method="selectType">
+       		<result type="json"></result>
+        </action>
+          
+          
+           <action name="selectPartyCus" class="cn.tcl.platform.excel.actions.SoTableAction" method="selectPartyCus">
+       		<result type="json"></result>
+        </action>
+        
+           <action name="selectXCPLine" class="cn.tcl.platform.excel.actions.SoTableAction" method="selectXCPLine">
+       		<result type="json"></result>
+        </action>
+        
+           <action name="selectXCPModelTwo" class="cn.tcl.platform.BDExcel.action.SoTableAction" method="selectXCPModelTwo">
+       		<result type="json"></result>
+        </action>
+        
+        
+          <action name="selectXCPModel" class="cn.tcl.platform.excel.actions.SoTableAction" method="selectXCPModel">
+       		<result type="json"></result>
+        </action>
+           <action name="selectCurvedModel" class="cn.tcl.platform.excel.actions.SoTableAction" method="selectCurvedModel">
+       		<result type="json"></result>
+        </action>
+        
+              <action name="selectDealerSellout" class="cn.tcl.platform.excel.actions.StatementTableAction" method="selectDealerSellout">
+       		<result type="json"></result>
+        </action>
+        
+        <action name="selectUserLevel" class="cn.tcl.platform.user.actions.UiUserLoginAction" method="selectUserLevel">
+			   <result type="json"/>     	
+        </action>
+        
+	</package>
+	
+	<bean name="parser" class="cn.tcl.platform.training.updownload.common.MyJakartaMultiPartRequest"
+	 scope="default" type="org.apache.struts2.dispatcher.multipart.MultiPartRequest" optional="true">
+	</bean>
+	
+	<constant name="struts.multipart.parser" value="parser"></constant>
+	
+	<constant name="struts.multipart.maxSize" value="-1"></constant>
+	
+	<package name="training.platform.page" extends="struts-default">
+		<interceptors>
+			<interceptor name="authority" class="cn.tcl.platform.user.security.AuthorityInterceptor"/>
+			<interceptor-stack name="mydefault">
+				<interceptor-ref name="defaultStack"></interceptor-ref>
+				<interceptor-ref name="authority"></interceptor-ref>
+			</interceptor-stack>
+		</interceptors>
+		<default-interceptor-ref name="mydefault"/>
+		<global-results>
+			<result name="loginPage" type="redirect">loginPage.action</result>
+		</global-results>
+		
+		<action name="loadCreateCoursePage" class="cn.tcl.platform.training.actions.CourseAction" method="loadCreateCoursePage">
+			<result name="success">/page/platform/training/createcourse.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadCourseListPage" class="cn.tcl.platform.training.actions.CourseAction" method="loadCourseListPage">
+			<!-- <result name="success">/page/platform/training/courselist.jsp</result> -->
+			<result name="success">/page/platform/training/coursesList.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadLearnPage" class="cn.tcl.platform.training.actions.LearnStatisticsAction" method="loadLearnPage">
+			<result name="success">/page/platform/training/learnstatistics.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadExaminationPage" class="cn.tcl.platform.training.actions.CourseAction" method="loadExaminationPage">
+			<result name="success">/page/platform/training/examinationquestion.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadMessageTagPage" class="cn.tcl.platform.training.actions.CourseAction" method="loadMessageTagPage">
+			<!-- <result name="success">/page/platform/training/messagetag.jsp</result> -->
+			<result name="success">/page/platform/training/message.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadSendMultiMessagesPage" class="cn.tcl.platform.training.actions.CourseAction" method="loadSendMultiMessagesPage">
+			<result name="success">/page/platform/training/sendmultimessages.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadStatisticsSummaryPage" class="cn.tcl.platform.training.actions.CourseAction" method="loadStatisticsSummaryPage">
+			<result name="success">/page/platform/training/statisticssummary.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadSummaryPage" class="cn.tcl.platform.summary.action.SummaryAction" method="loadSummaryPage">
+			<result name="success">/page/platform/training/createSummary.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+		
+		<action name="loadSummaryListPage" class="cn.tcl.platform.summary.action.SummaryAction" method="loadSummaryListPage">
+			<result name="success">/page/platform/training/summaryList.jsp</result>
+			<result name="error">/page/error.jsp</result>
+		</action>
+	</package>
+	
+	<package name="training.platform.jsonType" namespace="/training" extends="json-default">
+		<interceptors>
+			<interceptor name="authority" class="cn.tcl.platform.user.security.AuthorityInterceptor"/>
+			<interceptor-stack name="mydefault">
+				<interceptor-ref name="defaultStack"></interceptor-ref>
+				<interceptor-ref name="authority"></interceptor-ref>
+			</interceptor-stack>
+		</interceptors>
+		<default-interceptor-ref name="mydefault"/>
+		<global-results>
+			<result name="loginPage" type="redirect">loginPage.action</result>
+		</global-results>
+		
+		<action name="CreateCourse" class="cn.tcl.platform.training.actions.CourseAction" method="CreateCourse">
+			<result type="json"></result>
+		</action>
+		
+		<action name="loadLevel1CourseType" class="cn.tcl.platform.training.actions.CourseTypeAction" method="getLevel1TypeData">
+			<result type="json"></result>
+		</action>
+		
+		<action name="loadSubCourseType" class="cn.tcl.platform.training.actions.CourseTypeAction" method="getSubTypeData">
+			<result type="json"></result>
+		</action>
+		
+		<action name="loadCourseListData" class="cn.tcl.platform.training.actions.CourseAction" method="loadCourseListData">
+			<result type="json"></result>
+		</action>
+		
+		<action name="editCourse" class="cn.tcl.platform.training.actions.CourseAction" method="editCourse">
+			<result type="json"></result>
+		</action>
+		
+		<action name="saveCourse" class="cn.tcl.platform.training.actions.CourseAction" method="saveCourse">
+			<result type="json"></result>
+		</action>
+		
+		<action name="deleteCourse" class="cn.tcl.platform.training.actions.CourseAction" method="deleteCourse">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectRegion" class="cn.tcl.platform.training.actions.CourseAction" method="selectRegion">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectAllParty" class="cn.tcl.platform.training.actions.CourseAction" method="selectAllParty">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectCountry" class="cn.tcl.platform.training.actions.CourseAction" method="selectCountry">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 学习情况统计汇总 -->
+		<action name="loadLearnStatistics" class="cn.tcl.platform.training.actions.LearnStatisticsAction" method="loadLearnStatistics">
+			<result type="json"></result>
+		</action>
+		
+		<action name="loadRussiaLearnStatistics" class="cn.tcl.platform.training.actions.LearnStatisticsAction" method="loadRussiaLearnStatistics">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 一级菜单信息 -->
+		<action name="getLevelOneTypeId" class="cn.tcl.platform.training.actions.CourseAction" method="getLevelOneTypeId">
+			<result type="json"></result>
+		</action>
+		
+		<action name="getLevelTwoOrthreeTypeId" class="cn.tcl.platform.training.actions.CourseAction" method="getLevelTwoOrthreeTypeId">
+			<result type="json"></result>
+		</action>
+		
+		<action name="getLevelthreeTypeId" class="cn.tcl.platform.training.actions.CourseAction" method="getLevelthreeTypeId">
+			<result type="json"></result>
+		</action>
+		
+		<action name="exportLearnExcel" class="cn.tcl.platform.training.actions.LearnStatisticsAction" method="exportLearnExcel">
+			<result type="json"></result>
+		</action>
+		
+		<!-- 导出俄罗斯学习统计 -->
+		<action name="exportRusLearnExcel" class="cn.tcl.platform.training.actions.LearnStatisticsAction" method="exportRusLearnExcel">
+			<result type="json"></result>
+		</action>
+		
+		<action name="getPartyList" class="cn.tcl.platform.training.actions.CourseAction" method="getPartyList">
+			<result type="json"></result>
+		</action>
+		
+		<action name="getBranchPartyList" class="cn.tcl.platform.training.actions.CourseAction" method="getBranchPartyList">
+			<result type="json"></result>
+		</action>
+		
+		<action name="getMessageType" class="cn.tcl.platform.summary.action.SummaryTypeAction" method="getMessageType"> 
+			<result type="json"></result>
+		</action>
+		
+		<action name="insertSummary" class="cn.tcl.platform.summary.action.SummaryAction" method="insertSummary">
+			<result type="json"></result>
+		</action>
+		
+		<action name="loadSummaryListData" class="cn.tcl.platform.summary.action.SummaryAction" method="loadSummaryListData">
+			<result type="json"></result>
+		</action>
+		
+		<action name="updateSummary" class="cn.tcl.platform.summary.action.SummaryAction" method="updateSummary">
+			<result type="json"></result>
+		</action>
+		
+		<action name="deleteSummary" class="cn.tcl.platform.summary.action.SummaryAction" method="deleteSummary">
+			<result type="json"></result>
+		</action>
+	</package>
+	
+	<package name="updownload.training" namespace="/updownload"  extends="json-default">
+		<interceptors>
+			<interceptor name="authority" class="cn.tcl.platform.user.security.AuthorityInterceptor"/>
+			<interceptor-stack name="mydefault">
+				<interceptor-ref name="defaultStack"></interceptor-ref>
+				<interceptor-ref name="authority"></interceptor-ref>
+			</interceptor-stack>
+		</interceptors>
+		<default-interceptor-ref name="mydefault"/>
+		<global-results>
+			<result name="loginPage" type="redirect">loginPage.action</result>
+		</global-results>
+		
+		<action name="stateAction" class="cn.tcl.platform.training.updownload.actions.StateAction">
+			<result type="json"></result>
+		</action>
+		
+		<action name="fileUploadAction" class="cn.tcl.platform.training.updownload.actions.FileUploadAction" method="upload">		
+			<result type="json"></result>
+		</action>
+	</package>
+	
+	<package name="party.platform.jsonType" namespace="/party" extends="json-default">
+		<interceptors>
+			<interceptor name="authority" class="cn.tcl.platform.user.security.AuthorityInterceptor"/>
+			<interceptor-stack name="mydefault">
+				<interceptor-ref name="defaultStack"></interceptor-ref>
+				<interceptor-ref name="authority"></interceptor-ref>
+			</interceptor-stack>
+		</interceptors>
+		<default-interceptor-ref name="mydefault"/>
+		<global-results>
+			<result name="loginPage" type="redirect">loginPage.action</result>
+		</global-results>
+		
+		<action name="loadSCPartyData" class="cn.tcl.platform.party.actions.PartyAction" method="loadSCPartyData">
+			<result type="json"></result>
+		</action>
+		
+		<action name="loadCountryData" class="cn.tcl.platform.party.actions.PartyAction" method="loadCountryBySC">
+			<result type="json"></result>
+		</action>
+		
+	</package>
+	
+	<package name="acstatement.platform.jsonType" namespace="/acstatement" extends="json-default">
+		<interceptors>
+			<interceptor name="authority" class="cn.tcl.platform.user.security.AuthorityInterceptor"/>
+			<interceptor-stack name="mydefault">
+				<interceptor-ref name="defaultStack"></interceptor-ref>
+				<interceptor-ref name="authority"></interceptor-ref>
+			</interceptor-stack>
+		</interceptors>
+		<default-interceptor-ref name="mydefault"/>
+		<global-results>
+			<result name="loginPage" type="redirect">loginPage.action</result>
+		</global-results>
+			<action name="selectACCatena" class="cn.tcl.platform.statement.action.StatementAction" method="selectACCatena">
+				<result type="json"></result>
+			</action>
+			
+			<action name="selectACSize" class="cn.tcl.platform.statement.action.StatementAction" method="selectACSize">
+				<result type="json"></result>
+			</action>
+		
+			<!-- AC分体and窗体 -->
+			<action name="selectAcMachine" class="cn.tcl.platform.statement.action.StatementAction" method="selectAcMachine">
+				<result type="json"></result>
+			</action>
+	</package>
+	
+	
+	<package name="examination.platform.jsonType" namespace="/examination" extends="json-default">
+		<interceptors>
+			<interceptor name="authority" class="cn.tcl.platform.user.security.AuthorityInterceptor"/>
+			<interceptor-stack name="mydefault">
+				<interceptor-ref name="defaultStack"></interceptor-ref>
+				<interceptor-ref name="authority"></interceptor-ref>
+			</interceptor-stack>
+		</interceptors>
+		<default-interceptor-ref name="mydefault"/>
+		<global-results>
+			<result name="loginPage" type="redirect">loginPage.action</result>
+		</global-results>
+		
+		<action name="selectExamQuestions" class="cn.tcl.platform.examination.actions.ExaminationAction" method="selectExamQuestions">
+			<result type="json"></result>
+		</action>
+		
+		<action name="deleteExamQuestions" class="cn.tcl.platform.examination.actions.ExaminationAction" method="deleteExamQuestions">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectCorrectAnswerById" class="cn.tcl.platform.examination.actions.ExaminationAction" method="selectCorrectAnswerById">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectSubclassCategoriesById" class="cn.tcl.platform.examination.actions.ExaminationAction" method="selectSubclassCategoriesById">
+			<result type="json"></result>
+		</action>
+		
+		<action name="insertExamQuestions" class="cn.tcl.platform.examination.actions.ExaminationAction" method="insertExamQuestions">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectCountry" class="cn.tcl.platform.examination.actions.ExaminationAction" method="selectCountry">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectExamQuestionsById" class="cn.tcl.platform.examination.actions.ExaminationAction" method="selectExamQuestionsById">
+			<result type="json"></result>
+		</action>
+		
+		<action name="updateExamQuestionsById" class="cn.tcl.platform.examination.actions.ExaminationAction" method="updateExamQuestionsById">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectPaperData" class="cn.tcl.platform.examination.actions.PaperAction" method="selectPaperData">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectTestInfoByPaperId" class="cn.tcl.platform.examination.actions.PaperAction" method="selectTestInfoByPaperId">
+			<result type="json"></result>
+		</action>
+		
+		<action name="isSpecifiedEndTime" class="cn.tcl.platform.examination.actions.PaperAction" method="isSpecifiedEndTime">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectExaminationStatisticsData" class="cn.tcl.platform.examination.actions.PaperAction" method="selectExaminationStatisticsData">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectPaperDataByCountry" class="cn.tcl.platform.examination.actions.PaperAction" method="selectPaperDataByCountry">
+			<result type="json"></result>
+		</action>
+		
+		<action name="isSpecifiedTime" class="cn.tcl.platform.examination.actions.PaperAction" method="isSpecifiedTime">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectExamByTypeAndCountry" class="cn.tcl.platform.examination.actions.PaperAction" method="selectExamByTypeAndCountry">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectExamSelectedInfo" class="cn.tcl.platform.examination.actions.PaperAction" method="selectExamSelectedInfo">
+			<result type="json"></result>
+		</action>
+		
+		<action name="exportExamTestExcel" class="cn.tcl.platform.examination.actions.PaperAction" method="exportExamTestExcel">
+			<result type="json"></result>
+		</action>
+		<!-- 导出俄罗斯考试记录 -->
+		<action name="exportRusExamTestExcel" class="cn.tcl.platform.examination.actions.PaperAction" method="exportRusExamTestExcel">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectExaminationSituation" class="cn.tcl.platform.examination.actions.PaperAction" method="selectExaminationSituation">
+			<result type="json"></result>
+		</action>
+		<!-- 查询俄罗斯考试记录 -->
+		<action name="selectRusExaminationSituation" class="cn.tcl.platform.examination.actions.PaperAction" method="selectRusExaminationSituation">
+			<result type="json"></result>
+		</action>
+		
+		<action name="updateEndTime" class="cn.tcl.platform.examination.actions.PaperAction" method="updateEndTime">
+			<result type="json"></result>
+		</action>
+		
+		<action name="insertPaperData" class="cn.tcl.platform.examination.actions.PaperAction" method="insertPaperData">
+			<result type="json"></result>
+		</action>
+		
+		<action name="updatePaperData" class="cn.tcl.platform.examination.actions.PaperAction" method="updatePaperData">
+			<result type="json"></result>
+		</action>
+		
+		<action name="deletePaperData" class="cn.tcl.platform.examination.actions.PaperAction" method="deletePaperData">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectUserIsExam" class="cn.tcl.platform.examination.actions.PaperAction" method="selectUserIsExam">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectTopicTypeCount" class="cn.tcl.platform.examination.actions.PaperAction" method="selectTopicTypeCount">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectTopicByPaperId" class="cn.tcl.platform.examination.actions.PaperAction" method="selectTopicByPaperId">
+			<result type="json"></result>
+		</action>
+		
+		<action name="queryTempGreadData" class="cn.tcl.platform.examination.actions.GradeAction" method="queryTempGreadData">
+			<result type="json"></result>
+		</action>
+		
+		<action name="exportTempGreadExcel" class="cn.tcl.platform.examination.actions.GradeAction" method="exportTempGreadExcel">
+			<result type="json"></result>
+		</action>
+		
+		<action name="importQuestion" class="cn.tcl.platform.examination.actions.ExaminationAction" method="importQuestion">
+			<result type="json"></result>
+		</action>
+		
+		<action name="onDeleteExamQuestions" class="cn.tcl.platform.examination.actions.ExaminationAction" method="onDeleteExamQuestions">
+			<result type="json"></result>
+		</action>
+	</package>
+	
+	<package name="staPage.platform.jsonType" namespace="/staPage" extends="json-default">
+		<interceptors>
+			<interceptor name="authority" class="cn.tcl.platform.user.security.AuthorityInterceptor"/>
+			<interceptor-stack name="mydefault">
+				<interceptor-ref name="defaultStack"></interceptor-ref>
+				<interceptor-ref name="authority"></interceptor-ref>
+			</interceptor-stack>
+		</interceptors>
+		<default-interceptor-ref name="mydefault"/>
+		<global-results>
+			<result name="loginPage" type="redirect">loginPage.action</result>
+		</global-results>
+		
+		<action name="selectDealerSellout" class="cn.tcl.platform.excel.actions.StatementTableAction" method="selectDealerSellout">
+			<result type="json"></result>
+		</action>  
+		
+		<!-- 测试 -->
+		<!-- <action name="selectDealerSellout" class="cn.tcl.platform.statable.action.StaTableAction" method="PSeriesSalesStatus">
+			<result type="json"></result>
+		</action>-->
+		
+		<action name="queryStateTimeSalesBycountry" class="cn.tcl.platform.statable.action.StaTableAction" method="queryStateTimeSalesBycountry">
+			<result type="json"></result>
+		</action> 
+				<action name="queryStateTimeSalesByBDSC" class="cn.tcl.platform.BDExcel.action.SoTableAction" method="queryStateTimeSalesByBDSC">
+			<result type="json"></result>
+		</action> 
+		
+		
+		<action name="monthlySalesPerformance" class="cn.tcl.platform.statable.action.StaTableAction" method="monthlySalesPerformance">
+			<result type="json"></result>
+		</action> 
+		
+		<action name="regionalGrowthPerformanceByPartyId" class="cn.tcl.platform.statable.action.StaTableAction" method="regionalGrowthPerformanceByPartyId">
+			<result type="json"></result>
+		</action> 
+		
+		<action name="regionalGrowthPerformance" class="cn.tcl.platform.statable.action.StaTableAction" method="regionalGrowthPerformance">
+			<result type="json"></result>
+		</action> 
+		
+		<action name="PSeriesSalesStatus" class="cn.tcl.platform.statable.action.StaTableAction" method="PSeriesSalesStatus">
+			<result type="json"></result>
+		</action> 
+		
+		<action name="queryBigSaleInfo" class="cn.tcl.platform.statable.action.StaTableAction" method="queryBigSaleInfo">
+			<result type="json"></result>
+		</action> 
+	</package>
+	
+		<package name="message.platform.jsonType" namespace="/message"  extends="json-default">
+				<interceptors>
+			<interceptor name="authority" class="cn.tcl.platform.user.security.AuthorityInterceptor"/>
+			<interceptor-stack name="mydefault">
+				<interceptor-ref name="defaultStack"></interceptor-ref>
+				<interceptor-ref name="authority"></interceptor-ref>
+			</interceptor-stack>
+		</interceptors>
+		<default-interceptor-ref name="mydefault"/>
+		<global-results>
+			<result name="loginPage" type="redirect">loginPage.action</result>
+		</global-results>
+		
+		<action name="LoadMessageListData" class="cn.tcl.platform.message.action.MessageAction" method="LoadMessageListData">
+			<result type="json"></result>
+		</action>
+		
+		<action name="getUserAll" class="cn.tcl.platform.message.action.MessageAction" method="getUserAll">
+			<result type="json"></result>
+		</action>
+		
+		
+		<action name="deleteMessage" class="cn.tcl.platform.message.action.MessageAction" method="deleteMessage">
+			<result type="json"></result>
+		</action>
+		
+		<action name="getUserByRoleName" class="cn.tcl.platform.message.action.MessageAction" method="getUserByRoleName">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectUserBycondition" class="cn.tcl.platform.message.action.MessageAction" method="selectUserBycondition">
+			<result type="json"/>
+		</action>
+		
+		<action name="updateMessage" class="cn.tcl.platform.message.action.MessageAction" method="updateMessage">
+			<result type="json"></result>
+		</action>
+		
+		<action name="userIsReadCourse" class="cn.tcl.platform.message.action.MessageAction" method="userIsReadCourse">
+			<result type="json"></result>
+		</action>
+		
+		<action name="userIsReadSummary" class="cn.tcl.platform.message.action.MessageAction"  method="userIsReadSummary">
+			<result type="json"></result>
+		</action>
+		
+		<action name="selectAllUsers" class="cn.tcl.platform.message.action.MessageAction" method="selectAllUsers">
+			<result type="json"></result>
+		</action>
+		
+		<action name="getUserByCondition" class="cn.tcl.platform.message.action.MessageAction" method="getUserByCondition">
+			<result type="json"></result>
+		</action>
+		
+		<action name="getUserByRegion" class="cn.tcl.platform.message.action.MessageAction" method="getUserByRegion">
+			<result type="json"></result>
+		</action>
+		
+		<action name="getUserByCon" class="cn.tcl.platform.message.action.MessageAction" method="getUserByCon">
+			<result type="json"></result>
+		</action>
+	</package>
+	
+	
+	<package name="percentage.platform.jsonType" namespace="/incentive" extends="json-default">
+		<interceptors>
+			<interceptor name="authority" class="cn.tcl.platform.user.security.AuthorityInterceptor"/>
+			<interceptor-stack name="mydefault">
+				<interceptor-ref name="defaultStack"></interceptor-ref>
+				<interceptor-ref name="authority"></interceptor-ref>
+			</interceptor-stack>
+		</interceptors>
+		<default-interceptor-ref name="mydefault"/>
+		<global-results>
+			<result name="loginPage" type="redirect">loginPage.action</result>
+		</global-results>
+		
+		<action name="loadIncentiveList" class="cn.tcl.platform.incentive.action.IncentiveAction" method="loadIncentiveList">
+			<result type="json"/>
+		</action>
+		
+		<action name="addIncentive" class="cn.tcl.platform.incentive.action.IncentiveAction" method="addIncentive">
+			<result type="json"/>
+		</action>
+		
+		<action name="deleteIncentive" class="cn.tcl.platform.incentive.action.IncentiveAction" method="deleteIncentive">
+			<result type="json"/>
+		</action>
+		
+		<action name="updateIncentive" class="cn.tcl.platform.incentive.action.IncentiveAction" method="updateIncentive">
+			<result type="json"/>
+		</action>
+		
+		<action name="importIncentive" class="cn.tcl.platform.incentive.action.IncentiveAction" method="importIncentive">
+			<result type="json"/>
+		</action>
+		
+		<action name="loadPolicyList" class="cn.tcl.platform.performance.action.PolicyAction" method="loadPolicyList">
+			<result type="json"/>
+		</action>
+		
+		<action name="addPolicy" class="cn.tcl.platform.performance.action.PolicyAction" method="addPolicy">
+			<result type="json"/>
+		</action>
+		
+		<action name="selectBranchModel" class="cn.tcl.platform.incentive.action.IncentiveAction" method="selectBranchModel">
+			<result type="json"/>
+		</action>
+		
+		<action name="updatePolicy" class="cn.tcl.platform.performance.action.PolicyAction" method="updatePolicy">
+			<result type="json"/>
+		</action>
+		
+		<action name="selectProductLine"  class="cn.tcl.platform.performance.action.PolicyAction" method="selectProductLine">
+			<result type="json"/>
+		</action>
+		
+		<action name="loadPolicyListByProduct" class="cn.tcl.platform.performance.action.PolicyAction" method="loadPolicyListByProduct">
+			<result type="json"/>
+		</action>
+		
+		<action name="addPolicyByProduct" class="cn.tcl.platform.performance.action.PolicyAction" method="addPolicyByProduct">
+			<result type="json"/>
+		</action>
+		
+		<action name="updatePolicyByProduct" class="cn.tcl.platform.performance.action.PolicyAction" method="updatePolicyByProduct">
+			<result type="json"/>
+		</action>
+	</package>
+</struts>
+
+
+

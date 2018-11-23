@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<import>
+	<mapping bean="cn.tcl.platform.inventory.vo.Inventory">
+		<property column="*Branch" propertyName="partyId" required="true" javaType="java.lang.String"></property>
+		<property column="*Store" propertyName="shopName" required="true" javaType="java.lang.String"></property>
+		<property column="*HQ model" propertyName="hqModel" required="true" javaType="java.lang.String"></property> 
+		<property column="*Branch model" propertyName="model" required="true" javaType="java.lang.String"></property>
+		<property column="Quantity" propertyName="quantity" required="true" javaType="java.lang.Integer"></property>
+		<property column="Date" propertyName="datadate" required="true" javaType="java.lang.String"></property>
+		<property column="remark" propertyName="remark" required="false" javaType="java.lang.String"></property>
+	</mapping>
+	<volidate dateFormat="yyyy-MM-dd" volidateClass="cn.tcl.platform.inventory.imports.ValidationImportInventory" volidateMethod="validationImport"></volidate>
+	<service serviceBean="inventoryService" serviceMethod="importInventory"></service>
+</import>

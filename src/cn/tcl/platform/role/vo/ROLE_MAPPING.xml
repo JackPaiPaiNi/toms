@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.role.dao.IRoleDAO" >
+	<resultMap id="RoleMap" type="Role" >
+	    <result column="ROLE_ID" property="roleId" jdbcType="VARCHAR" />
+	    <result column="ROLE_NAME" property="roleName" jdbcType="VARCHAR" />
+	    <result column="CREATE_BY" property="createBy" jdbcType="VARCHAR" />
+	    <result column="role_type" property="roleType" jdbcType="VARCHAR" />
+	    <result column="UPDATE_BY" property="updateBy" jdbcType="VARCHAR" />
+	    <result column="CREATE_DATE" property="createDate" jdbcType="DATE" />
+	    <result column="UPDATE_DATE" property="updateDate" jdbcType="DATE" />
+	</resultMap>
+	
+	<resultMap id="RoleDataPermissionMap" type="RoleDataPermission" >
+	    <result column="ROLE_ID" property="roleId" jdbcType="VARCHAR" />
+	    <result column="PERMISSION_TYPE" property="permissionType" jdbcType="VARCHAR" />
+	    <result column="PERMISSION_VALUE" property="permissionValue" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap id="Role2UserMap" type="Role2User" >
+	    <result column="ROLE_ID" property="roleId" jdbcType="VARCHAR" />
+	    <result column="USER_LOGIN_ID" property="userLoginId" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<sql id="roleWhere">
+	  	<if test="conditions!=null">
+	       	<![CDATA[  ${conditions} ]]>
+	  	</if>
+	</sql>
+	
+	<select id="selectRole" resultMap="RoleMap">
+		select a.ROLE_ID, a.ROLE_NAME, a.CREATE_BY, 
+			a.CREATE_DATE, a.UPDATE_BY, a.UPDATE_DATE
+		from role a 
+		where a.`flag` = 0 
+		<include refid="roleWhere"/> 
+	</select>
+	
+	<select id="selectRoleDataPermission" resultMap="RoleDataPermissionMap">
+	    select a.ROLE_ID, a.PERMISSION_TYPE, a.PERMISSION_VALUE
+	    from ROLE_DATA_PERMISSION a
+	    where 1=1
+	   	<include refid="roleWhere"/>
+	</select>
+	
+	<select id="selectRole2User" resultMap="Role2UserMap">
+	    select a.ROLE_ID, a.USER_LOGIN_ID from USER_ROLE_MAPPING a
+	    where 1=1
+	   	<include refid="roleWhere"/>
+	</select>
+	
+<!-- 		<select id="selectRoleCount" resultType="java.lang.Integer">
+	  	select count(a.ROLE_ID) from role a 
+	  	where 1=1
+	   	<include refid="roleWhere"/>
+	</select> -->
+	
+	<select id="selectRoleCount" resultType="java.lang.Integer">
+	  	select count(*) from 
+	  	(
+		  	SELECT DISTINCT a.ROLE_ID, a.ROLE_NAME, a.CREATE_BY, a.CREATE_DATE,
+		  	 a.UPDATE_BY, a.UPDATE_DATE,substring_index(a.role_id,'_',1) as role_type
+			FROM role a
+			LEFT JOIN user_role_mapping urm ON urm.`ROLE_ID`=a.role_id LEFT JOIN user_login ul ON ul.`USER_LOGIN_ID`=urm.`USER_LOGIN_ID`
+	  	where a.`flag` = 0 
+	  		<include refid="roleWhere"/>
+	  		)t
+	</select>
+	
+	<!-- <select id="selectRoleWithPage" resultMap="RoleMap">
+			select art.ROLE_ID, art.ROLE_NAME, art.CREATE_BY, 
+			art.CREATE_DATE, art.UPDATE_BY, art.UPDATE_DATE,
+			art.role_type
+		from
+		(
+		  	SELECT a.ROLE_ID, a.ROLE_NAME, a.CREATE_BY, a.CREATE_DATE,
+		  	 a.UPDATE_BY, a.UPDATE_DATE,substring_index(a.role_id,'_',1) as role_type
+			FROM role a
+			WHERE 1 = 1 
+			<include refid="roleWhere"/>
+			${orderBy}
+			LIMIT ${startIndex},${endIndex}
+			)art
+	</select> -->
+	
+	<select id="selectRoleWithPage" resultMap="RoleMap">
+			select  art.ROLE_ID, art.ROLE_NAME, art.CREATE_BY, 
+			art.CREATE_DATE, art.UPDATE_BY, art.UPDATE_DATE,
+			art.role_type
+		from
+		(
+		  	SELECT DISTINCT a.ROLE_ID, a.ROLE_NAME, a.CREATE_BY, a.CREATE_DATE,
+		  	 a.UPDATE_BY, a.UPDATE_DATE,substring_index(a.role_id,'_',1) as role_type
+			FROM role a
+			LEFT JOIN user_role_mapping urm ON urm.`ROLE_ID`=a.role_id LEFT JOIN user_login ul ON ul.`USER_LOGIN_ID`=urm.`USER_LOGIN_ID`
+			WHERE a.`flag` = 0 
+			<include refid="roleWhere"/>
+			${orderBy}
+			LIMIT ${startIndex},${endIndex}
+			)art
+	</select>
+	
+	
+	<insert id="insertRole" parameterType="Role">
+	    insert into role
+	    <trim prefix="(" suffix=")" suffixOverrides="," >
+	      <if test="roleId!=null" >
+	        ROLE_ID,
+	      </if>
+	      <if test="roleName!=null" >
+	        ROLE_NAME,
+	      </if>
+	      <if test="createBy!=null" >
+	        CREATE_BY,
+	      </if>
+	      <if test="updateBy!=null" >
+	        UPDATE_BY,
+	      </if>
+	      <if test="createDate!=null" >
+	        CREATE_DATE,
+	      </if>
+	      <if test="updateDate!=null" >
+	        UPDATE_DATE,
+	      </if>
+	    </trim>
+	    values
+	    <trim prefix="(" suffix=")" suffixOverrides="," >
+	      <if test="roleId!=null" >
+	        #{roleId},
+	      </if>
+	      <if test="roleName!=null" >
+	        #{roleName},
+	      </if>
+	      <if test="createBy!=null" >
+	        #{createBy},
+	      </if>
+	      <if test="updateBy!=null" >
+	        #{updateBy},
+	      </if>
+	      <if test="createDate!=null" >
+	        #{createDate},
+	      </if>
+	      <if test="updateDate!=null" >
+	        #{updateDate},
+	      </if>
+	    </trim>
+	</insert>
+
+	<update id="updateRoleById" parameterType="Role" >
+	    update role
+	    <trim prefix="set" suffix="" suffixOverrides="," >
+	      <if test="roleName!=null" >
+	        ROLE_NAME = #{roleName},
+	      </if>
+	      <if test="createBy!=null" >
+	        CREATE_BY = #{createBy},
+	      </if>
+	      <if test="updateBy!=null" >
+	        UPDATE_BY = #{updateBy},
+	      </if>
+	      <if test="createDate!=null" >
+	        CREATE_DATE = #{createDate},
+	      </if>
+	      <if test="updateDate!=null" >
+	        UPDATE_DATE = #{updateDate},
+	      </if>
+	    </trim>
+	    where ROLE_ID = #{roleId}
+	</update>
+	
+	<delete id="deleteRole2User">
+  		delete from user_role_mapping where ROLE_ID = #{roleId}
+  	</delete>
+  	
+  	<delete id="deleteRole2UserByUserId">
+  		delete from user_role_mapping where USER_LOGIN_ID = #{userLoginId}
+  	</delete>
+	
+	<insert id="insertRole2User" parameterType="Role2User">
+	    insert into user_role_mapping
+	    <trim prefix="(" suffix=")" suffixOverrides="," >
+	      <if test="roleId!=null" >
+	        ROLE_ID,
+	      </if>
+	      <if test="userLoginId!=null" >
+	        USER_LOGIN_ID,
+	      </if>
+	    </trim>
+	    values
+	    <trim prefix="(" suffix=")" suffixOverrides="," >
+	      <if test="roleId!=null" >
+	        #{roleId},
+	      </if>
+	      <if test="userLoginId!=null" >
+	        #{userLoginId},
+	      </if>
+	    </trim>
+	</insert>
+	
+  	<update id="deleteRole" parameterType="java.lang.String">
+  		UPDATE role r SET r.`flag` = '-1',r.`operating_user` = #{operatingUser} WHERE r.ROLE_ID = #{roleId}
+  	</update>
+  	
+	<delete id="deleteRole2Permission">
+  		delete from role_permission where ROLE_ID = #{roleId}
+  	</delete>
+	
+	<insert id="insertRole2Permission" parameterType="java.util.List">
+		insert into role_permission (ROLE_ID,PERMISSION_ID,CHECK_STATE) values 
+		<foreach collection="rpList" item="item" index="index" open="" close=";" separator=",">
+		    (#{item.roleId},#{item.permissionId},#{item.checkState})
+	    </foreach>
+	</insert>
+	
+	<delete id="deleteRoleDataPermission">
+  		delete from role_data_permission where ROLE_ID = #{roleId} and PERMISSION_TYPE = #{permissionType}
+  	</delete>
+	
+	<insert id="insertRoleDataPermission" parameterType="java.util.List">
+		insert into role_data_permission (ROLE_ID,PERMISSION_TYPE,PERMISSION_VALUE) values 
+		<foreach collection="rdpList" item="item" index="index" open="" close=";" separator=",">
+		    (#{item.roleId},#{item.permissionType},#{item.permissionValue})
+	    </foreach>
+	</insert>
+	
+	<select id="selectRoleForSelect" resultMap="RoleMap">
+	  	SELECT distinct m.ROLE_ID, m.ROLE_NAME, m.CREATE_BY, m.CREATE_DATE, m.UPDATE_BY, m.UPDATE_DATE
+		FROM role m,role_data_permission n
+		where m.`flag` = 0
+			<!-- and m.ROLE_ID = n.ROLE_ID
+			and n.PERMISSION_TYPE=#{permissionType}
+			and n.PERMISSION_VALUE in (
+				select distinct t.PARTY_ID
+					  from party t,role_data_permission a,user_role_mapping b
+					where b.ROLE_ID = a.ROLE_ID
+						and a.PERMISSION_TYPE = #{permissionType}
+						and a.PERMISSION_VALUE = t.PARTY_ID
+						and b.USER_LOGIN_ID=#{userLoginId}
+			) -->
+		<include refid="roleWhere"/> 
+	</select>
+	
+	<select id="searchRoleNameSame" resultMap="RoleMap" >
+	  	select a.* from role a 
+	  	where a.`flag` = 0
+	  	and a.ROLE_NAME = #{roleName}
+	</select>
+	
+	<select id="selectRoleByPartyId" resultMap="RoleMap" parameterType="java.lang.String">
+	SELECT r.`ROLE_ID` as roleId,r.`ROLE_NAME` as roleName FROM role r, `role_data_permission` rdp WHERE rdp.`PERMISSION_TYPE` = 'PARTY' 
+	AND r.`ROLE_ID` = rdp.`ROLE_ID` AND rdp.`PERMISSION_VALUE` = #{partyId} 
+	AND r.`flag` = 0
+	<if test="partyId != '999'" >
+	AND r.`ROLE_ID` NOT IN(SELECT rd.`ROLE_ID` FROM `role_data_permission` rd WHERE rd.`PERMISSION_TYPE` = 'PARTY' AND rd.`PERMISSION_VALUE` = '999')
+	</if>
+	 AND r.role_id  NOT LIKE'%HADMIN%'
+	</select>
+	
+	
+	<select id="getRoleName" resultMap="RoleMap" parameterType="java.lang.String">
+		select r.role_name from role r where r.ROLE_ID=#{roleId} and r.ROLE_NAME like '%SC%'
+		
+	</select>
+</mapper>

@@ -1,0 +1,4431 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.excelCustomer.dao.IExcelCustomerDao">
+
+	<resultMap id="ExcelMap" type="ExcelCustomer">
+		<result column="REG" property="reg" jdbcType="VARCHAR" />
+		<result column="shop_id" property="shopId" jdbcType="VARCHAR" />
+		<result column="customer_id" property="customerId" jdbcType="VARCHAR" />
+		
+		<result column="REG" property="reg" jdbcType="VARCHAR" />
+		<result column="TYPE" property="type" jdbcType="VARCHAR" />
+		<result column="NO_OF_SHOP" property="noOfShop" jdbcType="INTEGER" />
+		<result column="DEALER" property="dealer" jdbcType="VARCHAR" />
+		<result column="BRANCH" property="branch" jdbcType="VARCHAR" />
+		<result column="TV_FPS" property="tvFps" jdbcType="INTEGER" />
+		<result column="AC_FPS" property="acFps" jdbcType="INTEGER" />
+		<result column="PROM_NAME" property="promName" jdbcType="VARCHAR" />
+		<result column="DATE" property="dateOfHired" jdbcType="CHAR" />
+		<result column="SHOP_NAME" property="shopName" jdbcType="VARCHAR" />
+		<result column="ACFO" property="acfo" jdbcType="VARCHAR" />
+		<result column="AREA" property="area" jdbcType="VARCHAR" />
+		<result column="SALESMAN" property="salesMan" jdbcType="VARCHAR" />
+		<result column="AGENCY" property="agency" jdbcType="VARCHAR" />
+		<result column="SHOP_CLASS" property="shopClass" jdbcType="VARCHAR" />
+		<result column="SALERTYPE" property="salerType" jdbcType="INTEGER" />
+		<result column="USERID" property="userId" jdbcType="INTEGER" />
+		<result column="LEVEL" property="level" jdbcType="VARCHAR" />
+		
+	</resultMap>
+
+	<resultMap id="modelMap" type="ExcelCustomer">
+		<result column="shop_id" property="shopId" jdbcType="VARCHAR" />
+		<result column="model" property="model" jdbcType="VARCHAR" />
+		<result column="quantity" property="quantity" jdbcType="INTEGER" />
+		<result column="amount" property="amount" jdbcType="INTEGER" />
+		<result column="country_id" property="countryId" jdbcType="VARCHAR" />
+	</resultMap>
+
+
+	<resultMap id="SumMap" type="ExcelCustomer">
+		<result column="targetSum" property="targetSum"  />
+		<result column="challengeSum" property="challengeSum"  />
+		<result column="targetQty" property="targetQty"  />
+		<result column="challengeQty" property="challengeQty"  />
+		<result column="saleSum" property="saleSum" jdbcType="VARCHAR" />
+		<result column="saleQty" property="saleQty" />
+	</resultMap>
+
+
+	<resultMap id="saleDateMap" type="ExcelCustomer">
+		<result column="shopId" property="shopId" jdbcType="VARCHAR" />
+		<result column="quantity" property="quantity" jdbcType="INTEGER" />
+		<result column="model" property="model" jdbcType="VARCHAR" />
+	</resultMap>
+
+
+
+	<sql id="listWhere">
+		<if test="searchStr != null"> ${searchStr} </if>
+		<where>
+			<if test="conditions != null"> and ${conditions} </if>
+		</where>
+	</sql>
+	<select id="selectDatas" parameterType="java.lang.String"
+		resultMap="ExcelMap">
+		SELECT pa.party_name AS REG,
+		si.`customer_ID` AS SHOP_ID ,si.`CUSTOMER_NAME` AS
+		DEALER,
+		si.`CREATE_DATE` AS DATE,
+		(SELECT p.party_name FROM party p WHERE
+		p.party_id=pa.`PARENT_PARTY_ID`) AREA
+
+		FROM customer_info si
+		
+		JOIN party pa ON
+		pa.party_id = si.party_id
+		
+		<include refid="listWhere" />
+		ORDER BY si.`Customer_NAME` ASC
+	</select>
+
+
+	<select id="selectSalerDatas" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT sp.`salertype` AS salerType ,u.user_Name AS userId
+		,ci.`CUSTOMER_ID` AS
+		shop_id FROM shop_saler_mapping sp
+		JOIN user_login u ON
+		u.user_login_id=sp.`user_login_id`
+		JOIN shop_info  si ON  si.`SHOP_ID`=sp.`shop_id`
+
+		JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID`
+		JOIN party pa  ON  pa.`PARTY_ID`=si.`PARTY_ID`
+		<include refid="listWhere" />
+	</select>
+
+
+
+	<select id="selectModelList" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT  s.customer_ID AS shop_id
+		,
+		<if test="isHq == true"> 
+  ${" tmc.`channel_model` AS model,ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity"}
+  </if>
+  <if test="isHq == false"> 
+  ${"tmc.`channel_model` AS model,ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity"}
+  </if>
+
+		FROM t_sale s 
+		JOIN customer_info ci
+		ON ci.`customer_ID`=s.`customer_ID`
+		JOIN party pa ON
+		pa.party_id = ci.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id` 
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =1
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND pr.PRODUCT_SPEC_ID LIKE '%BASIC LED%'
+		<if test="isHq == true">
+		${"group By ci.`customer_id`,tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By ci.`customer_id`,tmc.`channel_model`"}
+		</if>
+		
+
+	</select>
+
+
+	<select id="selectModelTotal" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT s.customer_id AS shop_id ,
+		
+		<if test="isHq == true">
+		${"ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity,COALESCE(SUM(s.`h_amount`),0) AS
+		amount"}
+		</if>
+		
+		<if test="isHq == false">
+		${"ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity,COALESCE(SUM(s.`amount`),0) AS
+		amount"}
+		</if>
+		FROM t_sale s
+		JOIN
+		customer_info p ON p.`customer_ID`=s.`customer_id`
+		
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =1
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND pr.PRODUCT_SPEC_ID LIKE '%BASIC LED%'
+		GROUP BY s.customer_id
+	</select>
+
+
+
+	
+
+
+	<select id="selectModel" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT 
+		<if test="isHq == true">
+			${"DISTINCT tm.hq_model AS model 
+		,COALESCE(SUM(t.`h_price`),0) AS price"}
+		</if>
+		
+		<if test="isHq == false">
+		${"DISTINCT tmc.`channel_model` AS model 
+		,COALESCE(SUM(t.`price`),0) AS price"}
+		</if>
+		,
+		COUNT(DISTINCT t.`customer_id`) AS shop FROM
+		t_sale t  
+
+		JOIN customer_info  ci ON t.`customer_id`=ci.`CUSTOMER_ID`
+		JOIN
+		party pa ON pa.party_id = ci.party_id  
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		
+		JOIN product p ON p.product_model=tm.`hq_model` AND p.head_type_id =1
+		<include refid="listWhere" />
+		AND p.PRODUCT_SPEC_ID LIKE '%BASIC LED%'
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate} 
+		<if test="isHq == true">
+		${"group By tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By tmc.`channel_model`"}
+		</if>
+
+
+	</select>
+
+
+
+
+
+
+
+
+	<select id="selectTargetByshop" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+
+ 
+ 
+ 
+ 		SELECT st.`target_id` AS shop_id,
+		<if test="isHq == true">
+		${"SUM(COALESCE(st.`h_amount`,0) )AS targetSum,
+		SUM(COALESCE(st.`h_tz_amount`,0)) AS challengeSum"}
+		</if>
+		
+		<if test="isHq == false">
+		${"SUM(COALESCE(st.`amount`,0) )AS targetSum,
+		SUM(COALESCE(st.`tz_amount`,0)) AS challengeSum"}
+		
+		</if>
+		
+		FROM t_target
+		st
+		JOIN
+		customer_info ci ON ci.`customer_ID`=st.`target_id` AND st.`class_id`=3
+		JOIN party pa ON pa.party_id = ci.party_id
+		<include refid="listWhere" />
+		AND st.type=#{type}
+		AND  st.`datadate`  BETWEEN  #{tBeginDate}   AND  #{tEndDate}
+		GROUP  BY  ci.`CUSTOMER_ID`
+ 
+
+	</select>
+	
+	
+
+	
+	
+	
+
+	<select id="selectSaleDataByshop" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT s.`customer_id` shop_id,
+		
+		
+		<if test="isHq == false"> 
+  	${"COALESCE(SUM(s.amount),0) AS
+		saleSum
+		,ROUND(COALESCE(SUM(s.quantity),0)) AS
+		saleQty"}
+  </if>
+  <if test="isHq == true"> 
+  ${"COALESCE(SUM(s.h_amount),0) AS
+		saleSum
+		,ROUND(COALESCE(SUM(s.h_quantity),0)) AS
+		saleQty"}
+  </if>
+  
+  		  FROM
+		t_sale s FORCE INDEX(idx_sale_shopdatadate)
+		JOIN customer_info si ON s.`customer_id`=si.`customer_ID`
+		JOIN party pa ON
+		pa.`PARTY_ID`=si.`PARTY_ID`
+		
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=si.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =1
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		GROUP BY s.customer_id
+	</select>
+
+
+<select id="selectSaleDataByshopByAc" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT s.`customer_id` shop_id,
+		
+		
+		<if test="isHq == false"> 
+  	${"COALESCE(SUM(s.amount),0) AS
+		saleSum
+		,ROUND(COALESCE(SUM(s.quantity),0)) AS
+		saleQty"}
+  </if>
+  <if test="isHq == true"> 
+  ${"COALESCE(SUM(s.h_amount),0) AS
+		saleSum
+		,ROUND(COALESCE(SUM(s.h_quantity),0)) AS
+		saleQty"}
+  </if>
+  
+  		  FROM
+		t_sale s FORCE INDEX(idx_sale_shopdatadate)
+		JOIN customer_info si ON s.`customer_id`=si.`customer_ID`
+		JOIN party pa ON
+		pa.`PARTY_ID`=si.`PARTY_ID`
+		
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=si.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =2
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		GROUP BY s.customer_id
+	</select>
+	
+
+	<select id="selectStockBymodel" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+	
+
+	SELECT 
+	
+	
+	<if test="isHq == false"> 
+  	${"tmc.`channel_model`
+		model"}
+  </if>
+  <if test="isHq == true"> 
+  ${"tm.`hq_model`
+		model"}
+  </if>
+	
+	,ROUND(COALESCE(SUM(t.`quantity`),0))
+		AS quantity
+		FROM
+		t_inventory
+		t
+		JOIN customer_info ci ON ci.`CUSTOMER_ID`=t.`customer_id`
+
+		
+		JOIN party pa ON
+		pa.party_id = ci.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` 
+		<include refid="listWhere" />
+		AND t.class_id=1
+		AND pr.PRODUCT_SPEC_ID LIKE #{spec}
+		AND
+		pr.head_type_id=1
+
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		<if test="isHq == true">
+		${"group By tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By tmc.`channel_model`"}
+		</if>
+		
+		
+	</select>
+
+
+
+<select id="selectStockBymodelByAc" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+	
+
+SELECT 
+	
+	
+	<if test="isHq == false"> 
+  	${"tmc.`channel_model`
+		model"}
+  </if>
+  <if test="isHq == true"> 
+  ${"tm.`hq_model`
+		model"}
+  </if>
+	
+	,ROUND(COALESCE(SUM(t.`quantity`),0))
+		AS quantity
+		FROM
+		t_inventory
+		t
+		JOIN customer_info ci ON ci.`CUSTOMER_ID`=t.`customer_id`
+
+		
+		JOIN party pa ON
+		pa.party_id = ci.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` 
+		<include refid="listWhere" />
+		AND t.class_id=1
+		AND pr.PRODUCT_SPEC_ID LIKE #{spec}
+		AND
+		pr.head_type_id=2
+
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		<if test="isHq == true">
+		${"group By tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By tmc.`channel_model`"}
+		</if>
+		
+		
+		
+		
+	</select>
+
+
+
+
+
+	<select id="selectStockByData" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT ci.customer_id AS shop_id,
+		
+		
+			<if test="isHq == false"> 
+  	${"tmc.`channel_model`
+		model"}
+  </if>
+  <if test="isHq == true"> 
+  ${"tm.`hq_model`
+		model"}
+  </if>
+		
+		,ROUND(COALESCE(SUM(t.`quantity`),0))
+		AS
+		quantity FROM t_inventory t
+		JOIN
+		customer_info ci ON
+		ci.customer_id=t.customer_id
+		JOIN party pa ON pa.party_id = ci.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`
+		<include refid="listWhere" />
+		AND t.class_id=1
+		AND pr.PRODUCT_SPEC_ID LIKE #{spec}
+		AND
+		pr.head_type_id=1
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		<if test="isHq == true">
+		${"group By ci.customer_id,tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By ci.customer_id,tmc.`channel_model`"}
+		</if>
+	</select>
+
+
+
+<select id="selectStockByDataByAc" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT ci.customer_id AS shop_id,
+		
+		
+			<if test="isHq == false"> 
+  	${"tmc.`channel_model`
+		model"}
+  </if>
+  <if test="isHq == true"> 
+  ${"tm.`hq_model`
+		model"}
+  </if>
+		
+		,ROUND(COALESCE(SUM(t.`quantity`),0))
+		AS
+		quantity FROM t_inventory t
+		JOIN
+		customer_info ci ON
+		ci.customer_id=t.customer_id
+		JOIN party pa ON pa.party_id = ci.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`
+		<include refid="listWhere" />
+		AND t.class_id=1
+		AND pr.PRODUCT_SPEC_ID LIKE #{spec}
+		AND
+		pr.head_type_id=2
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		<if test="isHq == true">
+		${"group By ci.customer_id,tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By ci.customer_id,tmc.`channel_model`"}
+		</if>
+		
+	</select>
+
+
+
+	<select id="selectDisplayBymodel" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT 			
+		<if test="isHq == false"> 
+  	${"tmc.`channel_model`
+		model"}
+  </if>
+  <if test="isHq == true"> 
+  ${"tm.`hq_model`
+		model"}
+  </if>
+		,ROUND(COALESCE(SUM(t.`quantity`),0))
+		AS quantity FROM
+		sample_record t
+		JOIN customer_info ci ON ci.`CUSTOMER_ID`=t.`customer_id`
+
+		JOIN party pa ON
+		pa.party_id = ci.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`
+		<include refid="listWhere" />
+		AND t.class_id=1
+		AND pr.PRODUCT_SPEC_ID LIKE #{spec}
+		AND
+		pr.head_type_id=1
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		
+		<if test="isHq == true">
+		${"group By tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By tmc.`channel_model`"}
+		</if>
+	</select>
+
+
+
+
+<select id="selectDisplayBymodelByAc" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+	SELECT 			
+		<if test="isHq == false"> 
+  	${"tmc.`channel_model`
+		model"}
+  </if>
+  <if test="isHq == true"> 
+  ${"tm.`hq_model`
+		model"}
+  </if>
+		,ROUND(COALESCE(SUM(t.`quantity`),0))
+		AS quantity FROM
+		sample_record t
+		JOIN customer_info ci ON ci.`CUSTOMER_ID`=t.`customer_id`
+
+		JOIN party pa ON
+		pa.party_id = ci.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`
+		<include refid="listWhere" />
+		AND t.class_id=1
+		AND pr.PRODUCT_SPEC_ID LIKE #{spec}
+		AND
+		pr.head_type_id=2
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		
+		<if test="isHq == true">
+		${"group By tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By tmc.`channel_model`"}
+		</if>
+	</select>
+
+
+
+
+
+
+	<select id="selectDisplayByData" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT ci.`customer_id` shop_id,		
+		<if test="isHq == false"> 
+  	${"tmc.`channel_model`
+		model"}
+  </if>
+  <if test="isHq == true"> 
+  ${"tm.`hq_model`
+		model"}
+  </if>,ROUND(COALESCE(SUM(t.`quantity`),0))
+		AS
+		quantity FROM
+		sample_record t
+		JOIN customer_info ci ON ci.customer_id=t.customer_id
+		JOIN party pa ON
+		pa.party_id = ci.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`
+		<include refid="listWhere" />
+		AND t.class_id=1
+		AND pr.PRODUCT_SPEC_ID LIKE #{spec}
+		AND
+		pr.head_type_id=1
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		<if test="isHq == true">
+		${"group By ci.customer_id,tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By ci.customer_id,tmc.`channel_model`"}
+		</if>
+		
+	</select>
+
+
+
+<select id="selectDisplayByDataByAc" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT ci.`customer_id` shop_id,		
+		<if test="isHq == false"> 
+  	${"tmc.`channel_model`
+		model"}
+  </if>
+  <if test="isHq == true"> 
+  ${"tm.`hq_model`
+		model"}
+  </if>,ROUND(COALESCE(SUM(t.`quantity`),0))
+		AS
+		quantity FROM
+		sample_record t
+		JOIN customer_info ci ON ci.customer_id=t.customer_id
+		JOIN party pa ON
+		pa.party_id = ci.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`
+		<include refid="listWhere" />
+		AND t.class_id=1
+		AND pr.PRODUCT_SPEC_ID LIKE #{spec}
+		AND
+		pr.head_type_id=2
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		<if test="isHq == true">
+		${"group By ci.customer_id,tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By ci.customer_id,tmc.`channel_model`"}
+		</if>
+		
+	</select>
+
+
+
+
+
+	<select id="selectSaleDataBySum" parameterType="java.lang.String"
+		resultMap="SumMap">
+		SELECT 
+		<if test="isHq ==  false">
+		${"COALESCE( SUM(s.amount),0)AS
+		saleSum
+		,ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		saleQty"}
+		</if>
+		
+		<if test="isHq ==  true">
+		${"COALESCE( SUM(s.h_amount),0)AS
+		saleSum
+		,ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS
+		saleQty"}
+		</if>
+		
+		
+		FROM t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+		
+		JOIN customer_info p
+		ON p.`customer_ID`=s.`customer_id`
+		
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		
+		
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+	</select>
+
+
+
+
+
+<select id="selectSaleDataBySumByAc" parameterType="java.lang.String"
+		resultMap="SumMap">
+		SELECT 
+		<if test="isHq ==  false">
+		${"COALESCE( SUM(s.amount),0)AS
+		saleSum
+		,ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		saleQty"}
+		</if>
+		
+		<if test="isHq ==  true">
+		${"COALESCE( SUM(s.h_amount),0)AS
+		saleSum
+		,ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS
+		saleQty"}
+		</if>
+		
+		
+		FROM t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+		
+		JOIN customer_info p
+		ON p.`customer_ID`=s.`customer_id`
+		
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =2
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+	</select>
+
+
+
+
+	<select id="selectTargetDataBySum" parameterType="java.lang.String"
+		resultMap="SumMap">
+	
+		SELECT 
+		<if test="isHq == true ">
+		${"COALESCE(SUM(st.h_amount),0) AS targetSum,
+		ROUND(COALESCE(SUM(st.`h_quantity`),0)) AS targetQty,
+		COALESCE(SUM(st.h_tz_amount),0) AS challengeSum,
+		ROUND(COALESCE(SUM(st.`h_tz_quantity`),0)) AS challengeQty"}
+		</if>
+		<if test="isHq  == false">
+		
+		${"COALESCE(SUM(st.amount),0) AS targetSum,
+		ROUND(COALESCE(SUM(st.`quantity`),0)) AS targetQty,
+		COALESCE(SUM(st.tz_amount),0) AS challengeSum,
+		ROUND(COALESCE(SUM(st.`tz_quantity`),0)) AS challengeQty"}
+		</if>
+		
+		FROM
+		t_target st
+		JOIN customer_info p ON p.`customer_ID`=st.`target_id`	 AND st.`class_id`=3
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		<include refid="listWhere" />
+		AND st.type=#{type}
+		AND  st.`datadate`  BETWEEN    #{tBeginDate} AND #{tEndDate}
+		
+	</select>
+
+
+	<select id="selectDataByArea" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+
+		
+	SELECT pa.`PARTY_ID` partyId, PA.`PARTY_NAME` AS AREA
+		,
+		
+		<if test="isHq == true">
+		${"round(COALESCE(SUM(S.`h_quantity`),0) )AS
+		saleQty,
+		COALESCE(SUM(S.`h_amount`),0)
+		AS
+		saleSum"}
+		</if>
+		
+		<if test="isHq == false">
+		${"round(COALESCE(SUM(S.`quantity`),0) )AS
+		saleQty,
+		COALESCE(SUM(S.`amount`),0)
+		AS
+		saleSum"}
+		</if>
+		,
+		COUNT(DISTINCT s.shop_id) noOfShops,
+		COALESCE(SUM(smtv.fps ),0)	 
+		AS tvFps
+
+		FROM t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+	
+		JOIN customer_info ci ON ci.customer_id=s.`customer_id`
+		
+			LEFT JOIN  (
+	SELECT DISTINCT  cii.customer_id  AS  shop, COUNT(DISTINCT sm.`user_login_id`) AS FPS FROM   shop_saler_mapping sm
+	JOIN t_sale t FORCE INDEX(idx_sale_shopdatadate) ON t.`shop_id`=sm.`shop_id` 
+	JOIN customer_info cii ON cii.customer_id=t.`customer_id`
+		JOIN shop_info psi ON
+		psi.`customer_id`=cii.`customer_id`
+	JOIN party pa ON pa.party_id=cii.party_id
+	<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+	AND sm.salertype='1' GROUP BY cii.`customer_id` ) smtv  ON smtv.shop=ci.`customer_id`
+	
+	
+		JOIN party pa ON pa.party_id = ci.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND  tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id` 
+		AND tmc.customer_id=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND
+		pr.head_type_id=1
+		GROUP BY ci.party_Id
+		 
+		
+		
+		
+	</select>
+
+
+<select id="selectDataByAreaByAc" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+
+	
+		
+	SELECT pa.`PARTY_ID` partyId, PA.`PARTY_NAME` AS AREA
+		,
+		
+		<if test="isHq == true">
+		${"round(COALESCE(SUM(S.`h_quantity`),0) )AS
+		saleQty,
+		COALESCE(SUM(S.`h_amount`),0)
+		AS
+		saleSum"}
+		</if>
+		
+		<if test="isHq == false">
+		${"round(COALESCE(SUM(S.`quantity`),0) )AS
+		saleQty,
+		COALESCE(SUM(S.`amount`),0)
+		AS
+		saleSum"}
+		</if>
+		,
+		COUNT(DISTINCT s.shop_id) noOfShops,
+		COALESCE(SUM(smtv.fps ),0)	 
+		AS tvFps
+
+		FROM t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+	
+		JOIN customer_info ci ON ci.customer_id=s.`customer_id`
+		
+			LEFT JOIN  (
+	SELECT DISTINCT  cii.customer_id  AS  shop, COUNT(DISTINCT sm.`user_login_id`) AS FPS FROM   shop_saler_mapping sm
+	JOIN t_sale t FORCE INDEX(idx_sale_shopdatadate) ON t.`shop_id`=sm.`shop_id` 
+	JOIN customer_info cii ON cii.customer_id=t.`customer_id`
+		JOIN shop_info psi ON
+		psi.`customer_id`=cii.`customer_id`
+	JOIN party pa ON pa.party_id=cii.party_id
+	<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+	AND sm.salertype='1' GROUP BY cii.`customer_id` ) smtv  ON smtv.shop=ci.`customer_id`
+	
+	
+		JOIN party pa ON pa.party_id = ci.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND  tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id` 
+		AND tmc.customer_id=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND
+		pr.head_type_id=2
+		GROUP BY ci.party_Id
+		 
+		
+		
+		
+		
+		
+	</select>
+
+
+
+
+	<select id="selectDataByAreaInfo" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+
+		SELECT pa.`PARTY_ID` partyId, PA.`PARTY_NAME` AS AREA
+		
+
+		FROM customer_info p
+		JOIN party pa ON pa.party_id = p.party_id
+		
+		<include refid="listWhere" />
+		GROUP BY PA.`PARTY_ID`
+		
+
+	</select>
+
+
+
+
+
+
+
+
+	<select id="selectTargetByArea" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT pa.`PARTY_ID`,
+		<if test="isHq ==true ">
+		${" COALESCE(SUM(s.`h_amount`),0) AS
+		targetSum,COALESCE(SUM(s.h_tz_amount),0) AS challengeSum"}
+		</if>
+		
+		<if test="isHq == false">
+		${" COALESCE(SUM(s.`amount`),0) AS
+		targetSum,COALESCE(SUM(s.tz_amount),0) AS challengeSum"}
+		</if>
+		
+		FROM
+		t_target s  
+		JOIN customer_info p ON
+		p.`customer_ID`=s.`target_id` AND s.`class_id`=3
+	
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		<include refid="listWhere" />
+		AND s.type=#{type}
+		AND s.datadate BETWEEN #{tBeginDate} AND #{tEndDate}
+	group by pa.party_id
+	</select>
+
+
+	<select id="selectTargetBySaleman" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		
+		
+		SELECT  sv.userId, sv.userName AS userName,SUM( sv.shop) AS noOfShops ,
+
+		COALESCE(SUM(sv.saleQty),0) AS saleQty,
+		COALESCE(SUM(sv.saleSum),0) AS saleSum,
+		COALESCE(SUM(tv.targetSum),0) AS targetSum ,
+		COALESCE(SUM(tv.challengeSum),0) AS challengeSum 
+		FROM (
+		SELECT
+		
+		ul.`USER_login_id` AS userId,ul.`USER_NAME` AS userName,
+		COUNT(DISTINCT t.shop_id) AS shop ,
+		ci.customer_id AS shop_id,
+		<if test="isHq == true ">
+		${"ROUND(COALESCE(SUM(t.`h_quantity`),0))
+		AS saleQty,
+		
+		ROUND(COALESCE(SUM(t.`h_amount`),0)) AS saleSum"}
+		</if>
+		
+		<if test="isHq == false ">
+		${"ROUND(COALESCE(SUM(t.`quantity`),0))
+		AS saleQty,
+		
+		ROUND(COALESCE(SUM(t.`amount`),0)) AS saleSum"}
+		</if>
+		
+		
+		FROM t_sale t 
+		JOIN customer_info ci ON ci.`CUSTOMER_ID`=t.`customer_id`
+		JOIN
+		shop_info si ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID`
+		JOIN `shop_saler_mapping` ssm
+		ON ssm.`shop_id`=t.`shop_id`
+		JOIN user_login ul ON
+		ul.`USER_LOGIN_ID`=ssm.`user_login_id`
+		JOIN party pa ON pa.party_id = si.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =1
+		
+		
+		<include refid="listWhere" />
+		AND  t.`datadate`   BETWEEN #{beginDate} AND #{endDate}
+		AND
+		ssm.salertype='0'
+		GROUP BY t.`shop_id`,ul.`USER_login_id`
+		)sv
+		
+		LEFT  JOIN 
+		
+		(SELECT tst.`target_id` AS targetId, 
+		<if test="isHq == true">
+		${"COALESCE(SUM(tst.`h_amount`),0)	AS targetSum ,COALESCE(SUM(tst.`h_tz_amount`),0) AS challengeSum "}
+		
+		</if>
+		
+		<if test="isHq == false">
+		${"COALESCE(SUM(tst.`amount`),0)	AS targetSum ,COALESCE(SUM(tst.`tz_amount`),0) AS challengeSum "}
+		
+		</if>
+		
+		FROM  t_target tst 
+		WHERE    tst.`class_id`=3
+		AND tst.TYPE=1
+		AND  tst.`datadate`  BETWEEN #{tBeginDate} AND #{tEndDate}
+		GROUP BY  tst.`target_id`
+		) tv ON sv.shop_id=tv.targetId
+		
+		GROUP BY sv.userId
+		
+				
+	</select>
+	
+	
+	
+	<select id="selectTargetBySalemanByAc" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		
+		SELECT  sv.userId, sv.userName AS userName,SUM( sv.shop) AS noOfShops ,
+
+		COALESCE(SUM(sv.saleQty),0) AS saleQty,
+		COALESCE(SUM(sv.saleSum),0) AS saleSum,
+		COALESCE(SUM(tv.targetSum),0) AS targetSum ,
+		COALESCE(SUM(tv.challengeSum),0) AS challengeSum 
+		FROM (
+		SELECT
+		
+		ul.`USER_login_id` AS userId,ul.`USER_NAME` AS userName,
+		COUNT(DISTINCT t.shop_id) AS shop ,
+		ci.customer_id AS shop_id,
+		<if test="isHq == true ">
+		${"ROUND(COALESCE(SUM(t.`h_quantity`),0))
+		AS saleQty,
+		
+		ROUND(COALESCE(SUM(t.`h_amount`),0)) AS saleSum"}
+		</if>
+		
+		<if test="isHq == false ">
+		${"ROUND(COALESCE(SUM(t.`quantity`),0))
+		AS saleQty,
+		
+		ROUND(COALESCE(SUM(t.`amount`),0)) AS saleSum"}
+		</if>
+		
+		
+		FROM t_sale t 
+		JOIN customer_info ci ON ci.`CUSTOMER_ID`=t.`customer_id`
+		JOIN
+		shop_info si ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID`
+		JOIN `shop_saler_mapping` ssm
+		ON ssm.`shop_id`=t.`shop_id`
+		JOIN user_login ul ON
+		ul.`USER_LOGIN_ID`=ssm.`user_login_id`
+		JOIN party pa ON pa.party_id = si.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =2
+		
+		
+		<include refid="listWhere" />
+		AND  t.`datadate`   BETWEEN #{beginDate} AND #{endDate}
+		AND
+		ssm.salertype='0'
+		GROUP BY t.`shop_id`,ul.`USER_login_id`
+		)sv
+		
+		LEFT  JOIN 
+		
+		(SELECT tst.`target_id` AS targetId, 
+		<if test="isHq == true">
+		${"COALESCE(SUM(tst.`h_amount`),0)	AS targetSum ,COALESCE(SUM(tst.`h_tz_amount`),0) AS challengeSum "}
+		
+		</if>
+		
+		<if test="isHq == false">
+		${"COALESCE(SUM(tst.`amount`),0)	AS targetSum ,COALESCE(SUM(tst.`tz_amount`),0) AS challengeSum "}
+		
+		</if>
+		
+		FROM  t_target tst 
+		WHERE    tst.`class_id`=3
+		AND tst.TYPE=2
+		AND  tst.`datadate`  BETWEEN #{tBeginDate} AND #{tEndDate}
+		GROUP BY  tst.`target_id`
+		) tv ON sv.shop_id=tv.targetId
+		
+		GROUP BY sv.userId
+		
+				
+		
+				
+	</select>
+
+	<select id="selectTargetBySalemanInfo" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+
+		
+		  SELECT 	
+		ul.`USER_login_id` AS userId,ul.`USER_NAME` AS userName
+		
+
+		FROM   `shop_saler_mapping` ssm 
+		JOIN
+		shop_info si ON ssm.`shop_id`=si.`SHOP_ID`
+		JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID`
+		JOIN user_login ul ON
+		ul.`USER_LOGIN_ID`=ssm.`user_login_id`
+		
+		JOIN party pa ON pa.party_id = si.party_id 
+		<include refid="listWhere" />
+		AND ssm.salertype='0'
+		GROUP BY ssm.`user_login_id`
+		
+	</select>
+
+	
+
+	<select id="selectModelBySpec" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		
+		SELECT 
+		<if test="isHq == true">
+			${"DISTINCT tm.hq_model AS model 
+		,COALESCE(SUM(t.`h_price`),0) AS price"}
+		</if>
+		
+		<if test="isHq == false">
+		${"DISTINCT  tmc.`channel_model` AS model 
+		,COALESCE(SUM(t.`price`),0) AS price"}
+		</if>
+		,
+		COUNT(DISTINCT t.`customer_id`) AS shop FROM
+		t_sale t  
+
+		JOIN customer_info  ci ON t.`customer_id`=ci.`CUSTOMER_ID`
+		JOIN
+		party pa ON pa.party_id = ci.party_id  
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product p ON p.product_model=tm.`hq_model` AND p.head_type_id =1
+		<include refid="listWhere" />
+		AND p.PRODUCT_SPEC_ID LIKE #{spec}
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate} 
+		<if test="isHq == true">
+		${"group By tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By tmc.`channel_model`"}
+		</if>
+		
+		
+		
+		
+		
+		
+		
+
+
+	</select>
+	
+	
+	
+	
+	<select id="selectModelBySpecByAc" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+			SELECT 
+		<if test="isHq == true">
+			${"DISTINCT tm.hq_model AS model 
+		,COALESCE(SUM(t.`h_price`),0) AS price"}
+		</if>
+		
+		<if test="isHq == false">
+		${"DISTINCT  tmc.`channel_model` AS model 
+		,COALESCE(SUM(t.`price`),0) AS price"}
+		</if>
+		,
+		COUNT(DISTINCT t.`customer_id`) AS shop FROM
+		t_sale t  
+
+		JOIN customer_info  ci ON t.`customer_id`=ci.`CUSTOMER_ID`
+		JOIN
+		party pa ON pa.party_id = ci.party_id  
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product p ON p.product_model=tm.`hq_model` AND p.head_type_id =2
+		<include refid="listWhere" />
+		AND p.PRODUCT_SPEC_ID LIKE #{spec}
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate} 
+		<if test="isHq == true">
+		${"group By tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By tmc.`channel_model`"}
+		</if>
+		
+		
+		
+		
+
+	</select>
+	
+	
+
+
+
+
+
+
+
+
+
+
+	<select id="selectModelListBySpec" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		
+	SELECT ci.`customer_ID` AS shop_id
+		,
+		<if test="isHq == true"> 
+  ${" tm.hq_model AS model,ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity"}
+  </if>
+  <if test="isHq == false"> 
+  ${"tmc.`channel_model` AS model,ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity"}
+  </if>
+
+		FROM t_sale s 
+		JOIN customer_info ci
+		ON ci.`customer_ID`=s.`customer_ID`
+		JOIN party pa ON
+		pa.party_id = ci.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =1
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND pr.PRODUCT_SPEC_ID LIKE #{spec}
+		<if test="isHq == true">
+		${"group By ci.`customer_id`,tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By ci.`customer_id`,tmc.`channel_model`"}
+		</if>
+		
+	</select>
+
+
+
+
+<select id="selectModelListBySpecByAc" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+			
+	SELECT ci.`customer_ID` AS shop_id
+		,
+		<if test="isHq == true"> 
+  ${" tm.hq_model AS model,ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity"}
+  </if>
+  <if test="isHq == false"> 
+  ${"tmc.`channel_model` AS model,ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity"}
+  </if>
+
+		FROM t_sale s 
+		JOIN customer_info ci
+		ON ci.`customer_ID`=s.`customer_ID`
+		JOIN party pa ON
+		pa.party_id = ci.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =2
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND pr.PRODUCT_SPEC_ID LIKE #{spec}
+		<if test="isHq == true">
+		${"group By ci.`customer_id`,tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By ci.`customer_id`,tmc.`channel_model`"}
+		</if>
+		
+	</select>
+
+
+
+
+	<select id="selectModelBySpecTotal" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT s.customer_id AS shop_id
+		,
+		
+		<if test="isHq ==true">
+		${"ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity,COALESCE(SUM(s.`h_amount`),0) AS
+		amount"}
+		
+		</if>
+		
+		<if test="isHq == false">
+		${"ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity,COALESCE(SUM(s.`amount`),0) AS
+		amount
+		"}
+		</if>
+		FROM t_sale s 
+		JOIN
+		customer_info p ON p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		<include refid="listWhere" />
+	<![CDATA[AND s.datadate BETWEEN #{beginDate} AND #{endDate}]]>
+
+		AND (pr.PRODUCT_SPEC_ID LIKE '%DIGITAL%'
+		OR pr.PRODUCT_SPEC_ID LIKE
+		'%INTERNET%'
+		OR pr.PRODUCT_SPEC_ID LIKE '%SMART%'
+		OR pr.PRODUCT_SPEC_ID
+		LIKE '%UHD%'
+		OR pr.PRODUCT_SPEC_ID LIKE '%CURVE%'
+		OR pr.PRODUCT_SPEC_ID LIKE '%QUHD%'
+		)
+		GROUP BY s.customer_id
+	</select>
+
+
+<select id="selectModelBySpecTotalByAc" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT s.customer_id AS shop_id
+		,
+		
+		<if test="isHq ==true">
+		${"ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity,COALESCE(SUM(s.`h_amount`),0) AS
+		amount"}
+		
+		</if>
+		
+		<if test="isHq == false">
+		${"ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity,COALESCE(SUM(s.`amount`),0) AS
+		amount
+		"}
+		</if>
+		FROM t_sale s 
+		JOIN
+		customer_info p ON p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =2
+		<include refid="listWhere" />
+	<![CDATA[AND s.datadate BETWEEN #{beginDate} AND #{endDate}]]>
+
+		AND (pr.product_type LIKE '%Fission%'
+		OR pr.product_type LIKE
+		'%Window%'
+		
+		)
+		
+		GROUP BY s.customer_id
+	</select>
+
+
+
+
+	<select id="selectModelTotalBySpec" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT s.customer_id AS shop_id
+		,
+		<if test="isHq ==  true">
+		${"round(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity,COALESCE(SUM(s.`h_amount`),0) AS
+		amount"}
+		
+		</if>
+		
+		<if test="isHq ==false">
+		
+		${"round(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity,COALESCE(SUM(s.`amount`),0) AS
+		amount"}
+		
+		
+		</if>
+		FROM t_sale s 
+		JOIN
+		customer_info p ON p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =1
+		<include refid="listWhere" />
+	<![CDATA[AND s.datadate BETWEEN #{beginDate} AND #{endDate}]]>
+
+		AND (pr.PRODUCT_SPEC_ID LIKE #{spec}
+
+		)
+		AND pr.head_type_id =1
+		GROUP BY
+		s.customer_id
+	</select>
+
+
+	<select id="selectStockByTotal" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT t.`customer_id` AS
+		shop_id,round(COALESCE(sum(t.`quantity`),0))
+		AS
+		quantity FROM
+		t_inventory t
+		JOIN customer_info p ON
+		p.`customer_ID`=t.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  
+		<include refid="listWhere" />
+		AND t.class_id=1
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND (pr.PRODUCT_SPEC_ID LIKE '%DIGITAL%'
+		OR
+		pr.PRODUCT_SPEC_ID LIKE '%INTERNET%'
+		OR pr.PRODUCT_SPEC_ID LIKE
+		'%SMART%'
+		OR pr.PRODUCT_SPEC_ID LIKE '%UHD%'
+		OR pr.PRODUCT_SPEC_ID LIKE
+		'%CURVE%'
+		OR pr.PRODUCT_SPEC_ID LIKE
+		'%QUHD%'
+
+		)
+		AND pr.head_type_id=1
+		group by t.`customer_id`
+		
+	</select>
+
+
+
+<select id="selectStockByTotalByAc" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT t.`customer_id` AS
+		shop_id,round(COALESCE(sum(t.`quantity`),0))
+		AS
+		quantity FROM
+		t_inventory t
+		JOIN customer_info p ON
+		p.`customer_ID`=t.`shop_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  
+		<include refid="listWhere" />
+		AND t.class_id=1
+		AND (
+		pr.product_type LIKE '%Window%'
+		OR
+		pr.product_type LIKE '%Fission%'
+		
+
+		)
+		AND pr.head_type_id=2
+		group by t.`customer_id`
+	</select>
+
+
+
+
+	<select id="selectSelloutByDealer" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+	
+SELECT  	sv.party_id,sv.partyId, sv.customer_name AS customer_name,
+		sv.DEALER AS DEALER,
+		sv.REG AS REG,
+		sv.noOfShops noOfShops ,
+		sv.tvFps AS tvFps, 
+
+		COALESCE(SUM(sv.saleQty),0) AS saleQty,
+		COALESCE(SUM(sv.saleSum),0) AS saleSum,
+		COALESCE(SUM(tv.targetSum),0) AS targetSum ,
+		COALESCE(SUM(tv.challengeSum),0) AS challengeSum 
+		FROM (
+		SELECT
+		 c.customer_id AS customer_id,
+		PA.`PARTY_ID` AS party_id,
+		c.`CUSTOMER_NAME` AS customer_name,
+		COUNT(DISTINCT s.shop_id) AS noOfShops ,
+		COALESCE(SUM(smtv.fps ),0) AS tvFps, 
+		(SELECT p.party_name
+		FROM party p WHERE p.party_id=pa.`PARENT_PARTY_ID`) REG,
+		c.`CUSTOMER_NAME` AS DEALER ,
+
+		pa.`PARTY_ID` partyId, PA.`PARTY_NAME` AS
+		AREA
+		,
+		
+		<if test="isHq == true ">
+		${"ROUND(COALESCE(SUM(S.`h_quantity`),0)) AS
+		saleQty,
+		COALESCE(SUM(S.`h_amount`),0) AS
+		saleSum
+		"}
+		</if>
+		<if test="isHq == false ">
+		${"ROUND(COALESCE(SUM(S.`quantity`),0)) AS
+		saleQty,
+		COALESCE(SUM(S.`amount`),0) AS
+		saleSum
+		"}
+		</if>
+
+		FROM t_sale s 
+		
+		JOIN
+		customer_info c ON s.customer_id=c.customer_id
+		 
+		
+		JOIN party pa ON
+		pa.party_id = c.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=c.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND  pr.head_type_id =1
+		LEFT JOIN  (
+	SELECT DISTINCT  cii.customer_id  AS  shop, COUNT(DISTINCT sm.`user_login_id`) AS FPS FROM   shop_saler_mapping sm
+	JOIN t_sale t FORCE INDEX(idx_sale_shopdatadate) ON t.`shop_id`=sm.`shop_id` 
+	JOIN customer_info cii ON cii.customer_id=t.`customer_id`
+		JOIN shop_info psi ON
+		psi.`customer_id`=cii.`customer_id`
+	JOIN party pa ON pa.party_id=cii.party_id
+	<include refid="listWhere" />
+		AND  t.`datadate` BETWEEN #{beginDate} AND #{endDate}
+	AND sm.salertype='1' GROUP BY cii.`customer_id` ) smtv  ON smtv.shop=c.`customer_id`
+		
+		<include refid="listWhere" />
+		AND  s.`datadate` BETWEEN #{beginDate} AND #{endDate}
+		
+		GROUP BY  c.customer_id
+		)sv
+		
+		LEFT  JOIN 
+		
+		(SELECT tst.`target_id` AS targetId,
+		<if test="isHq == true">
+		${" COALESCE((tst.`h_amount`),0)AS targetSum ,
+		 COALESCE((tst.`h_tz_amount`),0) AS challengeSum "}
+		</if>
+		
+		<if test="isHq == false">
+		${" COALESCE((tst.`amount`),0)AS targetSum ,
+		 COALESCE((tst.`tz_amount`),0) AS challengeSum "}
+		</if>
+		 
+		 FROM  t_target tst 
+		WHERE    tst.`class_id`=3
+		AND tst.TYPE=1
+		AND  tst.`datadate` BETWEEN #{tBeginDate} AND #{tEndDate}
+		) tv ON sv.customer_id=tv.targetId
+		
+		GROUP BY
+		sv.customer_id
+	</select>
+
+
+
+<select id="selectSelloutByDealerByAc" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+	
+SELECT  	sv.party_id,sv.partyId, sv.customer_name AS customer_name,
+		sv.DEALER AS DEALER,
+		sv.REG AS REG,
+		sv.noOfShops noOfShops ,
+		sv.tvFps AS tvFps, 
+
+		COALESCE(SUM(sv.saleQty),0) AS saleQty,
+		COALESCE(SUM(sv.saleSum),0) AS saleSum,
+		COALESCE(SUM(tv.targetSum),0) AS targetSum ,
+		COALESCE(SUM(tv.challengeSum),0) AS challengeSum 
+		FROM (
+		SELECT
+		 c.customer_id AS customer_id,
+		PA.`PARTY_ID` AS party_id,
+		c.`CUSTOMER_NAME` AS customer_name,
+		COUNT(DISTINCT s.shop_id) AS noOfShops ,
+		COALESCE(SUM(smtv.fps ),0) AS tvFps, 
+		(SELECT p.party_name
+		FROM party p WHERE p.party_id=pa.`PARENT_PARTY_ID`) REG,
+		c.`CUSTOMER_NAME` AS DEALER ,
+
+		pa.`PARTY_ID` partyId, PA.`PARTY_NAME` AS
+		AREA
+		,
+		
+		<if test="isHq == true ">
+		${"ROUND(COALESCE(SUM(S.`h_quantity`),0)) AS
+		saleQty,
+		COALESCE(SUM(S.`h_amount`),0) AS
+		saleSum
+		"}
+		</if>
+		<if test="isHq == false ">
+		${"ROUND(COALESCE(SUM(S.`quantity`),0)) AS
+		saleQty,
+		COALESCE(SUM(S.`amount`),0) AS
+		saleSum
+		"}
+		</if>
+
+		FROM t_sale s 
+		
+		JOIN
+		customer_info c ON s.customer_id=c.customer_id
+		 
+		
+		JOIN party pa ON
+		pa.party_id = c.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=c.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND  pr.head_type_id =2
+		LEFT JOIN  (
+	SELECT DISTINCT  cii.customer_id  AS  shop, COUNT(DISTINCT sm.`user_login_id`) AS FPS FROM   shop_saler_mapping sm
+	JOIN t_sale t FORCE INDEX(idx_sale_shopdatadate) ON t.`shop_id`=sm.`shop_id` 
+	JOIN customer_info cii ON cii.customer_id=t.`customer_id`
+		JOIN shop_info psi ON
+		psi.`customer_id`=cii.`customer_id`
+	JOIN party pa ON pa.party_id=cii.party_id
+	<include refid="listWhere" />
+		AND  t.`datadate` BETWEEN #{beginDate} AND #{endDate}
+	AND sm.salertype='1' GROUP BY cii.`customer_id` ) smtv  ON smtv.shop=c.`customer_id`
+		
+		<include refid="listWhere" />
+		AND  s.`datadate` BETWEEN #{beginDate} AND #{endDate}
+		
+		GROUP BY  c.customer_id
+		)sv
+		
+		LEFT  JOIN 
+		
+		(SELECT tst.`target_id` AS targetId,
+		<if test="isHq == true">
+		${" COALESCE((tst.`h_amount`),0)AS targetSum ,
+		 COALESCE((tst.`h_tz_amount`),0) AS challengeSum "}
+		</if>
+		
+		<if test="isHq == false">
+		${" COALESCE((tst.`amount`),0)AS targetSum ,
+		 COALESCE((tst.`tz_amount`),0) AS challengeSum "}
+		</if>
+		 
+		 FROM  t_target tst 
+		WHERE    tst.`class_id`=3
+		AND tst.TYPE=2
+		AND  tst.`datadate` BETWEEN #{tBeginDate} AND #{tEndDate}
+		) tv ON sv.customer_id=tv.targetId
+		
+		GROUP BY
+		sv.customer_id
+	</select>
+
+
+
+
+	<select id="selectSelloutByDealerInfo" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+
+SELECT pa.party_name  AS REG,
+		c.`CUSTOMER_NAME` AS DEALER
+
+		FROM
+		customer_info c 
+		
+		JOIN party pa ON pa.party_id = c.party_id
+		<include refid="listWhere" />
+		GROUP BY PA.`PARTY_ID` ,c.`CUSTOMER_ID`
+		
+		
+	</select>
+
+
+
+
+
+
+
+	<select id="selectDisPlayByTotal" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT t.`customer_id` AS
+		shop_id,round(COALESCE(sum(t.`quantity`),0))
+		AS
+		quantity FROM
+		sample_record t
+		JOIN customer_info p ON p.`customer_ID`=t.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`
+		<include refid="listWhere" />
+		AND t.class_id=1
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		
+		AND (pr.PRODUCT_SPEC_ID LIKE '%DIGITAL%'
+		OR
+		pr.PRODUCT_SPEC_ID LIKE '%INTERNET%'
+		OR pr.PRODUCT_SPEC_ID LIKE
+		'%SMART%'
+		OR pr.PRODUCT_SPEC_ID LIKE '%UHD%'
+		OR pr.PRODUCT_SPEC_ID LIKE
+		'%CURVE%'
+		OR pr.PRODUCT_SPEC_ID LIKE
+		'%QUHD%'
+
+		)
+		AND pr.head_type_id=1
+		group by t.`customer_id`
+		
+	</select>
+
+
+	<select id="selectDisPlayByTotalByAc" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT t.`customer_id` AS
+		shop_id,round(COALESCE(sum(t.`quantity`),0))
+		AS
+		quantity FROM
+		sample_record t
+		JOIN customer_info p ON p.`customer_ID`=t.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`
+		<include refid="listWhere" />
+		AND t.class_id=1
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		
+		AND (
+		pr.product_type LIKE '%Window%'
+		OR
+		pr.product_type LIKE '%Fission%'
+		
+
+		)
+		AND pr.head_type_id=2
+		group by t.`customer_id`
+		
+		
+	</select>
+	
+	<select id="selectSaleDataBySize" parameterType="java.lang.String"
+		resultType="java.util.LinkedHashMap">
+	
+		SELECT      CASE  WHEN size BETWEEN  1 AND  18  THEN  '&lt;19'
+	     WHEN size BETWEEN  19 AND  22  THEN  '≥19'	
+	     WHEN size BETWEEN  23 AND  25  THEN  '≥23'	
+	     WHEN size BETWEEN  26 AND  31  THEN '≥26'
+	     WHEN size BETWEEN  32 AND  38  THEN '≥32'
+	      WHEN size BETWEEN  39 AND  47  THEN '≥39'
+	      WHEN size>=48  THEN '≥48'
+	      ELSE 'settled unsettled'
+		END sizeT  ,
+           <if test="isHq == true  ">
+           
+           ${" ROUND(
+		COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity"}
+           </if>
+           
+           
+           <if test="isHq ==false ">
+           ${" ROUND(
+		COALESCE(SUM(s.`quantity`),0)) AS
+		quantity"}
+           </if>
+		FROM t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+		JOIN
+		customer_info p ON p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND pr.head_type_id
+		=1
+		GROUP  BY sizeT
+		ORDER BY
+		sizeT
+		
+		
+	</select>
+	
+	
+	<select id="selectSaleDataBySizeByAc" parameterType="java.lang.String"
+		resultType="java.util.LinkedHashMap">
+
+		SELECT      CASE  WHEN size=06  OR SIZE=6 THEN  '\'06'
+	     WHEN size=07  OR SIZE=7 THEN  '\'07'	
+	     WHEN size=09  OR SIZE=9  THEN  '\'09'	
+	     WHEN size=12  THEN '12'
+	     WHEN size=18  THEN '18'
+	      WHEN size=22  THEN '22'
+	      ELSE 'settled unsettled'
+		END sizeT  ,
+           <if test="isHq == true  ">
+           
+           ${" ROUND(
+		COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity"}
+           </if>
+           
+           
+           <if test="isHq ==false ">
+           ${" ROUND(
+		COALESCE(SUM(s.`quantity`),0)) AS
+		quantity"}
+           </if>
+		FROM t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+		JOIN
+		customer_info p ON p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND pr.head_type_id
+		=2
+		GROUP  BY sizeT
+		ORDER BY
+		sizeT
+		
+		
+	</select>
+
+
+
+	<select id="selectSaleDataBySizeLast" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT
+		
+		<if test="isHq ==  true">
+		${"round(
+		COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity"}
+		
+		</if>
+		
+		<if test="isHq == false">
+		 ${"round(
+		COALESCE(SUM(s.`quantity`),0)) AS
+		quantity"}
+		</if>
+		FROM t_sale s 
+		JOIN
+		customer_info p ON p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND pr.head_type_id
+		=1
+	  <![CDATA[ and pr.`size`>=48]]>
+
+	</select>
+
+
+
+
+
+	<select id="selectSaleTotalBySize" parameterType="java.lang.String"
+		resultType="java.util.LinkedHashMap">
+		SELECT
+		
+		<if test="isHq == true">
+		${"round(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity"}
+		</if>
+		
+		<if test="isHq == false">
+		${"round(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity"}
+		</if>
+		FROM t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+		JOIN
+		customer_info p ON p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND pr.head_type_id
+		=1
+	</select>
+
+
+<select id="selectSaleTotalBySizeByAc" parameterType="java.lang.String"
+		resultType="java.util.LinkedHashMap">
+			SELECT
+		
+		<if test="isHq == true">
+		${"round(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity"}
+		</if>
+		
+		<if test="isHq == false">
+		${"round(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity"}
+		</if>
+		FROM t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+		JOIN
+		customer_info p ON p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND pr.head_type_id
+		=2
+	</select>
+
+
+
+
+
+	<select id="selectQtyTotalBySpec" parameterType="java.lang.String"
+		resultType="java.util.LinkedHashMap">
+		
+			SELECT  CASE  
+	  WHEN PRODUCT_SPEC_ID LIKE '%CURVED%' THEN 'CURVED TV'
+	   WHEN PRODUCT_SPEC_ID LIKE '%QUHD%' THEN 'QUHD'
+	  
+	  WHEN PRODUCT_SPEC_ID  like '%UHD%' THEN 'UHD'
+	  WHEN PRODUCT_SPEC_ID LIKE '%SMART%' THEN 'SMART TV'
+	    
+	  WHEN PRODUCT_SPEC_ID LIKE '%INTERNET%'  THEN  'INTERNET TV'
+	    
+	     WHEN PRODUCT_SPEC_ID LIKE '%DIGITAL%'  THEN  'DIGITAL BASIC LED TV'
+	      WHEN PRODUCT_SPEC_ID LIKE '%BASIC LED%'  THEN  'BASIC LED'	
+	      ELSE 'settled unsettled'
+		END  SPEC ,
+		<if test="isHq ==true">
+		${"round(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity"}
+		
+		</if>
+		
+		<if test="isHq ==false">
+		${"round(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity"}
+		
+		</if>
+		FROM t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+		JOIN
+		customer_info p ON p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+	JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+	JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+	AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+	 			AND pr.head_type_id
+		=1
+		GROUP BY  SPEC
+		ORDER BY SPEC
+		
+		
+	</select>
+	
+	
+	
+	<select id="selectQtyTotalBySpecByAc" parameterType="java.lang.String"
+		resultType="java.util.LinkedHashMap">
+		
+			SELECT  CASE  
+	  WHEN product_type LIKE '%Fission%' THEN 'Fission'
+	   WHEN product_type LIKE '%Window%' THEN 'Window'
+	  
+	      ELSE 'settled unsettled'
+		END  SPEC ,
+		<if test="isHq ==true">
+		${"round(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity"}
+		
+		</if>
+		
+		<if test="isHq ==false">
+		${"round(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity"}
+		
+		</if>
+		FROM t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+		JOIN
+		customer_info p ON p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+	JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+	JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+	AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+	 			AND pr.head_type_id
+		=2
+		GROUP BY  SPEC
+		ORDER BY SPEC
+		
+		
+	</select>
+
+
+	<select id="selectQtyTotalBySpecType" parameterType="java.lang.String"
+		resultType="java.util.LinkedHashMap">
+		
+		
+		SELECT  CASE WHEN PRODUCT_SPEC_ID LIKE '%CURVED%' THEN 'CURVED TV'
+	   WHEN PRODUCT_SPEC_ID LIKE '%QUHD%' THEN 'QUHD'
+	  
+	  WHEN PRODUCT_SPEC_ID  LIKE '%UHD%' THEN 'UHD'
+	  WHEN PRODUCT_SPEC_ID LIKE '%SMART%' THEN 'SMART TV'
+	    
+		WHEN PRODUCT_SPEC_ID LIKE '%INTERNET%'  THEN  'INTERNET TV'
+	    
+	     WHEN PRODUCT_SPEC_ID LIKE '%DIGITAL%'  THEN  'DIGITAL BASIC LED TV'
+	      WHEN PRODUCT_SPEC_ID LIKE '%BASIC LED%'  THEN  'BASIC LED'	
+	      ELSE 'settled unsettled'
+		END  SPEC ,
+		
+		<if test="isHq ==true">
+		${"ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity"}
+		
+		</if>
+		
+		<if test="isHq ==false">
+		${"ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity"}
+		
+		</if>
+		FROM t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+		JOIN
+		customer_info p ON p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND pr.head_type_id
+		=1
+		
+		GROUP BY spec
+		ORDER BY   spec
+	</select>
+
+
+
+<select id="selectQtyTotalBySpecTypeByAc" parameterType="java.lang.String"
+		resultType="java.util.LinkedHashMap">
+		
+		
+		SELECT  CASE 
+		WHEN product_type LIKE '%Fission%' THEN 'Fission'
+	   WHEN product_type LIKE '%Window%' THEN 'Window'
+	  
+	  
+	      ELSE 'settled unsettled'
+		END  SPEC ,
+		
+		<if test="isHq ==true">
+		${"ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity"}
+		
+		</if>
+		
+		<if test="isHq ==false">
+		${"ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity"}
+		
+		</if>
+		FROM t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+		JOIN
+		customer_info p ON p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND pr.head_type_id
+		=2
+		
+		GROUP BY spec
+		ORDER BY   spec
+	</select>
+
+
+
+
+
+
+
+
+
+	<select id="selectQtyTotalBySpecYear" parameterType="java.lang.String"
+		resultType="java.util.LinkedHashMap">
+		
+		
+			SELECT  CASE  
+	  WHEN PRODUCT_SPEC_ID LIKE '%CURVED%' THEN 'CURVED TV'
+	   WHEN PRODUCT_SPEC_ID LIKE '%QUHD%' THEN 'QUHD'
+	  
+	  WHEN PRODUCT_SPEC_ID  LIKE '%UHD%' THEN 'UHD'
+	  WHEN PRODUCT_SPEC_ID LIKE '%SMART%' THEN 'SMART TV'
+	    
+	  WHEN PRODUCT_SPEC_ID LIKE '%INTERNET%'  THEN  'INTERNET TV'
+	    
+	     WHEN PRODUCT_SPEC_ID LIKE '%DIGITAL%'  THEN  'DIGITAL BASIC LED TV'
+	      WHEN PRODUCT_SPEC_ID LIKE '%BASIC LED%'  THEN  'BASIC LED'	
+	      ELSE 'settled unsettled'
+		END  SPEC ,
+	       
+	       
+		
+		<if test="isHq == true ">
+		${"tm.hq_model AS
+		model,ROUND(COALESCE(SUM(s.`h_quantity`),0))
+		AS quantity"}
+		
+
+		</if>
+		
+		<if test="isHq == false ">
+		${"tmc.`channel_model` AS
+		model,ROUND(COALESCE(SUM(s.`quantity`),0))
+		AS quantity"}
+		</if>
+		FROM
+		t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+		JOIN customer_info p ON p.`customer_ID`=s.`customer_id`
+		
+		JOIN party pa ON
+		pa.party_id =
+		p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =1
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		<if test="isHq == true">
+		${"group By tm.hq_model,spec"}
+		</if>
+		<if test="isHq == false">
+		${"group By tmc.`channel_model`,spec"}
+		</if>
+		
+		ORDER BY
+		SPEC
+	</select>
+
+
+
+<select id="selectQtyTotalBySpecYearByAc" parameterType="java.lang.String"
+		resultType="java.util.LinkedHashMap">
+		
+		
+			SELECT  CASE  
+	  WHEN product_type LIKE '%Fission%' THEN 'Fission'
+	   WHEN product_type LIKE '%Window%' THEN 'Window'
+	      ELSE 'settled unsettled'
+		END  SPEC ,
+	       
+	       
+		
+		<if test="isHq == true ">
+		${"tm.hq_model AS
+		model,ROUND(COALESCE(SUM(s.`h_quantity`),0))
+		AS quantity"}
+		
+
+		</if>
+		
+		<if test="isHq == false ">
+		${"tmc.`channel_model` AS
+		model,ROUND(COALESCE(SUM(s.`quantity`),0))
+		AS quantity"}
+		</if>
+		FROM
+		t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+		JOIN customer_info p ON p.`customer_ID`=s.`customer_id`
+		
+		JOIN party pa ON
+		pa.party_id =
+		p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =2
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		<if test="isHq == true">
+		${"group By tm.hq_model,spec"}
+		</if>
+		<if test="isHq == false">
+		${"group By tmc.`channel_model`,spec"}
+		</if>
+		
+		ORDER BY
+		SPEC
+	</select>
+
+
+
+
+	<select id="selectQtyTotalBySpecModelYear" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT 
+		
+			<if test="isHq == true ">
+		${"tm.hq_model AS
+		model,round(COALESCE(SUM(s.`h_quantity`),0))
+		AS quantity"}
+		
+
+		</if>
+		
+		<if test="isHq == false ">
+		${"tmc.`channel_model` AS
+		model,round(COALESCE(SUM(s.`quantity`),0))
+		AS quantity"}
+		
+		
+		</if>
+		FROM
+		t_sale s 
+		JOIN customer_info p ON p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id =
+		p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =1
+		<include refid="listWhere" />
+		AND pr.PRODUCT_SPEC_ID LIKE #{spec}
+		<if test="isHq == true">
+		${"group By tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By tmc.`channel_model`"}
+		</if>
+		
+	</select>
+
+
+
+
+	<select id="selectQtyTotalBySpecTotalYear" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT
+		
+		<if test="isHq == true ">
+		${"round(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity"}
+		
+
+		</if>
+		
+		<if test="isHq == false ">
+		${"round(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity"}
+		
+		
+		</if>
+		FROM t_sale s FORCE INDEX(idx_sale_shopdatadate)
+		JOIN
+		customer_info p ON p.`customer_ID`=s.`customer_id`
+		
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		<!-- AND (
+		pr.PRODUCT_SPEC_ID LIKE '%BASIC LED%' OR 
+		pr.PRODUCT_SPEC_ID LIKE '%DIGITAL%'
+		OR pr.PRODUCT_SPEC_ID LIKE
+		'%INTERNET%'
+		OR pr.PRODUCT_SPEC_ID LIKE '%SMART%'
+		OR pr.PRODUCT_SPEC_ID
+		LIKE '%UHD%'
+		OR pr.PRODUCT_SPEC_ID LIKE '%CURVE%'
+		
+
+		) -->
+		AND pr.head_type_id
+		=1
+		
+	</select>
+
+
+	<select id="selectQtyTotalBySpecModelYearByAc" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT 
+		
+			<if test="isHq == true ">
+		${"tm.hq_model AS
+		model,round(COALESCE(SUM(s.`h_quantity`),0))
+		AS quantity"}
+		
+
+		</if>
+		
+		<if test="isHq == false ">
+		${"tmc.`channel_model` AS
+		model,round(COALESCE(SUM(s.`quantity`),0))
+		AS quantity"}
+		
+		
+		</if>
+		FROM
+		t_sale s 
+		JOIN customer_info p ON p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id =
+		p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =2
+		<include refid="listWhere" />
+		AND pr.PRODUCT_SPEC_ID LIKE #{spec}
+		<if test="isHq == true">
+		${"group By tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By tmc.`channel_model`"}
+		</if>
+		
+	</select>
+
+
+
+
+	<select id="selectQtyTotalBySpecTotalYearByAc" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT
+		
+		<if test="isHq == true ">
+		${"round(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity"}
+		
+
+		</if>
+		
+		<if test="isHq == false ">
+		${"round(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity"}
+		
+		
+		</if>
+		FROM t_sale s FORCE INDEX(idx_sale_shopdatadate)
+		JOIN
+		customer_info p ON p.`customer_ID`=s.`customer_id`
+		
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		
+		AND pr.head_type_id
+		=2
+		
+
+	</select>
+
+
+
+
+	<select id="selectInfoByCPURH" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT pa.`PARTY_ID`, pa.`PARTY_NAME`
+		FROM t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+		JOIN customer_info p ON
+		p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =1
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		GROUP BY
+		pa.`PARTY_ID`
+
+	</select>
+
+
+
+
+	<select id="selectDataByCPURH" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+
+		SELECT
+		pa.`PARTY_ID`,pa.`PARTY_NAME`,pr.`product_line`,
+		
+		<if test="isHq == true ">
+		${"tm.`hq_model` AS model,round(COALESCE(SUM(s.`h_quantity`),0))
+		AS
+		quantity"}
+		
+
+		</if>
+		
+		<if test="isHq == false ">
+		${"tmc.`channel_model` AS model,round(COALESCE(SUM(s.`quantity`),0))
+		AS
+		quantity"}
+		
+		
+		</if>
+		
+		FROM t_sale s 
+		JOIN customer_info p ON p.`customer_ID`=s.`customer_id`
+		
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =1
+		JOIN core_product cp ON cp.`product_line`=pr.`product_line` AND
+		cp.`country_id`=pa.`COUNTRY_ID`
+		
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		
+		
+		<if test="isHq == true">
+		${"group By pa.`PARTY_ID`,
+		pr.`product_line`, tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By pa.`PARTY_ID`,
+		pr.`product_line`,tmc.`channel_model`"}
+		</if>
+		
+
+	</select>
+
+
+	<select id="selectTotalByCPURH" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+
+		SELECT sv.PARTY_ID AS PARTY_ID,sv.PARTY_NAME AS PARTY_NAME,
+	sv.product_line AS product_line,
+		
+ COALESCE(SUM(sv.saleQty),0) AS saleQty ,COALESCE(SUM(tv.targetQty ),0) AS targetQty
+FROM  
+(SELECT
+		s.`customer_id` shop_id,s.`model`,pa.`PARTY_ID`,pa.`PARTY_NAME`,pr.`product_line`,
+		<if test="isHq == true ">
+		${"ROUND(COALESCE(SUM(s.`h_quantity`),0))
+		AS
+		saleQty"}
+		
+		</if>
+		
+		<if test="isHq == false ">
+		${"ROUND(COALESCE(SUM(s.`quantity`),0))
+		AS
+		saleQty"}
+		
+		</if>
+		
+		FROM t_sale s
+		JOIN customer_info p ON p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id =
+		p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		JOIN core_product
+		cp ON
+		cp.`product_line`=pr.`product_line`  AND cp.`country_id`=pa.`COUNTRY_ID`
+		
+		
+		<include refid="listWhere" />
+		AND  s.`datadate`  BETWEEN #{beginDate} AND #{endDate}
+		GROUP BY
+		s.`customer_id`, s.`model`,pr.`product_line`
+		
+	)sv  
+	LEFT JOIN  (SELECT tst.`product_model`,tst.`target_id` AS targetId, 
+	<if test="isHq == true">
+	${"COALESCE((tst.`h_quantity`),0) AS targetQty "}
+	</if>
+	
+	<if test="isHq == false">
+	${"COALESCE((tst.`quantity`),0) AS targetQty "}
+	</if>
+	
+	FROM  t_target tst 
+		WHERE   tst.`class_id`=7 
+		AND  tst.`datadate`  BETWEEN #{tBeginDate} AND #{tEndDate}
+		) tv ON sv.shop_id=tv.targetId  AND sv.`model`=tv.product_model
+		
+		GROUP BY
+		sv.`PARTY_ID`, sv.`product_line`
+	</select>
+
+
+	<select id="selectSaleTTLByCPURH" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT sv.product_line AS product_line,COALESCE(SUM(SV.saleSum),0) AS saleSum,COALESCE(SUM(tv.targetSum),0) AS targetSum FROM
+
+
+		(SELECT s.`model`,s.`customer_id` shop_id ,pr.`product_line`,
+		<if test="isHq == true">
+		${"ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS saleSum"}
+		</if>
+		
+		<if test="isHq == false">
+		${"ROUND(COALESCE(SUM(s.`quantity`),0)) AS saleSum"}
+		</if>
+		
+		FROM
+		t_sale s 
+		JOIN customer_info
+		p ON p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON pa.party_id =
+		p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =1
+		JOIN core_product cp ON
+		cp.`product_line`=pr.`product_line`   AND cp.`country_id`=pa.`COUNTRY_ID`
+		
+	
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		
+		GROUP BY
+		s.`model`,s.`customer_id`,pr.`product_line`
+		)sv
+		LEFT JOIN  (SELECT tst.`product_model`,tst.`target_id` AS targetId,
+		<if test="isHq == true">
+		${" COALESCE((tst.`h_amount`),0) AS targetSum"}
+		</if>
+		<if test="isHq == false">
+		${" COALESCE((tst.`amount`),0) AS targetSum"}
+		</if>
+		  FROM  t_target tst 
+		WHERE   tst.`class_id`=7 
+		AND  tst.`datadate`  BETWEEN  #{tBeginDate} AND #{tEndDate}
+		) tv ON sv.shop_id=tv.targetId  AND sv.`model`=tv.product_model
+		
+		GROUP BY
+		sv.`product_line`
+	</select>
+
+
+
+	
+
+
+	<select id="selectTTLByCPURH" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+
+		SELECT
+		pr.`product_line`,
+		
+			
+		<if test="isHq == true ">
+		${"
+		tm.`hq_model` AS model,
+		round(COALESCE(SUM(s.`h_quantity`),0))
+		AS
+		quantity"}
+		
+
+		</if>
+		
+		<if test="isHq == false ">
+		${"
+		tmc.`channel_model` AS model,
+		round(COALESCE(SUM(s.`quantity`),0))
+		AS
+		quantity"}
+		
+		
+		</if>
+		FROM t_sale s 
+		JOIN customer_info p ON p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model    AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =1
+		JOIN core_product cp ON cp.`product_line`=pr.`product_line`  AND
+		cp.`country_id`=pa.country_id
+		
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		
+		
+		<if test="isHq == true">
+		${"group By pr.`product_line`,tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By pr.`product_line`,tmc.`channel_model`"}
+		</if>
+		
+		
+
+
+	</select>
+
+
+
+
+
+
+
+
+	<select id="selectDataHeadByCPURH" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+
+		SELECT pr.`product_line`,
+		
+		<if test="isHq == true ">
+		${"
+		tm.`hq_model` AS model"}
+		</if>
+		
+		<if test="isHq == false ">
+		${"
+		tmc.`channel_model` AS model"}
+		</if>
+		
+		FROM t_sale s FORCE INDEX(idx_sale_shopdatadate)
+		JOIN customer_info p ON
+		p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		<if test="isHq == true">
+		${"group By pr.`product_line`,tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By pr.`product_line`,tmc.`channel_model`"}
+		</if>
+		
+
+	</select>
+
+
+	<select id="selectTargetByAcfo" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+
+	
+SELECT  sv.userId, SUM( sv.shop) AS noOfShops ,sv.userName AS userName,
+
+		COALESCE(SUM(sv.saleQty),0) AS saleQty,
+		COALESCE(SUM(sv.saleSum),0) AS saleSum,
+		COALESCE(SUM(tv.targetSum),0) AS targetSum ,
+		COALESCE(SUM(tv.challengeSum),0) AS challengeSum 
+		FROM (
+		SELECT  ul.`USER_login_id` AS userId, 
+		ul.`USER_NAME` AS userName,  ci.`customer_id`,
+		COUNT(DISTINCT t.`shop_id`) AS shop ,
+		<if test="isHq == true ">
+		${"ROUND(COALESCE(SUM(t.`h_quantity`),0))
+		AS
+		saleQty,
+
+		COALESCE(SUM(t.`h_amount`),0) AS saleSum
+		"}
+		
+		</if>
+		<if test="isHq == false ">
+		${"ROUND(COALESCE(SUM(t.`quantity`),0))
+		AS
+		saleQty,
+
+		COALESCE(SUM(t.`amount`),0) AS saleSum
+		"}
+		
+		</if>
+		
+		FROM t_sale t 
+		JOIN
+		customer_info ci ON t.`customer_id`=ci.`customer_id`
+		
+		JOIN
+		shop_info si ON ci.`customer_id`=si.`customer_id`
+		
+		JOIN `shop_saler_mapping` ssm
+		ON ssm.`shop_id`=t.`shop_id`
+		JOIN user_login ul ON
+		ul.`USER_LOGIN_ID`=ssm.`user_login_id`
+		
+		JOIN party pa ON pa.party_id = si.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =1
+		
+
+		<include refid="listWhere" />
+
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND
+		ssm.salertype='2'
+		GROUP BY ci.`customer_id`, ul.`USER_login_id`
+		)sv
+		
+		LEFT  JOIN 
+		
+		(SELECT tst.`target_id` AS targetId, 
+		<if test="isHq == true ">
+		${"COALESCE(SUM(tst.`h_amount`),0)
+		AS targetSum ,COALESCE(SUM(tst.`h_tz_amount`),0) AS challengeSum "}
+		
+		</if>
+		<if test="isHq == false ">
+		${"COALESCE(SUM(tst.`amount`),0)
+		AS targetSum ,COALESCE(SUM(tst.`tz_amount`),0) AS challengeSum "}
+		
+		</if>
+		
+		
+		FROM  t_target tst 
+		WHERE    tst.`class_id`=3
+		AND TST.TYPE=1
+		AND tst.datadate BETWEEN #{tBeginDate} AND #{tEndDate}
+		GROUP BY tst.`target_id` 
+		) tv ON sv.customer_id=tv.targetId
+		
+		GROUP BY sv.userId
+		
+		
+
+
+	</select>
+
+
+
+	<select id="selectTargetByAcfoByAc" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+
+SELECT  sv.userId, SUM( sv.shop) AS noOfShops ,sv.userName AS userName,
+
+		COALESCE(SUM(sv.saleQty),0) AS saleQty,
+		COALESCE(SUM(sv.saleSum),0) AS saleSum,
+		COALESCE(SUM(tv.targetSum),0) AS targetSum ,
+		COALESCE(SUM(tv.challengeSum),0) AS challengeSum 
+		FROM (
+		SELECT  ul.`USER_login_id` AS userId, 
+		ul.`USER_NAME` AS userName,  ci.`customer_id`,
+		COUNT(DISTINCT t.`shop_id`) AS shop ,
+		<if test="isHq == true ">
+		${"ROUND(COALESCE(SUM(t.`h_quantity`),0))
+		AS
+		saleQty,
+
+		COALESCE(SUM(t.`h_amount`),0) AS saleSum
+		"}
+		
+		</if>
+		<if test="isHq == false ">
+		${"ROUND(COALESCE(SUM(t.`quantity`),0))
+		AS
+		saleQty,
+
+		COALESCE(SUM(t.`amount`),0) AS saleSum
+		"}
+		
+		</if>
+		
+		FROM t_sale t 
+		JOIN
+		customer_info ci ON t.`customer_id`=ci.`customer_id`
+		
+		JOIN
+		shop_info si ON ci.`customer_id`=si.`customer_id`
+		
+		JOIN `shop_saler_mapping` ssm
+		ON ssm.`shop_id`=t.`shop_id`
+		JOIN user_login ul ON
+		ul.`USER_LOGIN_ID`=ssm.`user_login_id`
+		
+		JOIN party pa ON pa.party_id = si.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =2
+		
+
+		<include refid="listWhere" />
+
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND
+		ssm.salertype='2'
+		GROUP BY ci.`customer_id`, ul.`USER_login_id`
+		)sv
+		
+		LEFT  JOIN 
+		
+		(SELECT tst.`target_id` AS targetId, 
+		<if test="isHq == true ">
+		${"COALESCE(SUM(tst.`h_amount`),0)
+		AS targetSum ,COALESCE(SUM(tst.`h_tz_amount`),0) AS challengeSum "}
+		
+		</if>
+		<if test="isHq == false ">
+		${"COALESCE(SUM(tst.`amount`),0)
+		AS targetSum ,COALESCE(SUM(tst.`tz_amount`),0) AS challengeSum "}
+		
+		</if>
+		
+		
+		FROM  t_target tst 
+		WHERE    tst.`class_id`=3
+		AND TST.TYPE=2
+		AND tst.datadate BETWEEN #{tBeginDate} AND #{tEndDate}
+		GROUP BY tst.`target_id` 
+		) tv ON sv.customer_id=tv.targetId
+		
+		GROUP BY sv.userId
+		
+		
+
+	</select>
+
+
+
+
+
+	<select id="selectTargetByAcfoInfo" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+
+ 
+ SELECT ul.`USER_login_id` AS userId, ul.`USER_NAME` AS userName
+		
+
+		FROM   `shop_saler_mapping` ssm
+		JOIN
+		shop_info si ON ssm.`shop_id`=si.`SHOP_ID`
+				JOIN customer_info ci ON si.`CUSTOMER_ID`=ci.`CUSTOMER_ID`
+		
+		JOIN user_login ul ON
+		ul.`USER_LOGIN_ID`=ssm.`user_login_id`
+		JOIN party pa ON pa.party_id = si.party_id
+		
+			<include refid="listWhere" />
+		AND ssm.salertype='2'
+
+		GROUP BY ssm.`user_login_id`
+
+		
+		
+	</select>
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<select id="selectPartyNameByuser" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		
+	
+		SELECT DISTINCT ssm.`user_login_id` AS userId,  pa.`PARTY_NAME` FROM party pa
+		
+		JOIN shop_info si ON
+		 pa.`PARTY_ID`= si.`PARTY_ID`
+		 JOIN  customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID`
+		 
+		JOIN `shop_saler_mapping` ssm ON
+		ssm.`shop_id`=si.`shop_id`
+		<include refid="listWhere" />
+
+	</select>
+
+
+
+	<select id="selectFpsNameByShop" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+
+SELECT ssm.`user_login_id` AS USER, COALESCE(SUM(s.fps ),0) AS TVFPS FROM shop_saler_mapping ssm,
+(SELECT DISTINCT  sm.shop_id  AS  shop, COUNT(DISTINCT sm.`user_login_id`) AS FPS FROM   shop_saler_mapping sm
+JOIN t_sale t ON t.`shop_id`=sm.`shop_id` 
+JOIN  customer_info ci ON ci.`CUSTOMER_ID`= t.`CUSTOMER_ID`
+JOIN  shop_info  si ON si.CUSTOMER_ID=ci.`CUSTOMER_ID`
+ 
+
+JOIN party pa ON pa.party_id=si.party_id
+JOIN t_modelmap tm ON tm.`branch_model`=t.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` AND pt.`head_type_id`=1
+<include refid="listWhere" />
+AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+AND sm.salertype='1' GROUP BY t.`shop_id`  )  s
+WHERE  s.shop IN(ssm.`shop_id`)
+GROUP BY ssm.`user_login_id`
+
+
+	</select>
+
+
+
+	<select id="selectFpsNameByShopByAc" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+SELECT ssm.`user_login_id` AS USER, COALESCE(SUM(s.fps ),0) AS TVFPS FROM shop_saler_mapping ssm,
+(SELECT DISTINCT  sm.shop_id  AS  shop, COUNT(DISTINCT sm.`user_login_id`) AS FPS FROM   shop_saler_mapping sm
+JOIN t_sale t ON t.`shop_id`=sm.`shop_id` 
+JOIN  shop_info  si ON si.shop_id=t.shop_id
+JOIN party pa ON pa.party_id=si.party_id
+JOIN t_modelmap tm ON tm.`branch_model`=t.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model` AND pt.`head_type_id`=1
+<include refid="listWhere" />
+AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+AND sm.salertype='1' GROUP BY t.`shop_id`  )  s
+WHERE  s.shop IN(ssm.`shop_id`)
+GROUP BY ssm.`user_login_id`
+	</select>
+
+
+
+
+
+	<select id="selectInfoByCPUSALE" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		
+	
+		SELECT ul.`USER_login_id` AS userId,ul.`USER_NAME`
+		AS userName
+		FROM
+		t_sale t FORCE INDEX(idx_sale_shopdatadate)
+		
+		join customer_info ci on ci.customer_id=t.customer_id
+		JOIN
+		shop_info si ON ci.customer_id=si.`customer_id`
+		JOIN
+		`shop_saler_mapping` ssm
+		ON ssm.`shop_id`=t.`shop_id`
+		JOIN user_login ul
+		ON
+		ul.`USER_LOGIN_ID`=ssm.`user_login_id`
+		
+		JOIN party pa ON pa.party_id = si.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =1
+		<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND
+		ssm.salertype='0'
+		GROUP BY ssm.`user_login_id`
+
+	</select>
+
+
+
+	<select id="selectTotalByCPUSALE" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+
+		SELECT sv.product_line AS product_line,
+	sv.userId,sv.userName,
+COALESCE(SUM(sv.saleQty),0) AS saleQty,COALESCE(SUM(tv.targetQty),0)  AS targetQty FROM
+
+(	SELECT t.`model`,ci.`customer_id`,pr.`product_line`,ul.`USER_login_id` AS userId,ul.`USER_NAME`
+		AS userName,
+		
+		<if test="isHq == true">
+		${"ROUND(COALESCE(SUM(t.`h_quantity`),0)) AS
+		saleQty"}
+		</if>
+		
+		
+		<if test="isHq == false">
+		${"ROUND(COALESCE(SUM(t.`quantity`),0)) AS
+		saleQty"}
+		</if>
+		
+		FROM t_sale  
+		t 
+		JOIN
+		customer_info ci ON t.`customer_id`=ci.`customer_id`
+		
+		JOIN
+		shop_info si ON ci.`customer_id`=si.`customer_id`
+		JOIN `shop_saler_mapping`
+		ssm
+		ON ssm.`shop_id`=t.`shop_id`
+		JOIN user_login ul ON
+		ul.`USER_LOGIN_ID`=ssm.`user_login_id`
+		JOIN party pa ON pa.party_id = si.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =1
+		JOIN core_product cp ON
+		cp.`product_line`=pr.`product_line`
+		
+		
+		<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+	
+		
+		AND
+		ssm.salertype='0'
+		AND cp.`country_id`=ul.`PARTY_ID`
+		
+		GROUP BY
+		t.`model`,pr.product_line,t.`shop_id`,ul.`USER_login_id`
+
+)sv
+
+LEFT JOIN  (SELECT tst.`product_model`,tst.`target_id` AS targetId, 
+		<if test="isHq == true">
+		${"COALESCE((tst.`h_quantity`),0) AS targetQty"}
+		</if>
+		
+		<if test="isHq == false">
+		${"COALESCE((tst.`quantity`),0) AS targetQty"}
+		</if>
+	
+	 FROM  t_target tst 
+		WHERE   tst.`class_id`=7 
+		AND  tst.`datadate`  BETWEEN   #{tBeginDate} AND #{tEndDate}
+		) tv ON sv.customer_id=tv.targetId  AND sv.`model`=tv.product_model
+		
+			GROUP BY
+		sv.userId,sv.product_line
+
+
+	</select>
+
+
+
+
+
+
+
+	<select id="selectModelByCPUSALE" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT  pr.`product_line`,ul.`USER_login_id` AS
+		userId,ul.`USER_NAME` AS userName,
+
+		<if test="isHq== true">
+		${" tm.`hq_model` as model,round(COALESCE(SUM(t.`h_quantity`),0)) AS
+		saleQty"}
+		</if>
+		
+		<if test="isHq ==false">
+		${"tmc.`channel_model` as model,round(COALESCE(SUM(t.`quantity`),0)) AS
+		saleQty"}
+	
+		</if>
+
+		FROM t_sale t  
+		JOIN customer_info ci ON t.`customer_id`=ci.`customer_ID`
+		
+		
+		JOIN shop_info si ON ci.`customer_ID`=si.`customer_ID`
+		JOIN
+		`shop_saler_mapping` ssm ON ssm.`shop_id`=t.`shop_id`
+		JOIN user_login
+		ul ON ul.`USER_LOGIN_ID`=ssm.`user_login_id`
+		JOIN party pa ON pa.party_id = si.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =1
+		JOIN core_product cp ON
+		cp.`product_line`=pr.`product_line`
+		
+		<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND
+		ssm.salertype='0'
+		AND cp.`country_id`=ul.`PARTY_ID`
+		
+		<if test="isHq == true">
+		${"group By ssm.`user_login_id`,tm.hq_model, pr.`product_line`"}
+		</if>
+		<if test="isHq == false">
+		${"group By  ssm.`user_login_id`,tmc.`channel_model`, pr.`product_line`"}
+		</if>
+		
+		
+	</select>
+
+
+
+	<select id="selectModelTTLByCPUSALE" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT  pr.`product_line`,
+
+		<if test="isHq ==  true ">
+		${"tm.`hq_model` AS model,round(COALESCE(SUM(t.`h_quantity`),0))
+		saleQty
+		"}
+		
+		
+		</if>
+		
+		<if test="isHq  == false">
+		${"tmc.`channel_model` AS model,round(COALESCE(SUM(t.`quantity`),0))
+		saleQty
+		"}
+		
+		</if>
+		FROM t_sale t 
+			JOIN customer_info ci ON t.`customer_id`=ci.`customer_ID`
+			
+		JOIN shop_info si ON ci.`customer_ID`=si.`customer_ID`
+		JOIN
+		`shop_saler_mapping` ssm ON ssm.`shop_id`=t.`shop_id`
+		JOIN user_login
+		ul ON ul.`USER_LOGIN_ID`=ssm.`user_login_id`
+		JOIN party pa ON pa.party_id = si.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		JOIN core_product cp ON
+		pr.`product_line`=cp.`product_line`
+		
+		<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND
+		ssm.salertype='0'
+		AND cp.`country_id`=ul.`PARTY_ID`
+		
+		<if test="isHq == true">
+		${"group By tm.hq_model, pr.`product_line`"}
+		</if>
+		<if test="isHq == false">
+		${"group By  tmc.`channel_model`, pr.`product_line`"}
+		</if>
+		
+	</select>
+
+
+
+	<select id="selectTTLByCPUSALE" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT pr.`product_line`,
+
+		<if test="isHq == true">
+		${"round(COALESCE(SUM(t.`h_quantity`),0))
+		saleQty,
+		round(COALESCE(SUM(tt.`h_quantity`),0)) AS targetQty
+		"}
+		
+		
+		</if>
+		
+		<if test="isHq  == false">
+		${"round(COALESCE(SUM(t.`quantity`),0))
+		saleQty,
+		round(COALESCE(SUM(tt.`quantity`),0)) AS targetQty
+		"}
+		
+		
+		</if>
+		
+
+		FROM t_sale
+		t  
+		JOIN customer_info ci ON t.`customer_id`=ci.`customer_ID`
+			
+		JOIN shop_info si ON ci.`customer_ID`=si.`customer_ID`
+		JOIN
+		`shop_saler_mapping`
+		ssm
+		ON ssm.`shop_id`=t.`shop_id`
+		JOIN user_login ul
+		ON
+		ul.`USER_LOGIN_ID`=ssm.`user_login_id`
+		
+		JOIN party pa ON pa.party_id = si.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		JOIN core_product cp ON
+		cp.`product_line`=pr.`product_line`
+		LEFT JOIN t_target tt ON
+		tt.`target_id`=t.`shop_id`  AND tt.`class_id`=7
+		AND tt.product_model=t.`model`
+		AND tt.datadate BETWEEN #{tBeginDate} AND #{tEndDate}
+		
+		<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND
+		ssm.salertype='0'
+		AND cp.`country_id`=ul.`PARTY_ID`
+		
+	
+		GROUP BY pr.`product_line`
+
+
+	</select>
+
+
+
+
+
+
+	<select id="selectInfoByCPUACFO" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		
+		SELECT ul.`USER_login_id` AS userId,ul.`USER_NAME`
+		AS userName
+
+		FROM
+		`shop_saler_mapping` ssm
+		JOIN
+		shop_info si ON ssm.`shop_id`=si.`SHOP_ID`
+		join customer_info ci on ci.customer_id=si.customer_id
+		JOIN user_login ul
+		ON
+		ul.`USER_LOGIN_ID`=ssm.`user_login_id`
+		
+		JOIN party pa ON pa.party_id = si.party_id
+		
+		<include refid="listWhere" />
+		AND
+		ssm.salertype='2'
+
+		GROUP BY ssm.`user_login_id`
+		
+
+
+
+	</select>
+	<select id="selectTotalByCPUACFO" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT pr.`product_line`,ul.`USER_login_id` AS userId,ul.`USER_NAME`
+		AS userName,
+		
+		<if test="isHq == true ">
+		${"round(COALESCE(SUM(t.`h_quantity`),0)) AS
+		saleQty,
+		round(COALESCE(SUM(tt.`h_quantity`),0)) AS targetQty
+		"}
+		
+		</if>
+
+		<if test="isHq == false">
+		${"round(COALESCE(SUM(t.`quantity`),0)) AS
+		saleQty,
+		round(COALESCE(SUM(tt.`quantity`),0)) AS targetQty
+		"}
+		</if>		
+		
+
+		FROM t_sale t  
+		JOIN customer_info ci ON t.`customer_id`=ci.`customer_ID`
+			
+		JOIN shop_info si ON ci.`customer_ID`=si.`customer_ID`
+		JOIN
+		`shop_saler_mapping` ssm
+		ON ssm.`shop_id`=t.`shop_id`
+		JOIN user_login ul
+		ON
+		ul.`USER_LOGIN_ID`=ssm.`user_login_id`
+		JOIN party pa ON pa.party_id = si.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model    AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`   AND pr.head_type_id =1
+		JOIN core_product cp ON
+		cp.`product_line`=pr.`product_line`
+		LEFT JOIN t_target tt ON
+		tt.`target_id`=t.`shop_id`
+		AND tt.`class_id`=7
+		AND tt.product_model=t.`model`
+		AND tt.datadate BETWEEN #{tBeginDate} AND #{tEndDate}
+		
+		<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND
+		ssm.salertype='2'
+		AND cp.`country_id`=ul.`PARTY_ID`
+		
+		
+		GROUP BY
+		ssm.`user_login_id`,pr.`product_line`
+
+
+
+	</select>
+
+
+
+
+	<select id="selectModelByCPUACFO" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT   pr.`product_line`,ul.`USER_login_id` AS
+		userId,ul.`USER_NAME` AS userName,
+
+		<if test="isHq == true ">
+		${"tm.`hq_model` AS model,round(COALESCE(SUM(t.`h_quantity`),0)) AS
+		saleQty"}
+		
+		</if>
+		
+		<if test="isHq == false">
+		${"tmc.`channel_model` AS model,round(COALESCE(SUM(t.`quantity`),0)) AS
+		saleQty"}
+		
+		</if>
+
+		FROM t_sale t 
+		JOIN customer_info ci ON t.`customer_id`=ci.`customer_ID`
+			
+		JOIN shop_info si ON ci.`customer_ID`=si.`customer_ID`
+		JOIN
+		`shop_saler_mapping` ssm ON
+		ssm.`shop_id`=t.`shop_id`
+		JOIN user_login ul
+		ON
+		ul.`USER_LOGIN_ID`=ssm.`user_login_id`
+		JOIN party pa ON pa.party_id = si.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model    AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		JOIN core_product cp ON
+		cp.`product_line`=pr.`product_line`
+		
+		<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND
+		ssm.salertype='2'
+		AND cp.`country_id`=ul.`PARTY_ID`
+	
+<if test="isHq == true">
+		${"group By ssm.`user_login_id`,tm.hq_model, pr.`product_line`"}
+		</if>
+		<if test="isHq == false">
+		${"group By ssm.`user_login_id`,tmc.`channel_model`, pr.`product_line`"}
+		</if>
+
+	</select>
+
+
+
+
+	<select id="selectModelTTLByCPUACFO" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT  pr.`product_line`,
+
+
+		<if test="isHq  == true">
+		${" tm.`hq_model` AS model,round(COALESCE(SUM(t.`h_quantity`),0)) AS
+		saleQty"}
+		
+		</if>
+		
+		<if test="isHq == false">
+		${" tmc.`channel_model` AS model,round(COALESCE(SUM(t.`quantity`),0)) AS
+		saleQty"}
+		
+		</if>
+
+
+		FROM t_sale t 
+		JOIN customer_info ci ON t.`customer_id`=ci.`customer_ID`
+			
+		JOIN shop_info si ON ci.`customer_ID`=si.`customer_ID`
+		JOIN
+		`shop_saler_mapping` ssm ON
+		ssm.`shop_id`=t.`shop_id`
+		JOIN user_login ul
+		ON
+		ul.`USER_LOGIN_ID`=ssm.`user_login_id`
+		JOIN party pa ON pa.party_id = si.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		JOIN core_product cp ON
+		cp.`product_line`=pr.`product_line`
+		
+		<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND
+		ssm.salertype='2'
+		AND cp.`country_id`=ul.`PARTY_ID`
+		
+<if test="isHq == true">
+		${"group By tm.hq_model,pr.`product_line`"}
+		</if>
+		<if test="isHq == false">
+		${"group By tmc.`channel_model`,pr.`product_line`"}
+		</if>
+	</select>
+
+
+
+
+
+
+	<select id="selectTTLByCPUACFO" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT pr.`product_line`,
+
+		<if test="isHq == true  ">
+		
+		${"round(COALESCE(SUM(t.`h_quantity`),0)) AS
+		saleQty,
+		round(COALESCE(SUM(tt.`h_quantity`),0)) AS targetQty"}
+		</if>
+		
+		<if test="isHq == false">
+		${"round(COALESCE(SUM(t.`quantity`),0)) AS
+		saleQty,
+		round(COALESCE(SUM(tt.`quantity`),0)) AS targetQty"}
+		
+		</if>
+		
+
+		FROM t_sale t  
+		JOIN customer_info ci ON t.`customer_id`=ci.`customer_ID`
+			
+		JOIN shop_info si ON ci.`customer_ID`=si.`customer_ID`
+		JOIN
+		`shop_saler_mapping` ssm
+		ON
+		ssm.`shop_id`=t.`shop_id`
+		JOIN
+		user_login ul
+		ON
+		ul.`USER_LOGIN_ID`=ssm.`user_login_id`
+		JOIN party pa ON
+		pa.party_id = si.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=t.model    AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=ci.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		JOIN core_product cp ON
+		cp.`product_line`=pr.`product_line`
+		LEFT JOIN t_target tt ON
+		tt.`target_id`=t.`shop_id`
+		AND tt.`class_id`=7
+		AND tt.product_model=t.`model`
+		AND tt.datadate BETWEEN #{tBeginDate} AND #{tEndDate}
+		
+		<include refid="listWhere" />
+		AND t.datadate BETWEEN #{beginDate} AND #{endDate}
+		AND
+		ssm.salertype='2'
+		AND cp.`country_id`=ul.`PARTY_ID`
+		
+		GROUP BY pr.`product_line`
+
+
+	</select>
+
+
+
+
+
+
+
+
+
+
+	<select id="selectSaleDataByDEALER" parameterType="java.lang.String"
+		resultType="java.util.LinkedHashMap">
+		SELECT c.`CUSTOMER_NAME` AS DEALER,
+		
+		<if test="isHq == true">
+		${"ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS
+		saleQty"}
+		</if>
+		
+		<if test="isHq == false">
+		${"ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		saleQty"}
+		</if>
+		
+		FROM t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+		JOIN
+		customer_info c ON s.customer_id=c.customer_id
+		JOIN party pa ON
+		pa.party_id = c.party_id
+		
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=c.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =1
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		GROUP BY
+		c.`CUSTOMER_NAME`
+	</select>
+
+
+
+<select id="selectSaleDataByDEALERByAc" parameterType="java.lang.String"
+		resultType="java.util.LinkedHashMap">
+		SELECT c.`CUSTOMER_NAME` AS DEALER,
+		
+		<if test="isHq == true">
+		${"ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS
+		saleQty"}
+		</if>
+		
+		<if test="isHq == false">
+		${"ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		saleQty"}
+		</if>
+		
+		FROM t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+		
+		JOIN
+		customer_info c ON s.customer_id=c.customer_id
+		JOIN party pa ON
+		pa.party_id = c.party_id
+		
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=c.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =2
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		GROUP BY
+		c.`CUSTOMER_NAME`
+	</select>
+
+
+
+
+	<select id="selectSaleTTLByDEALERByAc" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT
+		<if test="isHq == true">
+		${"ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS
+		saleQty"}
+		
+		</if>
+		
+		<if test="isHq== false">
+		${"ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		saleQty"}
+		
+		</if>
+		FROM t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+		
+		JOIN
+		customer_info c ON
+		s.customer_id=c.customer_id
+		JOIN party pa ON
+		pa.party_id = c.party_id
+		
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=c.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =2
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		
+	</select>
+
+
+
+
+
+	<select id="selectSaleTTLByDEALER" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT
+		<if test="isHq == true">
+		${"ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS
+		saleQty"}
+		
+		</if>
+		
+		<if test="isHq== false">
+		${"ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		saleQty"}
+		
+		</if>
+		FROM t_sale s  FORCE INDEX(idx_sale_shopdatadate)
+		
+		JOIN
+		customer_info c ON
+		s.customer_id=c.customer_id
+		JOIN party pa ON
+		pa.party_id = c.party_id
+		
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=c.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		
+	</select>
+
+	<select id="selectDEALER" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+
+		SELECT DISTINCT c.`CUSTOMER_NAME` AS DEALER
+		FROM t_sale s
+		
+		JOIN customer_info c ON
+		s.customer_id=c.customer_id
+		JOIN party pa ON pa.party_id = p.party_id
+		<include refid="listWhere" />
+	</select>
+
+
+
+	<select id="selectCPUInventoryBYBRANCH" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT
+		
+		<if test="isHq == true">
+		${"tm.hq_model AS model"}
+		
+		</if>
+		
+		<if test="isHq== false">
+		${"tmc.`channel_model` AS model"}
+		
+		</if>,
+		
+		 c.`CUSTOMER_NAME` AS DEALER,c.customer_id SHOP_ID,pr.`product_line`,
+		pr.`product_line`,
+
+		ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity
+		FROM `t_inventory`
+		s
+		
+		JOIN
+		customer_info c ON
+		s.customer_id=c.customer_id
+		JOIN party pa ON
+		pa.party_id = c.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=c.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		<include refid="listWhere" />
+		and s.`class_id`=1
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		
+		
+		<if test="isHq == true">
+		${"group By tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By tmc.`channel_model`"}
+		</if>,c.`customer_id`,pr.`product_line`
+		
+		
+		
+		
+		order by
+		c.`CUSTOMER_NAME`
+	</select>
+
+
+	<select id="selectCPUDisplayBYBRANCH" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT <if test="isHq == true">
+		${"tm.hq_model AS model"}
+		
+		</if>
+		
+		<if test="isHq== false">
+		${"tmc.`channel_model` AS model"}
+		
+		</if>,
+		c.`CUSTOMER_NAME` AS DEALER,s.`SHOP_ID`,pr.`product_line`,
+		pr.`product_line`,
+
+		ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity
+		FROM sample_record s
+		
+		JOIN
+		customer_info c ON
+		s.customer_id=c.customer_id
+		JOIN party pa ON
+		pa.party_id = c.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=c.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		<include refid="listWhere" />
+		and s.`class_id`=1
+		
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		
+		<if test="isHq == true">
+		${"group By tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By tmc.`channel_model`"}
+		</if>,c.`customer_id`
+		,pr.`product_line`
+		
+		order by
+		c.`CUSTOMER_NAME`
+	</select>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<select id="selectCPUInfoByBRANCH" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT c.`CUSTOMER_NAME` AS DEALER,c.customer_id SHOP_ID
+		FROM
+		customer_info c 
+		JOIN
+		party pa ON pa.party_id = c.party_id
+		<include refid="listWhere" />
+		GROUP BY c.`CUSTOMER_NAME` ,c.customer_id
+		ORDER BY c.customer_id
+
+	</select>
+
+	<select id="selectSellDataBYBRANCH" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT
+		p.`customer_ID` SHOP_ID,p.`customer_NAME` SHOP_NAME,pr.`product_line`,
+
+		<if test="isHq == true ">
+		${"tm.hq_model AS model,ROUND(COALESCE(SUM(s.`h_quantity`),0))
+		AS
+		quantity
+		"}
+		
+		</if>
+
+
+		<if test="isHq == false">
+		${"tmc.`channel_model` AS model,ROUND(COALESCE(SUM(s.`quantity`),0))
+		AS
+		quantity
+		"}
+		</if>		
+		FROM t_sale s FORCE INDEX(idx_sale_shopdatadate)
+		JOIN customer_info p ON p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model    AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =1
+		
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		
+		<if test="isHq == true">
+		${"group By tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By tmc.`channel_model`"}
+		</if>,s.`customer_id`,pr.`product_line`
+		
+	
+	</select>
+
+
+
+	<select id="selectSellDataByTotal" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT p.`customer_ID` SHOP_ID,p.`customer_NAME` SHOP_NAME,
+		<if test="isHq == true">
+		${"ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity
+		"}
+		</if>
+		
+		<if test="isHq == false">
+		${"ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity
+		"}
+		
+		</if>
+		
+		,pr.`product_line`
+		FROM t_sale s FORCE INDEX(idx_sale_shopdatadate)
+		JOIN customer_info p ON
+		p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		GROUP BY
+		pr.`product_line`,s.`customer_id`
+	
+	</select>
+
+
+
+
+	<select id="selectCPUInventoryByTotal" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT p.`customer_id` SHOP_ID,
+
+		ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity,
+		pr.`product_line`
+		FROM
+		`t_inventory` s
+		JOIN
+		customer_info p ON
+		p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		<include refid="listWhere" />
+		and s.`class_id`=1
+				AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		
+		GROUP BY pr.`product_line`,s.`customer_id`
+	</select>
+
+
+	<select id="selectCPUDisplayByTotal" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT s.`customer_ID` SHOP_ID,
+		ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity,pr.`product_line`
+		FROM
+		sample_record s
+		JOIN
+		customer_info p ON
+		p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON pa.party_id =
+		p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		<include refid="listWhere" />
+		and s.`class_id`=1
+						AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		
+		GROUP BY pr.`product_line`,s.`customer_id`
+		
+	</select>
+
+
+
+
+
+	<select id="selectSellDataByTTL" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT 
+		<if test="isHq == true">
+		${"tm.hq_model AS model,ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity
+		"}
+		</if>
+
+		<if test="isHq == false">
+		${"tmc.`channel_model` AS model,ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity
+		"}
+		</if>
+		
+		,pr.`product_line`
+		FROM t_sale
+		s FORCE INDEX(idx_sale_shopdatadate)
+		JOIN customer_info p ON
+		p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		<if test="isHq == true">
+		${"group By tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By tmc.`channel_model`"}
+		</if>,pr.`product_line`
+
+	</select>
+
+	<select id="selectCPUInventoryByTTL" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT 
+		<if test="isHq == true">
+		${"tm.hq_model AS model
+		"}
+		</if>
+
+		<if test="isHq == false">
+		${"tmc.`channel_model` AS model
+		"}
+		</if>,
+		ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity,pr.`product_line`
+		FROM
+		`t_inventory` s
+		JOIN
+		customer_info p ON
+		p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		<include refid="listWhere" />
+		AND s.`class_id`=1
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		<if test="isHq == true">
+		${"group By tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By tmc.`channel_model`"}
+		</if>,pr.`product_line`
+
+	</select>
+
+
+	<select id="selectCPUDisplayByTTL" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT 
+		<if test="isHq == true">
+		${"tm.hq_model AS model
+		"}
+		</if>
+
+		<if test="isHq == false">
+		${"tmc.`channel_model` AS model
+		"}
+		</if>,
+		ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity,pr.`product_line`
+		FROM
+		sample_record s
+		JOIN customer_info
+		p ON
+		p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON pa.party_id =
+		p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		<include refid="listWhere" />
+		AND s.`class_id`=1
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		<if test="isHq == true">
+		${"group By tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By tmc.`channel_model`"}
+		</if>,pr.`product_line`
+
+	</select>
+
+
+
+
+
+
+
+	<select id="selectSellDataBySUM" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT
+			<if test="isHq == true">
+			${"ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity"}
+			
+			</if>
+			
+			<if test="isHq == false">
+			${"ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity"}
+			
+			</if>
+		
+		,pr.`product_line`
+		FROM t_sale
+		s FORCE INDEX(idx_sale_shopdatadate)
+		JOIN
+		 customer_info p ON
+		p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`  AND pr.head_type_id =1
+		
+		<include refid="listWhere" />
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		group by
+		pr.`product_line`
+
+	</select>
+
+	<select id="selectCPUInventoryBySUM" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT
+		ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity,
+		pr.`product_line`
+		FROM `t_inventory` s
+		JOIN
+		customer_info p ON
+		p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model` AND pr.head_type_id =1
+		<include refid="listWhere" />
+		AND s.`class_id`=1
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		group by pr.`product_line`
+
+	</select>
+
+	<select id="selectCPUDisplayBySUM" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT
+		ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity,pr.`product_line`
+		FROM sample_record s
+		JOIN
+		customer_info
+		p ON
+		p.`customer_ID`=s.`customer_id`
+		JOIN party pa ON
+		pa.party_id = p.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=p.customer_id
+		JOIN product pr ON pr.product_model=tm.`hq_model`   AND pr.head_type_id =1
+		<include refid="listWhere" />
+		AND s.`class_id`=1
+		AND s.datadate BETWEEN #{beginDate} AND #{endDate}
+		group by pr.`product_line`
+
+
+	</select>
+
+	<select id="selectPartyByUser" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		SELECT p.`PARTY_NAME` FROM user_login u
+		JOIN party p ON
+		p.`PARTY_ID`=u.`PARTY_ID`
+		WHERE u.user_login_id=#{userId}
+
+	</select>
+
+
+
+	<select id="selectRegionalHeadByParty" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT pa.`PARTY_ID`, ul.`USER_NAME` AS userName FROM
+		user_role_mapping ur
+		JOIN user_login ul ON
+		ul.`USER_LOGIN_ID`=ur.`USER_LOGIN_ID`
+		JOIN role_data_permission udp ON
+		udp.`ROLE_ID`=ur.`ROLE_ID`
+		JOIN party pa ON
+		pa.`PARTY_ID`=udp.`PERMISSION_VALUE`
+		<include refid="listWhere" />
+		AND ur.`ROLE_ID` LIKE '%REGIONAL%'
+	</select>
+
+
+
+	<select id="selectAreaByUser" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+	
+		SELECT urm.`USER_LOGIN_ID` AS userId,pa.party_Name AS PARTY_NAME
+		,pa.`PARTY_ID`,pa.`PARENT_PARTY_ID` FROM
+		party pa,`role_data_permission`
+		rdp,`user_role_mapping` urm
+		<include refid="listWhere" />
+		AND pa.`PARTY_ID`=rdp.`PERMISSION_VALUE`
+		AND rdp.`PERMISSION_TYPE`='PARTY'
+		AND urm.`ROLE_ID`=rdp.`ROLE_ID`
+		AND
+		pa.`PARTY_ID` NOT IN (SELECT p.`PARENT_PARTY_ID`FROM party p)
+		  
+
+	</select>
+
+
+
+
+
+
+	<select id="selectCoreProductByCountry" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT 
+		<if test="isHq == true">
+		${"tm.hq_model AS model
+		"}
+		</if>
+
+		<if test="isHq == false">
+		${"tmc.`channel_model` AS model
+		"}
+		</if>,
+		cp.`product_line`  FROM
+		`core_product` cp
+		JOIN product p ON p.`product_line`=cp.`product_line`  AND p.head_type_id =1
+		JOIN t_modelmap tm ON tm.`hq_model`=p.`PRODUCT_model`  AND tm.`party_id`=#{countryId}
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		WHERE country_id=#{countryId}
+		<!-- AND P.`party_id`=#{countryId} -->
+	</select>
+
+
+	<select id="selectCoreProductByStock" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT 
+		<if test="isHq == true">
+		${"tm.hq_model AS model
+		"}
+		</if>
+
+		<if test="isHq == false">
+		${"tmc.`channel_model` AS model
+		"}
+		</if>,
+		
+		cp.`product_line` FROM
+		`core_product` cp
+		JOIN product p ON p.`product_line`=cp.`product_line` AND p.head_type_id =1
+		JOIN t_modelmap tm ON tm.`hq_model`=p.product_model  AND tm.`party_id`=#{countryId}
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		JOIN `t_inventory` ti ON 
+		tm.`branch_model`=ti.`model` AND ti.country_id=tm.party_id
+		WHERE  cp.country_id=#{countryId}
+		<!-- AND P.`party_id`=#{countryId} -->
+	</select>
+
+
+	<select id="selectCoreProductBySample" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT
+		 <if test="isHq == true">
+		${"tm.hq_model AS model
+		"}
+		</if>
+
+		<if test="isHq == false">
+		${"tmc.`channel_model` AS model
+		"}
+		</if>,
+		cp.`product_line` FROM
+		`core_product` cp
+		JOIN product p ON p.`product_line`=cp.`product_line` AND p.head_type_id =1
+		
+		JOIN t_modelmap tm ON tm.`hq_model`=p.product_model   AND tm.`party_id`=#{countryId}
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		JOIN  sample_record ts ON 
+		tm.`branch_model`=ts.`model`  and ts.country_id=tm.party_id
+		WHERE
+		cp.country_id=#{countryId}
+		
+		<!-- AND P.`party_id`=#{countryId} -->
+		AND
+		ts.`class_id`=1
+	</select>
+
+	<select id="selectCoreLine" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT cp.`product_line`FROM `core_product` cp
+		WHERE
+		country_id=#{countryId}
+	</select>
+
+
+	<select id="selectCoreSellData" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT p.`product_line` ,
+		<if test="isHq == true">
+		${"tm.hq_model AS model,ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity,
+		COALESCE(SUM(s.`h_amount`),0) AS
+		amount
+		"}
+		
+		</if>
+		
+		<if test="isHq  == false">
+		${"tmc.`channel_model` AS model,ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity,
+		COALESCE(SUM(s.`amount`),0) AS
+		amount
+		"}
+		
+		</if>
+		 FROM t_sale s 
+		 
+		 JOIN customer_info si
+		ON
+		s.`customer_ID`=si.`customer_id`
+		
+		JOIN party pa ON pa.party_id = si.party_id
+		
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=si.customer_id
+		JOIN product p ON p.product_model=tm.`hq_model` AND p.head_type_id =1
+		JOIN
+		core_product cp ON
+		p.`product_line`=cp.`product_line`
+		
+		<include refid="listWhere" />
+		AND cp.`country_id`=#{countryId}
+		AND s.`datadate` BETWEEN #{beginDate}
+		AND #{endDate}
+		<if test="isHq == true">
+		${"group By tm.hq_model"}
+		</if>
+		<if test="isHq == false">
+		${"group By tmc.`channel_model`"}
+		</if>,p.`product_line`
+	</select>
+
+
+
+	<select id="selectCoreByTarget" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT p.`product_line`,
+		<if test="isHq == true ">
+		${"ROUND(COALESCE(SUM(t.`h_quantity`),0)) AS
+		quantity,
+		COALESCE(SUM(t.`h_amount`),0) AS amount"}
+		</if>
+		
+		<if test="isHq == false ">
+		${"ROUND(COALESCE(SUM(t.`quantity`),0)) AS
+		quantity,
+		COALESCE(SUM(t.`amount`),0) AS amount"}
+		</if>
+		
+		
+		FROM t_sale s 
+		
+		JOIN
+		customer_info si ON
+		s.`customer_ID`=si.`customer_id`
+		
+		JOIN party pa ON pa.party_id = si.party_id
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model  AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=si.customer_id
+		JOIN product p ON p.product_model=tm.`hq_model` AND p.head_type_id =1
+		
+		JOIN core_product cp ON
+		cp.`product_line`=p.`product_line`  AND cp.`country_id`=pa.country_id
+		
+		LEFT JOIN `t_target` t ON
+		t.`target_id`=s.`shop_id`
+		AND t.`class_id`=7
+
+		AND
+		t.`product_model`=s.model
+		AND t.`datadate` BETWEEN #{tBeginDate} AND #{tEndDate}
+		<include refid="listWhere" />
+		AND s.`datadate` BETWEEN #{beginDate} AND #{endDate}
+		
+		GROUP BY
+		p.product_line
+	</select>
+
+	<select id="selectCoreSellTotal" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		SELECT p.`product_line` ,
+		<if test="isHq == true">
+		${"ROUND(COALESCE(SUM(s.`h_quantity`),0)) AS
+		quantity,
+		COALESCE(SUM(s.`h_amount`),0) AS
+		amount"}
+		
+		</if>
+		
+		<if test="isHq ==  false">
+		${"ROUND(COALESCE(SUM(s.`quantity`),0)) AS
+		quantity,
+		COALESCE(SUM(s.`amount`),0) AS
+		amount"}
+		
+		</if>
+		
+		FROM t_sale s  
+		
+		JOIN customer_info si
+		ON
+		s.`customer_ID`=si.`customer_id`
+		
+		JOIN party pa ON pa.party_id = si.party_id
+		
+		JOIN t_modelmap tm ON tm.`branch_model`=s.model   AND tm.`party_id`=pa.`COUNTRY_ID`
+		JOIN  t_modelmap_channel tmc ON tmc.`branch_model`=tm.`branch_model` AND tmc.`party_id`=tm.`party_id`
+		AND tmc.`customer_id`=si.customer_id
+		JOIN product p ON p.product_model=tm.`hq_model`  AND p.head_type_id =1
+		
+		JOIN
+		core_product cp ON
+		p.`product_line`=cp.`product_line`
+		
+		
+		<include refid="listWhere" />
+		AND cp.`country_id`=#{countryId}
+		AND s.`datadate` BETWEEN #{beginDate}
+		AND #{endDate}
+		GROUP BY p.`product_line`
+	</select>
+
+	<select id="selectCountryByUser" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		select u.`PARTY_ID` AS countryId from user_login u where
+		u.`USER_LOGIN_ID`=#{userId}
+
+	</select>
+
+
+</mapper>

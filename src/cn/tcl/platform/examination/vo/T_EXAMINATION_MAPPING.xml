@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.examination.dao.IExaminationDao" >
+  
+   <sql id = 'examQuestionsWhere'>
+  	    <if test="cType != '' and cType != null">AND o.`type` = #{cType}</if>
+  	    <if test="isHq == 'false'">and o.country_id = #{countryId}</if>
+  	    <if test="userLoginId !=null and userLoginid !=''">
+  	    	and o.country_id in ( select DISTINCT b.PERMISSION_VALUE
+		from user_role_mapping a,role_data_permission b,party p
+		where a.ROLE_ID = b.ROLE_ID
+		and b.PERMISSION_TYPE = 'party'
+		and b.permission_value=p.party_id
+		and p.STATUS=1
+		and a.USER_LOGIN_ID = #{userLoginId}) 
+  	    </if>
+   </sql>
+   
+   
+
+   
+   <select id="selectExamQuestions" parameterType="java.util.Map" resultType="Examination">
+       SELECT oqb.`id` id,
+       oqb.`fractions` fractions,
+       oqb.`type` cType,
+       oqb.`ex_questions` exQuestions,
+       oqb.`al_answers_a` alAnswersA,
+       oqb.`al_answers_b` alAnswersB,
+       oqb.`al_answers_c` alAnswersC,
+       oqb.`al_answers_d` alAnswersD,
+       oqb.`al_answers_e` alAnswersE,
+       oqb.`al_answers_f` alAnswersF,
+       oqb.`al_answers_g` alAnswersG,
+       cp.`PVALUE` exQuestionsTypeShow,
+       oqb.`categories` categoriesId,
+       oqb.`medium` mediumsId,
+       oqb.analysis analysis,
+       oqb.`sma_class` smaClassId,
+       oqb.country_id countryId,
+       (SELECT par.PARTY_NAME FROM party par WHERE par.PARTY_ID = oqb.country_id) countryName,
+       (SELECT ct.`type_name` FROM course_type ct WHERE ct.`type_id`= oqb.`categories` AND ct.`status` = 1) categories,
+       (SELECT ct.`type_name` FROM course_type ct WHERE ct.`type_id`= oqb.`medium` AND ct.`status` = 1) mediums,
+       (SELECT ct.`type_name` FROM course_type ct WHERE ct.`type_id`= oqb.`sma_class` AND ct.`status` = 1) smaClass
+	   FROM (SELECT * FROM ot_ques_bank o WHERE 1=1 <include refid="examQuestionsWhere"/>) oqb 
+	   LEFT JOIN cfg_parameter cp ON oqb.`type` = cp.`PKEY`
+	   AND cp.`PDOMAIN` = 'TCL_EXAMINATION' 
+	   <if test="language == 'ENGLISH'">
+	   		AND cp.`PTYPE` = 'ENGLISH_TYPE'
+	   </if>
+	    <if test="language == '简体中文'">
+	   		AND cp.`PTYPE` = 'CHINESE_TYPE'
+	   </if>
+	   
+	   ORDER BY oqb.`c_time` DESC limit #{start},#{limit}
+    </select>
+    
+     <select id="selectExamQuestionsById" parameterType="java.lang.Integer" resultType="Examination">
+   	   SELECT oqb.`id` id,
+       oqb.`fractions` fractions,
+       oqb.`type` cType,
+       oqb.`ex_questions` exQuestions,
+       oqb.`al_answers_a` alAnswersA,
+       oqb.`al_answers_b` alAnswersB,
+       oqb.`al_answers_c` alAnswersC,
+       oqb.`al_answers_d` alAnswersD,
+       oqb.`al_answers_e` alAnswersE,
+       oqb.`al_answers_f` alAnswersF,
+       oqb.`al_answers_g` alAnswersG,
+       oqb.`categories` categoriesId,
+       oqb.`medium` mediumsId,
+       oqb.`sma_class` smaClassId,
+       (SELECT ct.`type_name` FROM course_type ct WHERE ct.`type_id`= oqb.`categories` AND ct.`status` = 1) categories,
+       (SELECT ct.`type_name` FROM course_type ct WHERE ct.`type_id`= oqb.`medium` AND ct.`status` = 1) mediums,
+       (SELECT ct.`type_name` FROM course_type ct WHERE ct.`type_id`= oqb.`sma_class` AND ct.`status` = 1) smaClass
+	   FROM ot_ques_bank oqb WHERE oqb.`id` = #{id,jdbcType=INTEGER}
+    </select>
+    
+    <select id="selectExamQuestionsCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT COUNT(o.`id`) FROM ot_ques_bank o WHERE 1=1
+        <include refid="examQuestionsWhere"/>
+    </select>
+  
+	<delete id="deleteExamQuestions" parameterType="java.lang.Integer">
+	   DELETE FROM ot_ques_bank WHERE id =  #{id,jdbcType=INTEGER}
+	</delete>
+	
+	<delete id="deleteTopicAnswer" parameterType="java.lang.Integer">
+	   DELETE FROM ot_top_answer WHERE e_questions_id = #{id,jdbcType=INTEGER}
+	</delete>
+  
+    <select id="selectCorrectAnswerById" parameterType="java.lang.String" resultType="Examination">
+        SELECT ota.`id` id,ota.`top_answer` corAnswer FROM ot_top_answer ota WHERE ota.`e_questions_id` = #{id}
+    </select>
+    
+    <select id="selectSubclassCategoriesById" parameterType="java.lang.Integer" resultType="Examination">
+    	SELECT ct.`type_id` id,ct.`type_name` NAMES FROM course_type ct WHERE ct.parent_type_id = #{id,jdbcType=INTEGER} AND ct.status = 1
+    </select>
+ 	
+ 	<insert id="insertExamQuestions" parameterType="Examination">
+ 		INSERT INTO ot_ques_bank(ex_questions,al_answers_a,al_answers_b,al_answers_c,al_answers_d,al_answers_e,al_answers_f,al_answers_g,
+		fractions,categories,MEDIUM,sma_class,TYPE,country_id,analysis,user_id)
+		VALUES(#{exQuestions},#{alAnswersA},#{alAnswersB},#{alAnswersC},#{alAnswersD},#{alAnswersE},#{alAnswersF},#{alAnswersG},
+		#{fractions},#{categories},#{mediums},#{smaClass},#{cType},#{countryId},#{analysis},#{userId})
+ 	</insert>
+ 	
+ 	<select id = 'selectExamQuestionsId' resultType="java.lang.Integer">
+ 		SELECT LAST_INSERT_ID() AS id
+ 	</select>
+ 	
+ 	<select id = 'selectUseTheTitleById' resultType="java.lang.Integer" parameterType="java.lang.String">
+ 		SELECT COUNT(*) FROM `ot_top_ep_mapping` otem WHERE otem.`e_questions_id` = #{id}
+ 	</select>
+ 	
+ 	<insert id="insertCorrectAnswer" parameterType="java.util.List" >
+		INSERT INTO ot_top_answer (e_questions_id,top_answer) VALUES
+		<foreach collection="list" item="item" separator=",">
+			(#{item.exQuestionsId},#{item.corAnswer})
+		</foreach>
+	</insert>
+	
+	<update id="updateExamQuestionsById" parameterType="Examination">
+			UPDATE ot_ques_bank 
+			SET ex_questions = #{exQuestions} ,
+			al_answers_a = #{alAnswersA} ,
+			al_answers_b = #{alAnswersB} ,
+			al_answers_c = #{alAnswersC} , 
+			al_answers_d = #{alAnswersD} ,
+			al_answers_e = #{alAnswersE} ,
+			al_answers_f = #{alAnswersF} ,
+			al_answers_g = #{alAnswersG} ,
+			fractions = #{fractions,jdbcType=INTEGER} ,
+			categories = #{categories} ,
+			MEDIUM = #{mediums} ,
+			sma_class = #{smaClass} ,
+			TYPE = #{cType} ,
+			analysis = #{analysis},
+			country_id = #{countryId} 
+			WHERE id = #{id,jdbcType=INTEGER}
+	</update>
+	
+	<select id="selectCountry" parameterType="java.lang.String" resultType="Examination">
+		SELECT DISTINCT  p.party_id AS countryId,p.`PARTY_NAME` AS countryName FROM user_role_mapping rm,role_data_permission dp,party p
+		WHERE rm.role_id=dp.role_id AND dp.permission_type='PARTY' AND p.party_id=dp.permission_value AND p.`flag` = 0
+		AND rm.user_login_id=#{userId} AND p.country_id=p.party_id order by p.`PARTY_ID` desc
+	</select>
+	
+	<select id="selectStypeIsExist" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT cp.`PKEY` eType FROM `cfg_parameter` cp WHERE cp.`PDOMAIN` = 'TCL_EXAMINATION' AND cp.`PVALUE` = #{eType}
+	</select>
+	
+	<select id="selectTitleByEQAndType" parameterType="Examination" resultType="java.lang.Integer">
+		SELECT COUNT(*) FROM `ot_ques_bank` oqb where 1 = 1
+			 <if test="exQuestions != null and exQuestions != ''">
+				And oqb.`ex_questions` = #{exQuestions}
+			</if> 
+			 <if test="cType != null and cType != ''">
+				and oqb.`type` = #{cType} 
+			</if>
+				AND oqb.`al_answers_a` = #{alAnswersA} 
+				AND oqb.`al_answers_b` = #{alAnswersB} 
+				AND oqb.`al_answers_c` = #{alAnswersC} 
+				AND oqb.`al_answers_d` = #{alAnswersD} 
+				AND oqb.`al_answers_e` = #{alAnswersE} 
+				AND oqb.`al_answers_f` = #{alAnswersF} 
+				AND oqb.`al_answers_g` = #{alAnswersG} 
+			<if test="countryId != null and countryId != ''">
+				AND oqb.`country_id` = #{countryId} 
+			</if>   
+			<if test="fractions != null and fractions != ''">
+				AND oqb.`fractions` = #{fractions} 
+			</if> 
+				AND oqb.`categories` = #{categories} 
+				AND oqb.`medium` = #{mediums} 
+				AND oqb.`sma_class` = #{smaClass} 
+			<if test="analysis != null and analysis != ''">
+				AND oqb.`analysis` = #{analysis} 
+			</if>   
+			  	AND oqb.`id` != #{id} 
+	</select>
+	
+	<select id="selectTypeCount" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT COUNT(*) FROM `course_type` ct WHERE (ct.`type_name` = #{blankName} OR ct.`type_name` = #{underlineName})  AND ct.`status` = 1
+	</select>
+	
+	<select id="selectTypeIdByEname" parameterType="java.lang.String" resultType="java.lang.String">
+<!-- 		SELECT ct.`type_id` categoriesId FROM `course_type` ct WHERE ct.`type_name` = #{eName} AND ct.`status` = 1 -->
+		SELECT ct.`type_id` categoriesId FROM `course_type` ct WHERE (ct.`type_name` = #{blankName} OR ct.`type_name` = #{underlineName}) AND ct.`status` = 1
+	</select>
+	
+	<select id="selectTypeIdByEnameByparentId" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT ct.`type_id` categoriesId FROM `course_type` ct WHERE (ct.`type_name` = #{blankName} OR ct.`type_name` = #{underlineName}) AND ct.`status` = 1 and ct.`parent_type_id` = #{parentId} 
+	</select>
+	
+	<select id="selectPartyIdByPartyName" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT p.`PARTY_ID` countryId FROM party p WHERE p.`PARTY_NAME` = #{partyName}
+	</select>
+ 
+</mapper>

@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<import>
+	<mapping bean="cn.tcl.platform.product.vo.Product">
+		<property column="*Product model" propertyName="modelName" required="true" javaType="java.lang.String"></property>
+		<property column="*Size" propertyName="size" required="true" javaType="java.lang.String"></property>
+		<property column="Comments" propertyName="comments" required="false" javaType="java.lang.String"></property>
+		<property column="*Product Type" propertyName="productType" required="true" javaType="java.lang.String"></property>
+		<property column="*Product Catena" propertyName="catena" required="true" javaType="java.lang.String"></property>
+		<property column="Gas Type" propertyName="gasType" required="false" javaType="java.lang.String"></property>
+		<property column="Description" propertyName="description" required="false" javaType="java.lang.String"></property>
+		</mapping>
+	<volidate dateFormat="yyyy-MM-dd" volidateClass="cn.tcl.platform.product.imports.ValidationImportProduct" volidateMethod="validationACImport"></volidate>
+	<service serviceBean="productService" serviceMethod="acImportProduct"></service>
+</import>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.statable.dao.IStaHQTableDao">
+	
+	<sql id="listwhere">
+		<if test="listWhe != null"> ${listWhe} </if>
+	</sql>
+	
+	<select id="queryStateTimeSalesBycountry" resultType="StaHQTable" parameterType="java.lang.String">
+		SELECT sr.`center` center,
+		sr.`country_id` countryId,
+		sr.`country` country,
+		DATE_FORMAT(sr.`datadate`,'%m') moth,
+		SUM(sr.`saleQty`) qty
+		FROM 
+		`sale_record` sr
+		WHERE sr.`datadate` BETWEEN #{startDate} AND #{endDate}
+		<include refid="listwhere" />
+		GROUP BY sr.`center`,sr.`country_id`,sr.`country`,moth
+	</select>
+	
+	<select id="queryStateTimeSalesBycountryReduction" resultType="StaHQTable" parameterType="java.lang.String">
+		SELECT sr.`center` center,
+		sr.`country_id` countryId,
+		sr.`country` country,
+		DATE_FORMAT(sr.`datadate`,'%m') moth,
+		SUM(sr.`saleQty` / coe.`all_products_coefficient`) qty
+		FROM 
+		`sale_record` sr,`coefficient` coe
+		WHERE sr.`country_id` = coe.`country` <!-- CONVERT(coe.`country` USING utf8) COLLATE utf8_unicode_ci -->
+		AND sr.`datadate` BETWEEN #{startDate} AND #{endDate}
+		<include refid="listwhere" />
+		GROUP BY sr.`center`,sr.`country_id`,sr.`country`,moth
+	</select>
+	
+	<select id="querySaleCountry" resultType="StaHQTable" parameterType="java.lang.String">
+		  SELECT 
+		  sr.`center` center,
+		  sr.`country_id` countryId,
+		  sr.`country` country
+		  FROM  `sale_record` sr 
+	      WHERE 
+	      <if test="isSub != 'true'"> 
+	      		sr.`datadate` BETWEEN #{startDate} AND #{endDate} 
+	      </if>
+	      <if test="isSub == 'true'"> 
+	      		((sr.`datadate` BETWEEN #{thisYearStartDate} AND #{thisYearEndDate}) or (sr.`datadate` BETWEEN #{startDate} AND #{endDate}))
+	      </if>
+	      
+		  <include refid="listwhere" />
+		  GROUP BY sr.`country_id`,sr.`country`
+	</select>
+	
+</mapper>

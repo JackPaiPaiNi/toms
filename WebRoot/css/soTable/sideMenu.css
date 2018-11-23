@@ -1,0 +1,97 @@
+/*左部导航*/
+.side{
+	border-top: 1px solid #b5a38f;
+	width: 300px;
+	float: left;
+	background-color: #f8f8f8;
+	position: absolute;
+	top: 60px;
+	left: 0;
+	bottom: 1px;
+	overflow: auto;
+}
+.side>ul{
+	display: block;
+	padding-left: 10px;
+	padding-right: 10px;
+	text-align: left;
+}
+.side>ul>li{
+	display: block;
+	font-size: 12px;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+.side>ul>li>a{
+	display: block;
+	width: 100%;
+	height: 100%;
+	text-decoration: none;
+	color: #337ab7;
+	line-height: 37px;
+	text-indent: 15px;
+}
+.side>ul>li:last-child{
+	/*margin-bottom: 80px;*/
+	line-height: 37px;	
+	text-indent: 15px;
+	color: #337ab7;
+}
+.side>ul>li>ul>li>a{
+	display: block;
+	width: 100%;
+	height: 100%;
+	text-decoration: none;
+	color: #337ab7;
+	line-height: 37px;
+	text-indent: 40px;
+}
+#training>ul>li>a:before{
+	content: "";
+	display: inline-block;
+	width: 12px;
+	height: 12px;	
+	margin-right: 4px;
+}
+.Creategraphic:before{
+	background: url(../images/chuangjiantuwen_03.png) no-repeat center center;
+	background-size: 12px 12px;
+	opacity: 0.6;
+}
+.Queryby:before{
+	background: url(../images/chaxuntuwen.png) no-repeat center center;
+	background-size: 12px 12px;
+	opacity: 0.6;
+}
+.Addproductknowledge:before{
+	background: url(../images/tianjiachanpinzhisi.png) no-repeat center center;
+	background-size: 12px 12px;
+	opacity: 0.6;
+}
+.Examiquestmana:before{
+	background: url(../images/kaotiguanli.png) no-repeat center center;
+	background-size: 12px 12px;
+	opacity: 0.6;
+}
+.Themessagetag:before{
+	background: url(../images/xiaoxibaioqian.png) no-repeat center center;
+	background-size: 12px 12px;
+	opacity: 0.6;
+}
+.Messagesent:before{
+	background: url(../images/duoxiaoxifasong.png) no-repeat center center;
+	background-size: 12px 12px;
+	opacity: 0.6;
+}
+.Thestatisum:before{
+	background: url(../images/tongjihuizong.png) no-repeat center center;
+	background-size: 12px 12px;
+	opacity: 0.6;
+}
+.Itemmanagement:before{
+	background: url(../images/shixiangguanli.png) no-repeat center center;
+	background-size: 12px 12px;
+	opacity: 0.6;
+}
+#training>ul>li>a:hover:before{
+	opacity: 1;
+}

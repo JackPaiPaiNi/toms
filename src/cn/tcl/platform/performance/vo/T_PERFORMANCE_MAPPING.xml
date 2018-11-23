@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.performance.dao.IPerformanceDao">
+
+	<resultMap id="ExcelMap" type="Performance">
+		<result column="REG" property="reg" jdbcType="VARCHAR" />
+		<result column="shop_id" property="shopId" jdbcType="VARCHAR" />
+		<result column="REG" property="reg" jdbcType="VARCHAR" />
+		<result column="TYPE" property="type" jdbcType="VARCHAR" />
+		<result column="NO_OF_SHOP" property="noOfShop" jdbcType="INTEGER" />
+		<result column="DEALER" property="dealer" jdbcType="VARCHAR" />
+		<result column="BRANCH" property="branch" jdbcType="VARCHAR" />
+		<result column="TV_FPS" property="tvFps" jdbcType="INTEGER" />
+		<result column="AC_FPS" property="acFps" jdbcType="INTEGER" />
+		<result column="PROM_NAME" property="promName" jdbcType="VARCHAR" />
+		<result column="DATE" property="dateOfHired" jdbcType="CHAR" />
+		<result column="SHOP_NAME" property="shopName" jdbcType="VARCHAR" />
+		<result column="ACFO" property="acfo" jdbcType="VARCHAR" />
+		<result column="AREA" property="area" jdbcType="VARCHAR" />
+		<result column="SALESMAN" property="salesMan" jdbcType="VARCHAR" />
+		<result column="AGENCY" property="agency" jdbcType="VARCHAR" />
+		<result column="SHOP_CLASS" property="shopClass" jdbcType="VARCHAR" />
+		<result column="SALERTYPE" property="salerType" jdbcType="INTEGER" />
+		<result column="USERID" property="userId" jdbcType="INTEGER" />
+		<result column="LEVEL" property="level" jdbcType="VARCHAR" />
+		
+	</resultMap>
+
+	<resultMap id="modelMap" type="BDExcel">
+		<result column="shop_id" property="shopId" jdbcType="VARCHAR" />
+		<result column="model" property="model" jdbcType="VARCHAR" />
+		<result column="quantity" property="quantity" jdbcType="INTEGER" />
+		<result column="amount" property="amount" jdbcType="INTEGER" />
+		<result column="country_id" property="countryId" jdbcType="VARCHAR" />
+	</resultMap>
+
+
+	<resultMap id="SumMap" type="Performance">
+		<result column="targetSum" property="targetSum"  />
+		<result column="challengeSum" property="challengeSum"  />
+		<result column="targetQty" property="targetQty"  />
+		<result column="challengeQty" property="challengeQty"  />
+		<result column="saleSum" property="saleSum" jdbcType="VARCHAR" />
+		<result column="saleQty" property="saleQty" />
+	</resultMap>
+
+
+	<resultMap id="saleDateMap" type="Performance">
+		<result column="shopId" property="shopId" jdbcType="VARCHAR" />
+		<result column="quantity" property="quantity" jdbcType="INTEGER" />
+		<result column="model" property="model" jdbcType="VARCHAR" />
+	</resultMap>
+
+
+
+	<sql id="listWhere">
+	
+		<where>
+			<if test="conditions != null"> and ${conditions} </if>
+		</where>
+			<if test="searchStr != null"> ${searchStr} </if>
+	</sql>
+
+
+
+<select id="selectExchange" parameterType="java.lang.String"
+		resultType="java.lang.Float">
+
+
+SELECT tx.`exchange`  FROM  t_exchange tx
+
+WHERE tx.`datadate` IN(SELECT  MAX(te.datadate)  AS maxDate FROM  t_exchange  te
+
+WHERE  <![CDATA[ te.datadate<=#{date}]]>        
+AND te.country_id=#{country} )
+
+AND tx.country_id=#{country} 
+
+</select>
+
+
+
+	<select id="selectCustomerByName" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		  SELECT ci.customer_id FROM customer_info ci
+  JOIN shop_info si ON si.`CUSTOMER_ID`=ci.`CUSTOMER_NAME`
+	   WHERE si.shop_id=#{shopId} 
+	  AND ci.customer_name=#{customerName}
+	  
+	</select>
+	
+	<select id="selectShopByName" parameterType="java.lang.String"
+		resultType="java.lang.String">
+	  SELECT shop_id FROM shop_info
+	   WHERE country_id=#{countryId} 
+	  AND shop_name=#{shopName}
+	</select>
+	
+	
+	
+		<select id="selectPCByShop" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		SELECT ul.`USER_LOGIN_ID` FROM user_login ul 
+  JOIN shop_saler_mapping ssm ON ssm.user_login_id=ul.user_login_id AND ssm.`salertype`=1
+  JOIN shop_info si ON si.`SHOP_ID`=ssm.`shop_id`
+  WHERE si.`SHOP_ID`=#{shopId}
+  AND ul.`USER_NAME`=#{userName}
+  
+  
+	</select>
+	
+
+
+	<select id="selectPartyByUser" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		SELECT p.`PARTY_NAME` FROM user_login u
+		JOIN party p ON
+		p.`PARTY_ID`=u.`PARTY_ID`
+		WHERE u.user_login_id=#{userId}
+
+	</select>
+
+
+
+	<select id="selectCountryByUser" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		select u.`PARTY_ID` AS countryId from user_login u where
+		u.`USER_LOGIN_ID`=#{userId}
+
+	</select>
+
+
+	
+	
+	    <delete id="deletePCTarget"  parameterType="java.util.List">
+	 
+	      <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+				 DELETE  FROM t_target 
+				 WHERE class_id=10  AND DATE_FORMAT(datadate,'%Y%m')=DATE_FORMAT(#{item.dataDate},'%Y%m') 
+				AND target_id=#{item.targetId}  
+			
+		 </foreach>
+		
+    </delete>
+    
+    
+    
+ <insert id ="savePCTarget" parameterType="java.util.List" >
+              <selectKey resultType ="java.lang.Integer" keyProperty= "id"
+                   order= "AFTER">
+                  SELECT LAST_INSERT_ID()
+              </selectKey >
+           INSERT INTO t_target (target_id,class_id,quantity,h_quantity,amount,h_amount,datadate,country,type)
+             values
+             <foreach collection ="list" item="reddemCode" index= "index" separator =",">
+               (#{reddemCode.targetId},#{reddemCode.classId},
+               #{reddemCode.targetQty},
+              #{reddemCode.targetQty}, #{reddemCode.targetAmt},#{reddemCode.h_targetAmt},
+               #{reddemCode.dataDate},#{reddemCode.targetId},#{reddemCode.type})
+            </foreach >
+     </insert >
+     
+     
+  	<select id="selectCountry" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		SELECT  country_id FROM party p WHERE p.`PARTY_ID`=p.`COUNTRY_ID`
+
+		AND  p.`PARTY_NAME`=#{country}
+</select>
+
+
+	<select id="selectPCTarget" parameterType="java.lang.String"
+			resultType="java.util.HashMap">
+	
+	SELECT  pa.`PARTY_NAME`  countryName, ci.`CUSTOMER_NAME` customerName,si.`SHOP_NAME` shopName,
+ul.`USER_NAME` userName,DATE_FORMAT(datadate,'%m/%Y') date,t.`quantity`,t.`amount` FROM  t_target t
+JOIN shop_saler_mapping ssm ON t.`target_id`=ssm.`user_login_id` AND ssm.`salertype`=1
+JOIN user_login ul ON ul.`USER_LOGIN_ID`=ssm.`user_login_id`
+JOIN shop_info si ON si.`SHOP_ID`=ssm.`shop_id`
+LEFT JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID`
+JOIN party pa ON pa.`PARTY_ID`=si.`COUNTRY_ID`
+    <include refid="listWhere"/>
+ AND  class_id=10
+ 	ORDER BY ul.`USER_NAME`
+	 limit #{start},#{limit};
+	</select>
+	
+		<select id="selectPCTargetCount" parameterType="java.lang.String"
+			resultType="int">
+	
+	SELECT  count(*)  FROM  t_target t
+JOIN shop_saler_mapping ssm ON t.`target_id`=ssm.`user_login_id` AND ssm.`salertype`=1
+JOIN user_login ul ON ul.`USER_LOGIN_ID`=ssm.`user_login_id`
+JOIN shop_info si ON si.`SHOP_ID`=ssm.`shop_id`
+LEFT JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID`
+JOIN party pa ON pa.`PARTY_ID`=si.`COUNTRY_ID`
+    <include refid="listWhere"/>
+ AND  class_id=10
+ 	
+	</select>
+	
+	
+  	
+</mapper>

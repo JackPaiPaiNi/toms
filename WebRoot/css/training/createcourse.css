@@ -1,0 +1,237 @@
+*{
+	padding: 0;
+	margin: 0;
+}
+.fl{float: left;}
+.fr{float: right;}
+
+body{
+	background-color: #f8f8f8;
+}
+html,body,.parent{
+		height: 100%;
+		overflow: hidden;
+	}
+.parent{
+	position: relative;
+	}
+	
+@media only screen 
+and (min-width: 768px){
+	.parent .header .head-left{
+		width: 66%;
+	}	
+}
+@media only screen 
+and (max-width: 768px){
+	.parent .header .head-left{
+		width: 100%;
+	}
+}
+
+
+/*�Ҳ�����*/
+.main{
+	border-top: 1px solid #b5a38f;
+	border-left: 1px solid #b5a38f;
+	position: absolute;
+	left: 0px;
+	right: 0;
+	top: 0px;
+	bottom: 1px;
+	background-color: #fafafa;
+	overflow: auto;
+	padding-bottom: 30px;
+}
+.create{
+	background-color: #f0e3bf;
+	height: 28px;
+	line-height: 28px;
+	text-indent: 10px;
+	font-size: 14px;
+	border-bottom: 1px solid #d4a375;
+	position: fixed;
+	left: 301px;
+	right: 0;
+	z-index: 99999;
+}
+.main>div{
+	margin-top: 10px;
+	line-height: 20px;
+	font-size: 14px;
+}
+.main>div>select{
+	width: 400px;
+	height: 22px;
+	text-indent: 5px;
+	margin-left: 10px;
+}
+.messagecolumn{
+	text-indent: 31px;
+}
+.Messagetype
+{
+	text-indent: 48px;
+}
+.subtopic{
+	text-indent: 62px;
+}
+.subtopic>form{
+	display: inline-block;
+	text-indent: 0px;
+    margin-left: 10px;
+}
+.main>.subtopic select{
+	width: 195px;
+	height: 22px;
+}
+.main>.subtopic select:nth-child(2){
+	margin-left: 6px;
+}
+.regioncountry{
+	text-indent: 42px;
+	/* display: inline-block; */
+}
+.main>.regioncountry select{
+	width: 195px;
+	height: 22px;
+}
+.main>.regioncountry select:nth-child(2){
+	margin-left: 6px;
+}
+.Thetitle{
+	margin-top: 10px;
+	line-height: 20px;
+	font-size: 14px;
+	text-indent: 114px;
+}
+.Inthispaper{
+	margin-top: 10px;
+	line-height: 20px;
+	font-size: 14px;
+	text-indent: 102px;
+	height: 60px;
+}
+.Thetitle>input{
+	margin-left: 10px;
+	width: 396px;
+	height: 22px;
+}
+.Inthispaper>label{
+	vertical-align: top;
+	float: left;
+}
+.Inthispaper>input{
+	margin-left: 10px;
+	width: 396px;
+	height: 18px;
+}
+.Inthispaper>textarea{
+	margin-left: 10px;
+	width: 396px;
+	display: inline-block;
+	float: left;
+	resize: none;
+}
+.content{
+	font-size: 14px;
+	margin-left: 92px;
+	/* margin-top: 100px!important; */
+}
+.content>label{
+	vertical-align: top;
+	float: left;
+}
+.ke-container {
+    display: inline-block!important;
+    margin-left: 10px!important;
+}
+.Thecover{
+	font-size: 14px;
+    text-indent: 105px;
+    margin-top: 10px;
+}
+.Thecover>input{
+	margin-left: 10px;
+	float: left;
+}
+.Thecover>input:last-child{
+	width: 50px;
+}
+.Thecover>label:first-child{
+	float: left;
+}
+.Thecover>label:last-child{
+	font-size: 12px;
+	margin-left: -370px;
+	margin-top: 6px;
+	color: #b0b0b0;
+}
+.Thecover>label:last-child>span{
+	color: red;
+}
+.Theattachment{
+	font-size: 14px;
+    margin-top: 10px!important;
+    height: 30px;
+}
+.Theattachment label:first-child{
+	float:left;	
+	margin-right: 10px;
+	text-indent: 70px;
+}
+.Theattachment table{
+	float: left;
+	width: 680px;
+	border: 1px solid #A0A0A0;
+}
+.Theattachment td:last-child>input{
+	margin-left: 10px;
+	display: inline-block!important;	
+	font-size: 14px!important;
+	width: 50px;
+}
+.Coverpreview{
+	width: 190px;
+	height: 190px;
+	background-color: #f0f0f0;
+	position: absolute;
+	left: 654px;
+	top: 50px;
+	font-size: 24px;
+	line-height: 180px;
+	text-align: center;
+	color: #FFFFFF;
+}
+#submit{
+	display: block;
+	/* margin: 0 auto; */
+	width: 70px;
+	font-size: 16px;
+	margin-left: 450px;
+    margin-top: 10px;
+}
+.roleType{
+	text-indent: 76px;
+    /* display: inline-block; */
+}
+.roleTypeName{
+	width: 400px;
+    height: 22px;
+    text-indent: 5px;
+    margin-left: 10px
+}
+.inb{
+	display: inline-block;
+}
+.leftToright select{
+	width: 182px;
+	height: 145px;
+}
+.select_from{
+	margin-left:12px;
+}
+
+.leftToright{
+	
+}

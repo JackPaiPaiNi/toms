@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<import>
+	<mapping bean="cn.tcl.platform.product.vo.Product">
+		<property column="*Product model" propertyName="modelName" required="true" javaType="java.lang.String"></property>
+		<property column="*Product Type" propertyName="productTypeId" required="true" javaType="java.lang.String"></property>
+		<property column="*Size" propertyName="size" required="true" javaType="java.lang.String"></property>
+		<property column="*Product Attributes" propertyName="productSpecId" required="true" javaType="java.lang.String"></property>
+		<property column="Product Number" propertyName="productId" required="false" javaType="java.lang.String"></property>
+		<property column="Product Series" propertyName="catena" required="false" javaType="java.lang.String"></property>
+		<property column="Resolution" propertyName="display" required="false" javaType="java.lang.String"></property>
+		<property column="Screen Scale" propertyName="ratio" required="false" javaType="java.lang.String"></property>
+		<property column="Operating System" propertyName="os" required="false" javaType="java.lang.String"></property>
+		<property column="Product Description" propertyName="description" required="false" javaType="java.lang.String"></property>
+	</mapping>
+	<volidate dateFormat="yyyy-MM-dd" volidateClass="cn.tcl.platform.product.imports.ValidationImportProduct" volidateMethod="validationImport"></volidate>
+	<service serviceBean="productService" serviceMethod="importProduct"></service>
+</import>

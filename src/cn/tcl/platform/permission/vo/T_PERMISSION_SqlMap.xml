@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.permission.dao.IPermissionDAO">
+	<resultMap id="PermissionMap" type="Permission">
+		<result column="PERMISSION_ID" property="permissionId" jdbcType="VARCHAR" />
+		<result column="PARENT_PERMISSION_ID" property="parentPermissionId" jdbcType="VARCHAR" />
+		<result column="PERMISSION_NAME" property="permissionName" jdbcType="VARCHAR" />
+		<result column="IS_MENU" property="isMenu" jdbcType="INTEGER" />
+		<result column="COMMENTS" property="comments" jdbcType="VARCHAR" />
+		<result column="PERMISSION_CODE" property="permissionCode" jdbcType="VARCHAR" />
+		<result column="PERMISSION_URL" property="permissionUrl" jdbcType="VARCHAR" />
+		<result column="BUTTON_ID" property="buttonId" jdbcType="VARCHAR" />
+		<result column="PERMISSION_SEQ" property="permissionSeq" jdbcType="INTEGER" />
+		<result column="LABEL_KEY" property="labelKey" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap id="RolePermissionMap" type="Permission" >
+	    <result column="PERMISSION_ID" property="permissionId" jdbcType="VARCHAR" />
+		<result column="PARENT_PERMISSION_ID" property="parentPermissionId" jdbcType="VARCHAR" />
+		<result column="PERMISSION_NAME" property="permissionName" jdbcType="VARCHAR" />
+		<result column="IS_MENU" property="isMenu" jdbcType="INTEGER" />
+		<result column="COMMENTS" property="comments" jdbcType="VARCHAR" />
+		<result column="PERMISSION_CODE" property="permissionCode" jdbcType="VARCHAR" />
+		<result column="PERMISSION_URL" property="permissionUrl" jdbcType="VARCHAR" />
+		<result column="BUTTON_ID" property="buttonId" jdbcType="VARCHAR" />
+		<result column="PERMISSION_SEQ" property="permissionSeq" jdbcType="INTEGER" />
+	    <result column="CHECK_STATE" property="checkState" jdbcType="VARCHAR" />
+	    <result column="LABEL_KEY" property="labelKey" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<select id="selectPermissionByPId" parameterType="java.lang.String" resultMap="PermissionMap">
+	 select t.PERMISSION_ID,
+		       t.PARENT_PERMISSION_ID,
+		       t.PERMISSION_NAME,
+		       t.IS_MENU,
+		       t.COMMENTS,
+		       t.PERMISSION_CODE,
+		       t.PERMISSION_URL,
+		       t.BUTTON_ID,
+		       t.PERMISSION_SEQ,
+		       t.LABEL_KEY
+		  from permission t
+		 where t.PARENT_PERMISSION_ID = #{parentPermissionId}
+		 order by t.PERMISSION_SEQ
+  	</select>
+  	
+  	<select id="selectPermissionById" parameterType="java.lang.String" resultMap="PermissionMap">
+	  select t.PERMISSION_ID,
+		       t.PARENT_PERMISSION_ID,
+		       t.PERMISSION_NAME,
+		       t.IS_MENU,
+		       t.COMMENTS,
+		       t.PERMISSION_CODE,
+		       t.PERMISSION_URL,
+		       t.BUTTON_ID,
+		       t.PERMISSION_SEQ,
+		       t.LABEL_KEY
+		  from permission t
+ 		 where t.PERMISSION_ID = #{permissionId}
+  	</select>
+  	
+  	<insert id="insertPermission" parameterType="Permission">
+  		<selectKey resultType="java.lang.String" order="BEFORE" keyProperty="permissionId"> 
+			SELECT max(cast(a.PERMISSION_ID as unsigned int))+1 from permission a where a.PERMISSION_ID != 999
+		</selectKey>
+	    insert into permission
+	    <trim prefix="(" suffix=")" suffixOverrides="," >
+	      <if test="permissionId!=null" >
+	        PERMISSION_ID,
+	      </if>
+	      <if test="parentPermissionId!=null" >
+	        PARENT_PERMISSION_ID,
+	      </if>
+	      <if test="permissionName!=null" >
+	        PERMISSION_NAME,
+	      </if>
+	      <if test="isMenu!=null" >
+	        IS_MENU,
+	      </if>
+	      <if test="comments!=null" >
+	        COMMENTS,
+	      </if>
+	      <if test="permissionCode!=null" >
+	        PERMISSION_CODE,
+	      </if>
+	      <if test="permissionUrl!=null" >
+	        PERMISSION_URL,
+	      </if>
+	      <if test="buttonId!=null" >
+	        BUTTON_ID,
+	      </if>
+	      <if test="permissionSeq!=null" >
+	        PERMISSION_SEQ,
+	      </if>
+	      <if test="labelKey!=null" >
+	        LABEL_KEY,
+	      </if>
+	    </trim>
+	    values
+	    <trim prefix="(" suffix=")" suffixOverrides="," >
+	      <if test="permissionId!=null" >
+	        #{permissionId},
+	      </if>
+	      <if test="parentPermissionId!=null" >
+	        #{parentPermissionId},
+	      </if>
+	      <if test="permissionName!=null" >
+	        #{permissionName},
+	      </if>
+	      <if test="isMenu!=null" >
+	        #{isMenu},
+	      </if>
+	      <if test="comments!=null" >
+	        #{comments},
+	      </if>
+	      <if test="permissionCode!=null" >
+	        #{permissionCode},
+	      </if>
+	      <if test="permissionUrl!=null" >
+	        #{permissionUrl},
+	      </if>
+	      <if test="buttonId!=null" >
+	        #{buttonId},
+	      </if>
+	      <if test="permissionSeq!=null" >
+	        #{permissionSeq},
+	      </if>
+	      <if test="labelKey!=null" >
+	        #{labelKey},
+	      </if>
+	    </trim>
+  	</insert>
+  	
+  	<update id="updatePermissionById" parameterType="Permission" >
+	    update permission
+	    <trim prefix="set" suffix="" suffixOverrides="," >
+	      <if test="parentPermissionId!=null" >
+	        PARENT_PERMISSION_ID = #{parentPermissionId},
+	      </if>
+	      <if test="permissionName!=null" >
+	        PERMISSION_NAME = #{permissionName},
+	      </if>
+	      <if test="isMenu!=null" >
+	        IS_MENU = #{isMenu},
+	      </if>
+	      <if test="comments!=null" >
+	        COMMENTS = #{comments},
+	      </if>
+	      <if test="permissionCode!=null" >
+	        PERMISSION_CODE = #{permissionCode},
+	      </if>
+	      <if test="permissionUrl!=null" >
+	        PERMISSION_URL = #{permissionUrl},
+	      </if>
+	      <if test="buttonId!=null" >
+	        BUTTON_ID = #{buttonId},
+	      </if>
+	      <if test="permissionSeq!=null" >
+	        PERMISSION_SEQ = #{permissionSeq},
+	      </if>
+	      <if test="labelKey!=null" >
+	        LABEL_KEY = #{labelKey},
+	      </if>
+	    </trim>
+	    where PERMISSION_ID = #{permissionId}
+	</update>
+  	
+  	<delete id="deletePermissionById" parameterType="java.lang.String">
+		delete b from permission b inner join (SELECT PERMISSION_ID from permission where FIND_IN_SET(PERMISSION_ID,getAllPermissionByPID(#{permissionId}))) a where a.PERMISSION_ID = b.PERMISSION_ID
+  	</delete>
+  	
+  	<select id="selectPermissionByConds" resultMap="PermissionMap" parameterType="java.lang.String">
+	  	 select t.PERMISSION_ID,
+			       t.PARENT_PERMISSION_ID,
+			       t.PERMISSION_NAME,
+			       t.IS_MENU,
+			       t.COMMENTS,
+			       t.PERMISSION_CODE,
+			       t.PERMISSION_URL,
+			       t.BUTTON_ID,
+			       t.PERMISSION_SEQ,
+			       t.LABEL_KEY
+			  from permission t
+			  where 1 = 1
+			  ${conditions}
+	</select>
+	
+	<select id="selectRolePermission" resultMap="RolePermissionMap">
+		 select    
+		 	   a.PERMISSION_ID,
+		       a.PARENT_PERMISSION_ID,
+		       a.PERMISSION_NAME,
+		       a.IS_MENU,
+		       a.COMMENTS,
+		       a.PERMISSION_CODE,
+		       a.PERMISSION_URL,
+		       a.BUTTON_ID,
+		       a.PERMISSION_SEQ,
+		       (select c.CHECK_STATE from role b,role_permission c where a.permission_id = c.permission_id and b.role_id = c.role_id and b.role_id = #{roleId}) as CHECK_STATE,
+		       a.LABEL_KEY
+		from permission a ORDER BY a.`PERMISSION_SEQ`
+	</select>
+	
+	<select id="selectPermissionByUserId" resultMap="PermissionMap" parameterType="java.lang.String">
+		select distinct t.PERMISSION_ID,
+		       t.PARENT_PERMISSION_ID,
+		       t.PERMISSION_NAME,
+		       t.IS_MENU,
+		       t.COMMENTS,
+		       t.PERMISSION_CODE,
+		       t.PERMISSION_URL,
+		       t.BUTTON_ID,
+		       t.PERMISSION_SEQ,
+		       t.LABEL_KEY
+		  from permission t,user_role_mapping a,role_permission b
+		  where t.PERMISSION_ID=b.PERMISSION_ID
+				and a.ROLE_ID=b.ROLE_ID
+				and b.CHECK_STATE!='unchecked'
+				and a.USER_LOGIN_ID=#{userLoginId}
+				and t.PARENT_PERMISSION_ID!='root'
+		order by T.PERMISSION_SEQ
+	</select>
+</mapper>

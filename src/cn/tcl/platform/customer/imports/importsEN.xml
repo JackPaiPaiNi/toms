@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<import>
+	<mapping bean="cn.tcl.platform.customer.vo.Customer">
+		<property column="*Dealer name" propertyName="customerName" required="true" javaType="java.lang.String"></property>
+		<!-- <property column="*Branch company" propertyName="partyId" required="true" javaType="java.lang.String"></property> -->
+		<property column="*Country" propertyName="countryId" required="true" javaType="java.lang.String"></property>
+		<!-- <property column="*Country" propertyName="partyId" required="true" javaType="java.lang.String"></property> -->
+		<property column="*Dealer code" propertyName="customerCode" required="true" javaType="java.lang.String"></property>
+		<property column="*Channel type" propertyName="channelType" required="true" javaType="java.lang.String"></property>
+		<property column="Date of Joining TCL" propertyName="enterDate" required="true" javaType="java.util.Date"></property>
+		<!-- <property column="*Country" propertyName="countryId" required="true" javaType="java.lang.String"></property> -->
+		<!-- <property column="*Party" propertyName="countryId" required="true" javaType="java.lang.String"></property> -->
+		<property column="Party" propertyName="partyId" required="true" javaType="java.lang.String"></property>
+		<property column="Province" propertyName="provinceId" required="false" javaType="java.lang.String"></property>
+		<!-- <property column="City" propertyName="cityId" required="false" javaType="java.lang.String"></property>
+		<property column="County" propertyName="countyId" required="false" javaType="java.lang.String"></property>
+		<property column="Town" propertyName="townId" required="false" javaType="java.lang.String"></property> -->
+		<property column="*Address" propertyName="detailAddress" required="true" javaType="java.lang.String"></property>
+		<property column="Contact name" propertyName="contactName" required="true" javaType="java.lang.String"></property>
+		<property column="Contact number" propertyName="phone" required="true" javaType="java.lang.String"></property>
+		<property column="Contact e-mail" propertyName="email" required="true" javaType="java.lang.String"></property>
+		<property column="*Dealer webiste" propertyName="website" required="true" javaType="java.lang.String"></property>
+	</mapping>
+	<volidate dateFormat="yyyy-MM-dd" volidateClass="cn.tcl.platform.customer.imports.ValidationImportCustomer" volidateMethod="validationImport"></volidate>
+	<service serviceBean="customerService" serviceMethod="importCustomer"></service>
+</import>

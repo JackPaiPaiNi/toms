@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.party.dao.IPartyDAO">
+	<resultMap id="PartyMap" type="Party">
+		<result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+		<result column="PARTY_NAME" property="partyName" jdbcType="VARCHAR" />
+		<result column="FEDERAL_TAX_ID" property="federalTaxId" jdbcType="VARCHAR" />
+		<result column="STATUS" property="status" jdbcType="CHAR" />
+		<result column="CREATE_DATE" property="createDate" jdbcType="DATE" />
+		<result column="CREATE_BY" property="createBy" jdbcType="VARCHAR" />
+		<result column="LAST_MODIFY_USER" property="lastModifyUser" jdbcType="VARCHAR" />
+		<result column="LAST_MODIFY_DATE" property="lastModifyDate" jdbcType="DATE" />
+		<result column="GROUP_NAME_ABBR" property="groupNameAbbr" jdbcType="VARCHAR" />
+		<result column="PARTY_ID_LAYER" property="partyIdLayer" jdbcType="VARCHAR" />
+		<result column="PARENT_PARTY_ID" property="parentPartyId" jdbcType="VARCHAR" />
+		<result column="COMMENTS" property="comments" jdbcType="VARCHAR" />
+		<result column="COUNTRY_ID" property="countryId" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap id="RolePartyMap" type="Party">
+		<result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+		<result column="PARTY_NAME" property="partyName" jdbcType="VARCHAR" />
+		<result column="FEDERAL_TAX_ID" property="federalTaxId" jdbcType="VARCHAR" />
+		<result column="STATUS" property="status" jdbcType="CHAR" />
+		<result column="CREATE_DATE" property="createDate" jdbcType="DATE" />
+		<result column="CREATE_BY" property="createBy" jdbcType="VARCHAR" />
+		<result column="LAST_MODIFY_USER" property="lastModifyUser" jdbcType="VARCHAR" />
+		<result column="LAST_MODIFY_DATE" property="lastModifyDate" jdbcType="DATE" />
+		<result column="GROUP_NAME_ABBR" property="groupNameAbbr" jdbcType="VARCHAR" />
+		<result column="PARTY_ID_LAYER" property="partyIdLayer" jdbcType="VARCHAR" />
+		<result column="PARENT_PARTY_ID" property="parentPartyId" jdbcType="VARCHAR" />
+		<result column="COMMENTS" property="comments" jdbcType="VARCHAR" />
+		<result column="CHECK_STATE" property="checkState" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap id="_partyMap" type="Party">
+		<result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+		<result column="PARTY_NAME" property="partyName" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap type="Party" id="partyTreeMap">
+		<result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />	
+		<result column="PARENT_PARTY_ID" property="parentPartyId" jdbcType="VARCHAR" />	
+		<result column="COUNTRY_ID" property="countryId" jdbcType="VARCHAR" />	
+	</resultMap>
+	
+	<select id="selectPartyByPId" parameterType="java.lang.String" resultMap="PartyMap">
+	 select t.PARTY_ID,
+		       t.PARTY_NAME,
+		       t.FEDERAL_TAX_ID,
+		       t.STATUS,
+		       t.CREATE_DATE,
+		       t.CREATE_BY,
+		       t.LAST_MODIFY_USER,
+		       t.LAST_MODIFY_DATE,
+		       t.GROUP_NAME_ABBR,
+		       t.PARTY_ID_LAYER,
+		       t.PARENT_PARTY_ID,
+		       t.COMMENTS,
+		       t.COUNTRY_ID
+		  from party t
+		 where t.PARENT_PARTY_ID = #{parentPartyId} AND t.`flag` = 0
+		 order by t.CREATE_DATE 
+  	</select>
+  	<select id="getOnePartyByName"  parameterType="java.lang.String" resultMap="PartyMap"  resultType="Party">
+  		select * from party where PARTY_NAME=#{partyName} AND `flag` = 0 limit 1;
+  	</select>
+  	<select id="selectPartyById" parameterType="java.lang.String" resultMap="PartyMap">
+	  select t.PARTY_ID,
+		       t.PARTY_NAME,
+		       t.FEDERAL_TAX_ID,
+		       t.STATUS,
+		       t.CREATE_DATE,
+		       t.CREATE_BY,
+		       t.LAST_MODIFY_USER,
+		       t.LAST_MODIFY_DATE,
+		       t.GROUP_NAME_ABBR,
+		       t.PARTY_ID_LAYER,
+		       t.PARENT_PARTY_ID,
+		       t.COMMENTS,
+		       t.COUNTRY_ID
+		  from party t
+ 		 where t.PARTY_ID = #{partyId} AND t.`flag` = 0
+  	</select>
+  	
+  	<insert id="insertParty" parameterType="Party">
+  		<selectKey resultType="java.lang.String" order="BEFORE" keyProperty="partyId"> 
+			SELECT max(cast(a.PARTY_ID as unsigned int))+1 from party a where a.PARTY_ID != 999
+		</selectKey>
+	    insert into PARTY
+	    <trim prefix="(" suffix=")" suffixOverrides="," >
+	      <if test="partyId!=null" >
+	        PARTY_ID,
+	      </if>
+	      <if test="partyName!=null" >
+	        PARTY_NAME,
+	      </if>
+	      <if test="federalTaxId!=null" >
+	        FEDERAL_TAX_ID,
+	      </if>
+	      <if test="status!=null" >
+	        STATUS,
+	      </if>
+	      <if test="createDate!=null" >
+	        CREATE_DATE,
+	      </if>
+	      <if test="createBy!=null" >
+	        CREATE_BY,
+	      </if>
+	      <if test="lastModifyUser!=null" >
+	        LAST_MODIFY_USER,
+	      </if>
+	      <if test="lastModifyDate!=null" >
+	        LAST_MODIFY_DATE,
+	      </if>
+	      <if test="groupNameAbbr!=null" >
+	        GROUP_NAME_ABBR,
+	      </if>
+	      <if test="partyIdLayer!=null" >
+	        PARTY_ID_LAYER,
+	      </if>
+	      <if test="parentPartyId!=null" >
+	        PARENT_PARTY_ID,
+	      </if>
+	      <if test="comments!=null" >
+	        COMMENTS,
+	      </if>
+	      <if test="countryId!=null" >
+	        COUNTRY_ID,
+	      </if>
+	    </trim>
+	    values
+	    <trim prefix="(" suffix=")" suffixOverrides="," >
+	      <if test="partyId!=null" >
+	        #{partyId},
+	      </if>
+	      <if test="partyName!=null" >
+	        #{partyName},
+	      </if>
+	      <if test="federalTaxId!=null" >
+	        #{federalTaxId},
+	      </if>
+	      <if test="status!=null" >
+	        #{status},
+	      </if>
+	      <if test="createDate!=null" >
+	        #{createDate},
+	      </if>
+	      <if test="createBy!=null" >
+	        #{createBy},
+	      </if>
+	      <if test="lastModifyUser!=null" >
+	        #{lastModifyUser},
+	      </if>
+	      <if test="lastModifyDate!=null" >
+	        #{lastModifyDate},
+	      </if>
+	      <if test="groupNameAbbr!=null" >
+	        #{groupNameAbbr},
+	      </if>
+	      <if test="partyIdLayer!=null" >
+	        #{partyIdLayer},
+	      </if>
+	      <if test="parentPartyId!=null" >
+	        #{parentPartyId},
+	      </if>
+	      <if test="comments!=null" >
+	        #{comments},
+	      </if>
+	      <if test="countryId!=null" >
+	        #{countryId},
+	      </if>
+	    </trim>
+  	</insert>
+  	
+  	<update id="updatePartyById" parameterType="Party" >
+	    update party
+	    <trim prefix="set" suffix="" suffixOverrides="," >
+	      <if test="partyName!=null" >
+	        PARTY_NAME = #{partyName},
+	      </if>
+	      <if test="federalTaxId!=null" >
+	        FEDERAL_TAX_ID = #{federalTaxId},
+	      </if>
+	      <if test="status!=null" >
+	        STATUS = #{status},
+	      </if>
+	      <if test="createDate!=null" >
+	        CREATE_DATE = #{createDate},
+	      </if>
+	      <if test="createBy!=null" >
+	        CREATE_BY = #{createBy},
+	      </if>
+	      <if test="lastModifyUser!=null" >
+	        LAST_MODIFY_USER = #{lastModifyUser},
+	      </if>
+	      <if test="lastModifyDate!=null" >
+	        LAST_MODIFY_DATE = #{lastModifyDate},
+	      </if>
+	      <if test="groupNameAbbr!=null" >
+	        GROUP_NAME_ABBR = #{groupNameAbbr},
+	      </if>
+	      <if test="partyIdLayer!=null" >
+	        PARTY_ID_LAYER = #{partyIdLayer},
+	      </if>
+	      <if test="parentPartyId!=null" >
+	        PARENT_PARTY_ID = #{parentPartyId},
+	      </if>
+	      <if test="comments!=null" >
+	        COMMENTS = #{comments},
+	      </if>
+	      <if test="countryId!=null" >
+	        COUNTRY_ID = #{countryId},
+	      </if>
+	    </trim>
+	    where PARTY_ID = #{partyId}
+	</update>
+  	
+  <!-- 	<delete id="deletePartyById" parameterType="java.lang.String">
+		delete b from party b inner join (SELECT PARTY_ID from party where FIND_IN_SET(PARTY_ID,getAllPartyByPID(#{partyId}))) a where a.party_id = b.PARTY_ID
+  	</delete> -->
+  	<update id="deletePartyById" parameterType="java.lang.String">
+  		UPDATE `party` p SET p.`flag` = '-1' ,p.`operating_user` = #{operatingUser} WHERE  p.PARTY_ID = #{partyId}
+  	</update>
+  	
+  	<select id="selectPartyByConds" resultMap="PartyMap" parameterType="java.lang.String">
+	  	 select t.PARTY_ID,
+			       t.PARTY_NAME,
+			       t.FEDERAL_TAX_ID,
+			       t.STATUS,
+			       t.CREATE_DATE,
+			       t.CREATE_BY,
+			       t.LAST_MODIFY_USER,
+			       t.LAST_MODIFY_DATE,
+			       t.GROUP_NAME_ABBR,
+			       t.PARTY_ID_LAYER,
+			       t.PARENT_PARTY_ID,
+			       t.COMMENTS,
+		       	   t.COUNTRY_ID
+			  from party t
+			  where t.`flag` = 0
+			  ${conditions}
+	</select>
+	
+	<select id="selectRoleParty" resultMap="RolePartyMap">
+		 select    
+		 	   t.PARTY_ID,
+		       t.PARTY_NAME,
+		       t.FEDERAL_TAX_ID,
+		       t.STATUS,
+		       t.CREATE_DATE,
+		       t.CREATE_BY,
+		       t.LAST_MODIFY_USER,
+		       t.LAST_MODIFY_DATE,
+		       t.GROUP_NAME_ABBR,
+		       t.PARTY_ID_LAYER,
+		       t.PARENT_PARTY_ID,
+		       t.COMMENTS,
+			   (case when 
+	             	(select b.PERMISSION_VALUE from role_data_permission b where b.PERMISSION_TYPE=#{permissionType} and b.PERMISSION_VALUE=t.PARTY_ID and b.role_id = #{roleId}) is null then '' 
+				else 
+					(select b.PERMISSION_VALUE from role_data_permission b where b.PERMISSION_TYPE=#{permissionType} and b.PERMISSION_VALUE=t.PARTY_ID and b.role_id = #{roleId}) 
+				end) as CHECK_STATE
+		  from party t where t.`flag` = 0
+	</select>
+	
+	<select id="selectUserParty" parameterType="java.lang.String" resultMap="PartyMap">
+		select distinct t.PARTY_ID,
+		       t.PARTY_NAME,
+		       t.FEDERAL_TAX_ID,
+		       t.STATUS,
+		       t.CREATE_DATE,
+		       t.CREATE_BY,
+		       t.LAST_MODIFY_USER,
+		       t.LAST_MODIFY_DATE,
+		       t.GROUP_NAME_ABBR,
+		       t.PARTY_ID_LAYER,
+		       t.PARENT_PARTY_ID,
+		       t.COMMENTS,
+		       t.COUNTRY_ID
+		  from party t
+		where t.`flag` = 0
+			${conditions}
+		  order by t.PARTY_ID
+	</select>
+	
+	<select id="selectUserPartyCountry" parameterType="java.lang.String" resultMap="PartyMap">
+		select distinct t.PARTY_ID,
+		       t.PARTY_NAME,
+		       t.FEDERAL_TAX_ID,
+		       t.STATUS,
+		       t.CREATE_DATE,
+		       t.CREATE_BY,
+		       t.LAST_MODIFY_USER,
+		       t.LAST_MODIFY_DATE,
+		       t.GROUP_NAME_ABBR,
+		       t.PARTY_ID_LAYER,
+		       t.PARENT_PARTY_ID,
+		       t.COMMENTS,
+		       t.COUNTRY_ID
+		  from party t
+		where t.PARTY_ID in (select DISTINCT a.COUNTRY_ID from party a where 1=1 ${conditions}) AND t.`flag` = 0
+		  order by t.PARTY_ID
+	</select>
+	
+	<select id="selectAllPartyData" resultMap="_partyMap">
+		select p.party_id,p.party_name from party p where p.status = '1' AND p.`flag` = 0
+	</select>
+	
+	<select id="getCountPartyId" resultMap="partyTreeMap">
+		select p1.PARTY_ID,p1.PARENT_PARTY_ID,p1.COUNTRY_ID
+		  from party p1 where p1.`flag` = 0
+		  and p1.PARTY_ID = #{parentPartyId}
+	</select>
+	
+	
+		<select id="getCountryByPartyId" resultMap="partyTreeMap">
+		SELECT p1.PARTY_ID
+		  FROM party p1 WHERE  p1.`flag` = 0
+		  AND p1.country_id=#{countryId}
+	</select>
+	
+	<select id="getAllSCPartyData" resultMap="_partyMap">
+		<!-- select p.party_id,p.party_name from party p 
+		where p.status = '1' and
+			  upper(p.party_name) like '%SC%' -->
+		select * from (
+select p.party_id,p.party_name from party p where p.status = '1' and upper(p.party_name) like '%SC%' 
+union all select pa.PARTY_ID,pa.party_name from party pa where pa.PARTY_ID=999 AND pa.`flag` = 0)t ORDER BY t.party_id desc	  
+	</select>
+	
+	<select id="getPartyByPId" resultMap="_partyMap">
+	    <!-- select p.party_id,p.party_name from party p 
+		where p.status = '1' and
+			  p.PARENT_PARTY_ID=#{partyId} -->
+		select * from (
+		select p.party_id as partyId,p.party_name as partyName from party p 
+		where p.status = '1' 
+		
+		<if test="partyId!=null">
+			<choose>
+				<when test="partyId==2">
+					and p.PARENT_PARTY_ID in (select pa.PARTY_ID from party pa where pa.PARENT_PARTY_ID=#{partyId}  
+				and pa.flag=0)
+				</when>
+				<otherwise>
+					and	 p.PARENT_PARTY_ID=#{partyId} 
+			  		 AND p.`flag` = 0 and	p.country_id=p.party_id
+				</otherwise>
+			</choose>
+		</if>
+		<if test="partyId==999">
+		and p.party_id=999 
+		union all select pa.PARTY_ID as partyId,pa.party_name as partyName from party pa where pa.PARTY_ID=999
+		</if>	  
+		)t   ORDER BY t.partyId desc
+	</select>
+	
+</mapper>

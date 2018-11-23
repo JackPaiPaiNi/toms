@@ -1,0 +1,386 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.sellIn.dao.ISellInDao" >
+	
+  <resultMap id="SellInMap" type="SellIn" >
+    <result column="user_id" property="userId" jdbcType="VARCHAR" />
+    <result column="user_name" property="userName" jdbcType="VARCHAR" />
+    <result column="model" property="model" jdbcType="INTEGER" />
+    <result column="quantity" property="quantity" jdbcType="INTEGER" />
+    <result column="orderNum" property="orderNum" jdbcType="VARCHAR" />
+    
+  
+    <result column="datadate" property="datadate" jdbcType="VARCHAR" />
+    <result column="centerId" property="centerId" jdbcType="VARCHAR" />
+    <result column="centerName" property="centerName" jdbcType="VARCHAR" />
+    <result column="countryId" property="countryId" jdbcType="VARCHAR" />
+    <result column="countryName" property="countryName" jdbcType="VARCHAR" />
+    <result column="product_line" property="productLine" jdbcType="VARCHAR" />
+    
+    <result column="ctime" property="ctime" jdbcType="DATE" />
+    <result column="shop_id" property="shopId" jdbcType="INTEGER" />
+    <result column="SHOP_NAME" property="shopName" jdbcType="VARCHAR" />
+    <result column="customer_id" property="customerId" jdbcType="VARCHAR" />
+    
+    <result column="customer_code" property="customerCode" jdbcType="VARCHAR" />
+    <result column="customer_name" property="customerName" jdbcType="VARCHAR" />
+    <result column="PARTY_ID" property="partyId" jdbcType="VARCHAR" />
+    <result column="PARTY_NAME" property="partyName" jdbcType="VARCHAR" />
+    <result column="hq_model" property="hqModel" jdbcType="VARCHAR" />
+  </resultMap>
+ 
+  <sql id="listWhere">
+  	<where>
+		<if test="searchStr != null"> and ${searchStr} </if>
+		<if test="conditions != null"> and ${conditions} </if>
+	</where>
+  </sql>
+ 	<insert id ="saveSellIn" parameterType="java.util.List" >
+              <selectKey resultType ="java.lang.Integer" keyProperty= "id"
+                   order= "AFTER">
+                  SELECT LAST_INSERT_ID()
+              </selectKey >
+       INSERT INTO
+		`t_sell_in`(customer_code,model,quantity,datadate,orderNum,user_id,ctime)
+             values
+             <foreach collection ="list" item="reddemCode" index= "index" separator =",">
+               (#{reddemCode.customerCode},#{reddemCode.model},#{reddemCode.quantity}
+               ,#{reddemCode.datadate},#{reddemCode.orderNum},#{reddemCode.userId},#{reddemCode.ctime})
+            </foreach >
+     </insert >
+    
+<insert id ="saveReturn" parameterType="java.util.List" >
+              <selectKey resultType ="java.lang.Integer" keyProperty= "id"
+                   order= "AFTER">
+                  SELECT LAST_INSERT_ID()
+              </selectKey >
+       INSERT INTO
+		`t_return`(customer_code,model,quantity,datadate,user_id,ctime)
+             values
+             <foreach collection ="list" item="reddemCode" index= "index" separator =",">
+               (#{reddemCode.customerCode},#{reddemCode.model},#{reddemCode.quantity}
+               ,#{reddemCode.datadate},#{reddemCode.userId},#{reddemCode.ctime})
+            </foreach >
+     </insert >
+    
+    
+
+
+
+
+  	<select id = "selectSellInByHq" parameterType="java.util.Map" resultMap="SellInMap">
+		SELECT p.`PARTY_NAME` centerName,c.`PARTY_NAME` countryName
+      	,pt.`product_line`,tm.`hq_model`,SUM(si.`quantity`)quantity FROM t_sell_in si
+	JOIN shop_info s ON s.`SHOP_ID`=si.`shop_id`
+	JOIN party pa ON pa.`PARTY_ID`=s.`PARTY_ID`
+	JOIN party c ON c.`PARTY_ID`=pa.`COUNTRY_ID`
+	JOIN party p ON p.`PARTY_ID`=c.`PARENT_PARTY_ID`
+	JOIN  t_modelmap tm ON tm.`branch_model`=si.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+	JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+	Where si.datadate between #{beginDate} and #{endDate}
+	
+	
+		
+		
+		<if test = "line != '' and line != null">
+		AND pt.product_line=#{line}
+		</if>
+		
+	GROUP BY tm.`hq_model`,pa.`COUNTRY_ID`
+	ORDER BY p.`PARTY_NAME`,pt.`product_line`,c.`PARTY_NAME`
+	</select>
+	
+	
+	  	<select id = "selectSellInByHqCountry" parameterType="java.util.Map" resultMap="SellInMap">
+		
+	SELECT p.`PARTY_NAME` centerName,c.`PARTY_NAME` countryName
+       FROM t_sell_in si
+JOIN shop_info s ON s.`SHOP_ID`=si.`shop_id`
+JOIN party pa ON pa.`PARTY_ID`=s.`PARTY_ID`
+JOIN party c ON c.`PARTY_ID`=pa.`COUNTRY_ID`
+JOIN party p ON p.`PARTY_ID`=c.`PARENT_PARTY_ID`
+JOIN  t_modelmap tm ON tm.`branch_model`=si.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+			Where si.datadate between #{beginDate} and #{endDate}
+
+		
+		
+		<if test = "line != '' and line != null">
+		AND pt.product_line=#{line}
+		</if>
+GROUP BY pa.`COUNTRY_ID`
+ORDER BY p.`PARTY_NAME`,c.`PARTY_NAME`
+	</select>
+	
+	
+	 	<select id = "selectSellInByHqModel" parameterType="java.util.Map" resultMap="SellInMap">
+		
+	SELECT pt.`product_line`,tm.`hq_model` FROM t_sell_in si
+JOIN shop_info s ON s.`SHOP_ID`=si.`shop_id`
+JOIN party pa ON pa.`PARTY_ID`=s.`PARTY_ID`
+JOIN party c ON c.`PARTY_ID`=pa.`COUNTRY_ID`
+JOIN party p ON p.`PARTY_ID`=c.`PARENT_PARTY_ID`
+JOIN  t_modelmap tm ON tm.`branch_model`=si.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+
+			Where si.datadate between #{beginDate} and #{endDate}
+		
+	
+		
+		<if test = "line != '' and line != null">
+		AND pt.product_line=#{line}
+		</if>
+GROUP BY tm.`hq_model`
+ORDER BY pt.`product_line`,tm.`hq_model`
+	</select>
+	
+	
+		<select id = "selectCustomerCode" parameterType="java.util.Map" resultMap="SellInMap">
+		SELECT customer_name FROM customer_info WHERE customer_code=#{customerCode} AND country_id=#{countryId}
+
+	</select>
+	
+	<select id = "selectCustomerModel" parameterType="java.util.Map" resultMap="SellInMap">
+	SELECT branch_model as model FROM t_modelmap_channel WHERE channel_model=#{channelModel} AND party_id=#{countryId}
+	AND customer_id=#{customerId}
+
+	</select>
+
+  		
+  		 <select id = "selectModelByHq" parameterType="java.lang.String"  resultMap="SellInMap">
+
+		SELECT DISTINCT tm.`hq_Model` AS model FROM t_modelmap  tm
+		WHERE tm.`party_id`=#{countryId} 
+		ORDER BY tm.`hq_model`
+	</select>
+	
+	
+	
+	
+	<select id = "selectSellInByTable" parameterType="java.util.Map" resultMap="SellInMap">
+	SELECT  pa.`COUNTRY_ID` countryId,pa.`PARTY_NAME` countryName,p.`PARTY_ID`,p.`PARTY_NAME`,
+ tr.`customer_code`,ci.`CUSTOMER_NAME`,<if test="isHq == true"> 
+  ${" tm.hq_model AS model"}
+  </if>
+  <if test="isHq == false"> 
+  ${"tm.branch_model AS model"}
+  </if>,
+tr.`quantity`,tr.`datadate`,tr.orderNum
+ FROM t_sell_in  tr
+JOIN customer_info ci ON ci.`CUSTOMER_CODE`=tr.`customer_code`
+JOIN party pa ON pa.`PARTY_ID`=ci.`COUNTRY_ID`
+JOIN party p ON p.`PARTY_ID`=ci.`PARTY_ID`
+JOIN t_modelmap  tm ON tm.`branch_model`=tr.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+
+	
+<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+
+			AND tr.datadate  BETWEEN  #{beginDate}  AND  #{endDate} 
+		
+		
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND p.country_id =#{searchCountry}
+		</if>
+		
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND p.party_id=#{searchPatry}
+		</if>
+	
+		<if test = "searchCustomer != '' and searchCustomer != null">
+		AND ci.customer_id=#{searchCustomer}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+		${searchLine}
+		</if>
+		
+  <if test="isHq == true"> 
+  ${"     order by pt.product_line ,tm.hq_model"}
+  </if>
+  <if test="isHq == false"> 
+  ${"     order by pt.product_line ,tm.branch_model"}
+  </if>
+  
+   limit #{start},#{limit}; 
+	</select>
+	
+	
+	
+	<select id = "selectSellInByTableCount" parameterType="java.util.Map" resultType="int">
+	SELECT count(*)
+ FROM t_sell_in  tr
+JOIN customer_info ci ON ci.`CUSTOMER_CODE`=tr.`customer_code`
+JOIN party pa ON pa.`PARTY_ID`=ci.`COUNTRY_ID`
+JOIN party p ON p.`PARTY_ID`=ci.`PARTY_ID`
+JOIN t_modelmap  tm ON tm.`branch_model`=tr.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+
+	
+<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+
+			AND tr.datadate  BETWEEN  #{beginDate}  AND  #{endDate} 
+		
+		
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND p.country_id =#{searchCountry}
+		</if>
+		
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND p.party_id=#{searchPatry}
+		</if>
+	
+		<if test = "searchCustomer != '' and searchCustomer != null">
+		AND ci.customer_id=#{searchCustomer}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+		${searchLine}
+		</if>
+		
+ORDER BY pt.`product_line`,tm.`hq_model`
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	<select id = "selectReturn" parameterType="java.util.Map" resultMap="SellInMap">
+		
+	SELECT  pa.`COUNTRY_ID` countryId,pa.`PARTY_NAME` countryName,p.`PARTY_ID`,p.`PARTY_NAME`,
+ tr.`customer_code`,ci.`CUSTOMER_NAME`,pt.product_line,
+ <if test="isHq == true"> 
+  ${" tm.hq_model AS model"}
+  </if>
+  <if test="isHq == false"> 
+  ${"tm.branch_model AS model"}
+  </if>
+ 
+,
+tr.`quantity`,tr.`datadate`
+ FROM t_return  tr
+JOIN customer_info ci ON ci.`CUSTOMER_CODE`=tr.`customer_code`
+JOIN party pa ON pa.`PARTY_ID`=ci.`COUNTRY_ID`
+JOIN party p ON p.`PARTY_ID`=ci.`PARTY_ID`
+JOIN t_modelmap  tm ON tm.`branch_model`=tr.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+
+<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+
+			AND tr.datadate  BETWEEN  #{beginDate}  AND  #{endDate} 
+		
+		
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND p.country_id =#{searchCountry}
+		</if>
+		
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND p.party_id=#{searchPatry}
+		</if>
+	
+		<if test = "searchCustomer != '' and searchCustomer != null">
+		AND ci.customer_id=#{searchCustomer}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+		${searchLine}
+		</if>
+		
+		<if test="isHq == true"> 
+  ${"     order by pt.product_line ,tm.hq_model"}
+  </if>
+  <if test="isHq == false"> 
+  ${"     order by pt.product_line ,tm.branch_model"}
+  </if>
+ 
+     
+      limit #{start},#{limit}; 
+
+	</select>
+	
+	
+	<select id = "selectReturnCount" parameterType="java.util.Map" resultType="int">
+		
+	SELECT  count(*)
+ FROM t_return  tr
+JOIN customer_info ci ON ci.`CUSTOMER_CODE`=tr.`customer_code`
+JOIN party pa ON pa.`PARTY_ID`=ci.`COUNTRY_ID`
+JOIN party p ON p.`PARTY_ID`=ci.`PARTY_ID`
+JOIN t_modelmap  tm ON tm.`branch_model`=tr.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+JOIN product pt ON pt.`PRODUCT_model`=tm.`hq_model`
+
+<if test = "conditions != '' and conditions != null"> WHERE ${conditions} </if>
+
+			AND tr.datadate  BETWEEN  #{beginDate}  AND  #{endDate} 
+		
+		
+		<if test = "searchCountry != '' and searchCountry != null">
+			AND p.country_id =#{searchCountry}
+		</if>
+		
+		
+		<if test = "searchPatry != '' and searchPatry != null">
+			AND p.party_id=#{searchPatry}
+		</if>
+	
+		<if test = "searchCustomer != '' and searchCustomer != null">
+		AND ci.customer_id=#{searchCustomer}
+		</if>
+		<if test = "searchLine != '' and searchLine != null">
+		${searchLine}
+		</if>
+		
+
+	</select>
+	
+	
+	
+	
+	
+	
+	<select id = "selectStock" parameterType="java.util.Map" resultMap="SellInMap">
+	
+ SELECT   ci.`CUSTOMER_CODE`,ci.`CUSTOMER_NAME`,
+		 <if test="isHq == true"> 
+		  ${" tm.hq_model AS model"}
+		  </if>
+		  <if test="isHq == false"> 
+		  ${"tm.branch_model AS model"}
+		  </if>,
+		  COALESCE(SUM(sto.`quantity`),0) AS currStock,
+		  COALESCE(SUM(siOne.`quantity`),0) siOneQty,
+		  COALESCE(SUM(siTwo.`quantity`),0) siTwoQty,
+		  COALESCE(SUM(siThree.`quantity`),0) currSi,
+		  COALESCE(SUM(so.`quantity`),0) AS currSo,
+		  COALESCE(SUM(tr.`quantity`),0) AS currReturn,
+		 (COALESCE(SUM(sto.`quantity`),0)+COALESCE(SUM(siThree.`quantity`),0) -COALESCE(SUM(so.`quantity`),0)-COALESCE(SUM(tr.`quantity`),0))stock
+	FROM t_inventory sto 
+	JOIN shop_info si  ON si.`SHOP_ID`=sto.`shop_id`
+	JOIN party pa ON pa.`PARTY_ID`=si.`PARTY_ID`
+	JOIN customer_info ci ON ci.`CUSTOMER_ID`=si.`CUSTOMER_ID`
+	JOIN t_modelmap  tm ON tm.`branch_model`=sto.`model` AND tm.`party_id`=pa.`COUNTRY_ID`
+	JOIN product pt ON pt.PRODUCT_model=tm.`hq_model`
+	LEFT JOIN t_sale so ON so.`shop_id`=sto.`shop_id` AND so.`model`=sto.`model`
+		 AND so.`datadate` BETWEEN #{beginDate} AND #{endDate}
+	LEFT JOIN t_return tr ON tr.`customer_code`=ci.`CUSTOMER_CODE`AND tr.`model`=sto.`model`
+		 AND tr.`datadate` BETWEEN #{beginDate} AND #{endDate}
+	LEFT JOIN t_sell_in siOne ON siOne.`customer_code`=ci.`CUSTOMER_CODE` AND siOne.`model`=sto.`model`
+		 AND siOne.`datadate` BETWEEN #{oneBegin} AND #{oneEnd}
+		
+	LEFT JOIN t_sell_in siTwo ON siTwo.`customer_code`=ci.`CUSTOMER_CODE` AND siTwo.`model`=sto.`model`
+		 AND siTwo.`datadate` BETWEEN #{twoBegin} AND #{twoEnd}
+		
+	LEFT JOIN t_sell_in siThree ON siThree.`customer_code`=ci.`CUSTOMER_CODE` AND siThree.`model`=sto.`model`
+		 AND siThree.`datadate`BETWEEN #{beginDate} AND #{endDate}
+	
+	WHERE sto.`datadate` BETWEEN BETWEEN #{beginDate} AND #{endDate}
+		
+		GROUP BY ci.`CUSTOMER_CODE`,sto.`model`
+
+	</select>
+	
+	
+	
+</mapper>

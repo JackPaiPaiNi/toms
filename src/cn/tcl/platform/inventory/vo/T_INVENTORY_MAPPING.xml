@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.tcl.platform.inventory.dao.IInventoryDao" >
+	
+  <resultMap id="InventoryMap" type="Inventory" >
+    <result column="id" property="inventoryId" jdbcType="INTEGER" />
+    <result column="user_id" property="userId" jdbcType="VARCHAR" />
+    <result column="user_name" property="userName" jdbcType="VARCHAR" />
+    <result column="model" property="model" jdbcType="VARCHAR" />
+    <result column="quantity" property="quantity" jdbcType="INTEGER" />
+    <result column="remark" property="remark" jdbcType="VARCHAR" />
+    <result column="party_id" property="partyId" jdbcType="VARCHAR" />
+    <result column="party_name" property="partyName" jdbcType="VARCHAR" />
+    <result column="datadate" property="datadate" jdbcType="VARCHAR" />
+    <result column="ctime" property="ctime" jdbcType="DATE" />
+    <result column="shop_id" property="shopId" jdbcType="INTEGER" />
+    <result column="SHOP_NAME" property="shopName" jdbcType="VARCHAR" />
+    <result column="CUSTOMER_NAME" property="customerName" jdbcType="VARCHAR" />
+    <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR" />
+    <result column="hq_model" property="hqModel" jdbcType="VARCHAR" />
+    <result column="country_id" property="countryId" jdbcType="VARCHAR"/>
+  </resultMap>
+
+  <sql id="listWhere">
+  	<where>
+		<if test="searchStr != null"> and ${searchStr} </if>
+		<if test="conditions != null"> and ${conditions} </if>
+	</where>
+  </sql>
+  <select id="selectInventory" resultMap="InventoryMap">
+ <!-- SELECT ti.*,tm.hq_model,si.`SHOP_NAME`,p.`PARTY_NAME` FROM t_inventory ti LEFT JOIN t_modelmap tm ON ti.model=tm.branch_model
+ LEFT JOIN party p ON p.`PARTY_ID`=ti.`party_id` 
+ LEFT JOIN shop_info si ON si.`SHOP_ID`=ti.`shop_id` -->
+ 	 select vi.*,tm.hq_model from v_inventory vi 
+    left join t_modelmap tm on tm.branch_model = vi.model
+    and vi.party_id=tm.party_id
+    <include refid="listWhere"/>
+    order by vi.ctime desc limit #{start},#{limit};
+  </select>
+   <select id="countInventory" resultType="int">
+  <!-- SELECT COUNT(*) FROM t_inventory ti LEFT JOIN t_modelmap tm ON ti.model=tm.branch_model
+    LEFT JOIN party p ON p.`PARTY_ID`=tm.`party_id`
+    LEFT JOIN shop_info si ON si.`SHOP_ID`=ti.`shop_id`  -->
+     select COUNT(*) from v_inventory vi 
+    left join t_modelmap tm on tm.branch_model = vi.model and vi.party_id=tm.party_id
+     <include refid="listWhere"/> 
+  </select>
+  
+  <select id="getCountModelMapByBranch" parameterType="Inventory" resultType="int">
+  		SELECT COUNT(*) FROM t_inventory ti LEFT JOIN t_modelmap tm ON 
+  		ti.model=tm.branch_model WHERE tm.branch_model=#{model}
+  </select>
+  
+  <select id="searchHqModelMapCount" parameterType="Inventory" resultType="int">
+  		SELECT COUNT(*) FROM product p 	
+  		WHERE  1=1  AND p.`PARTY_ID`=999 AND p.product_model=#{hqModel}
+  </select>
+  
+  <select id="searchCountryByName"  parameterType="java.lang.String" resultType="int">
+  		SELECT COUNT(*) FROM party p WHERE 1=1 AND p.`PARTY_NAME`=#{partyId} 
+  		 AND p.`PARTY_ID`=p.`COUNTRY_ID`
+  </select>
+  
+  <select id="getPartyIdByName"  parameterType="Inventory" resultType="java.lang.String">
+  		SELECT p.`PARTY_ID` FROM party p WHERE 1=1 AND p.`PARTY_NAME`=#{partyId}
+  </select>
+  
+ <insert id="saveInventory" parameterType="Inventory">
+	insert into t_inventory(user_id,model,quantity,remark,shop_id,datadate,ctime,party_id) 
+  	values(#{userId},#{model},#{quantity},#{remark},#{shopId},#{datadate},#{ctime},#{partyId});
+</insert>
+  
+<!--   <select id="getCountryIdByName" parameterType="java.lang.String" resultType="java.lang.String">
+  	select p.country_id from party p where p.party_id=p.country_id and p.party_name=#{partyName}
+  </select> -->
+  
+</mapper>

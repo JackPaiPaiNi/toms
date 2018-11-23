@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+
+<import>
+	<mapping bean="cn.tcl.platform.examination.vo.Examination">
+		<property column="*Type" propertyName="cType" required="true" javaType="java.lang.String"></property>
+		<property column="*Score" propertyName="fractions" required="true" javaType="java.lang.Integer"></property>
+		<property column="*First Order" propertyName="categories" required="true" javaType="java.lang.String"></property>
+		<property column="Second Order" propertyName="mediums" required="false" javaType="java.lang.String"></property>
+		<property column="Three Level" propertyName="smaClass" required="false" javaType="java.lang.String"></property>
+		<property column="*Topic" propertyName="exQuestions" required="true" javaType="java.lang.String"></property>
+		<property column="OptionsA" propertyName="alAnswersA" required="false" javaType="java.lang.String"></property>
+		<property column="OptionsB" propertyName="alAnswersB" required="false" javaType="java.lang.String"></property>
+		<property column="OptionsC" propertyName="alAnswersC" required="false" javaType="java.lang.String"></property>
+		<property column="OptionsD" propertyName="alAnswersD" required="false" javaType="java.lang.String"></property>
+		<property column="OptionsE" propertyName="alAnswersE" required="false" javaType="java.lang.String"></property>
+		<property column="OptionsF" propertyName="alAnswersF" required="false" javaType="java.lang.String"></property>
+		<property column="OptionsG" propertyName="alAnswersG" required="false" javaType="java.lang.String"></property>
+		<property column="*Country" propertyName="countryName" required="true" javaType="java.lang.String"></property>
+		<property column="*Correct Answer" propertyName="corAnswer" required="true" javaType="java.lang.String"></property>
+		<property column="Analysis" propertyName="analysis" required="false" javaType="java.lang.String"></property>
+	</mapping>
+	<volidate dateFormat="yyyy-MM-dd" volidateClass="cn.tcl.platform.examination.imports.ValidationImportExamination" volidateMethod="validationImport"></volidate>
+	<service serviceBean="exService" serviceMethod="importExamination"></service>
+</import>
